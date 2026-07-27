@@ -1,0 +1,239 @@
+.gc-term {
+  appearance: none;
+  display: inline;
+  margin: 0 2px;
+  padding: 0 2px 1px;
+  border: 0;
+  border-bottom: 1px dashed #44e4eb;
+  border-radius: 2px;
+  background: rgba(57, 208, 216, 0.1);
+  color: #44e4eb !important;
+  font: inherit;
+  font-weight: 800;
+  line-height: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  text-shadow: 0 0 8px rgba(57, 208, 216, 0.25);
+}
+
+.gc-term::after {
+  content: "?";
+  position: relative;
+  top: -0.35em;
+  margin-left: 2px;
+  color: #ffd06a;
+  font-size: 0.56em;
+  line-height: 0;
+}
+
+.gc-term:hover,
+.gc-term:focus-visible {
+  outline: none;
+  background: rgba(255, 208, 106, 0.16);
+  border-bottom-color: #ffd06a;
+  color: #fff2c5 !important;
+}
+
+.gc-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    linear-gradient(rgba(3, 8, 18, 0.84), rgba(3, 8, 18, 0.94)),
+    repeating-linear-gradient(0deg, transparent 0 3px, rgba(68, 228, 235, 0.04) 3px 4px);
+  backdrop-filter: blur(5px);
+}
+
+.gc-overlay[hidden] {
+  display: none !important;
+}
+
+.gc-card {
+  position: relative;
+  width: min(680px, 100%);
+  max-height: min(820px, calc(100vh - 48px));
+  overflow: auto;
+  padding: 30px;
+  border: 3px solid #ffc85a;
+  border-radius: 4px;
+  background:
+    linear-gradient(135deg, rgba(28, 45, 74, 0.96), rgba(8, 18, 35, 0.99)),
+    #0b1728;
+  box-shadow:
+    0 0 0 4px #2c1608,
+    9px 9px 0 rgba(0, 0, 0, 0.55),
+    0 0 40px rgba(255, 190, 71, 0.16);
+  color: #edf5ff;
+  font-family: var(--pg-pixel-font, inherit);
+  image-rendering: pixelated;
+}
+
+.gc-card::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  pointer-events: none;
+  border: 1px solid rgba(68, 228, 235, 0.23);
+}
+
+.gc-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border: 2px solid #ffc85a;
+  border-radius: 2px;
+  background: #521f18;
+  color: #fff2c5;
+  font: inherit;
+  font-size: 22px;
+  line-height: 28px;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 #1d0b08;
+}
+
+.gc-close:hover,
+.gc-close:focus-visible {
+  outline: 2px solid #44e4eb;
+  outline-offset: 2px;
+  background: #7a2d20;
+}
+
+.gc-kicker {
+  margin: 0 48px 8px 0;
+  color: #44e4eb;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.gc-card h2 {
+  margin: 0 48px 4px 0;
+  color: #fff2c5;
+  font-size: clamp(26px, 5vw, 38px);
+  line-height: 1.25;
+  text-shadow: 3px 3px 0 #2c1608;
+}
+
+.gc-translation {
+  margin: 0 0 18px;
+  color: #a7b8d5;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.gc-summary {
+  margin: 0 0 18px;
+  padding: 15px 16px;
+  border-left: 4px solid #44e4eb;
+  background: rgba(68, 228, 235, 0.08);
+  color: #f2f7ff;
+  font-size: 15px;
+  line-height: 1.85;
+}
+
+.gc-section {
+  margin-top: 14px;
+  padding: 15px 16px;
+  border: 1px solid #354b70;
+  background: rgba(5, 15, 31, 0.58);
+}
+
+.gc-section h3,
+.gc-example h3 {
+  margin: 0 0 9px;
+  color: #ffc85a;
+  font-size: 14px;
+}
+
+.gc-section p,
+.gc-example p {
+  margin: 0;
+  color: #d4e0f3;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.gc-flow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: glossary-flow;
+}
+
+.gc-flow li {
+  position: relative;
+  min-height: 44px;
+  padding: 10px 10px 10px 40px;
+  border: 1px solid rgba(68, 228, 235, 0.18);
+  background: #111f38;
+  color: #dce8fa;
+  font-size: 12px;
+  line-height: 1.55;
+  counter-increment: glossary-flow;
+}
+
+.gc-flow li::before {
+  content: counter(glossary-flow, decimal-leading-zero);
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: #44e4eb;
+  font-weight: 900;
+}
+
+.gc-where {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gc-where li {
+  padding: 6px 9px;
+  border: 1px solid #435a82;
+  background: #172641;
+  color: #cfdbed;
+  font-size: 12px;
+}
+
+.gc-example {
+  margin-top: 14px;
+  padding: 15px 16px;
+  border: 1px solid rgba(255, 159, 91, 0.45);
+  background: rgba(255, 159, 91, 0.08);
+}
+
+@media (max-width: 640px) {
+  .gc-overlay {
+    align-items: end;
+    padding: 0;
+  }
+
+  .gc-card {
+    width: 100%;
+    max-height: 88vh;
+    padding: 24px 18px 30px;
+    border-width: 3px 0 0;
+    border-radius: 0;
+    box-shadow: 0 -5px 0 #2c1608;
+  }
+
+  .gc-flow {
+    grid-template-columns: 1fr;
+  }
+
+  .gc-close {
+    top: 12px;
+    right: 12px;
+  }
+}
