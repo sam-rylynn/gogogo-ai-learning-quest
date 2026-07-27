@@ -1,0 +1,1652 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>GOGO GO · AI 从业者闯关之路 v2</title>
+<style>
+  :root{
+    --bg:#0e1120; --bg2:#141a30; --card:#1a2138; --card2:#212a4a;
+    --line:#2c3558; --txt:#eef1fb; --txt2:#9aa5c8; --txt3:#6b76a0;
+    --accent:#7c6cff; --accent2:#39d0d8; --gold:#ffc94d; --green:#3ddc97;
+    --red:#ff6b81; --blue:#5b9cff; --orange:#ff9f5b;
+    --grad:linear-gradient(135deg,#7c6cff,#39d0d8);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--txt);overscroll-behavior:none}
+  #app{max-width:560px;margin:0 auto;min-height:100%;position:relative;padding-bottom:76px}
+
+  header{padding:18px 18px 6px;position:sticky;top:0;z-index:20;
+    background:linear-gradient(180deg,var(--bg) 75%,transparent)}
+  .hd-row{display:flex;align-items:center;justify-content:space-between}
+  .logo{font-size:18px;font-weight:800;letter-spacing:.5px}
+  .logo span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .xp-pill{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);
+    border-radius:999px;padding:5px 12px;font-size:12px;font-weight:700}
+  .xp-pill b{color:var(--gold)}
+  .title-bar{margin-top:8px}
+  .rank-name{font-size:13px;color:var(--txt2);display:flex;justify-content:space-between}
+  .rank-name b{color:var(--txt)}
+  .xpbar{height:6px;background:var(--card);border-radius:99px;margin-top:5px;overflow:hidden}
+  .xpbar i{display:block;height:100%;background:var(--grad);border-radius:99px;transition:width .5s}
+
+  nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;
+    display:flex;background:rgba(20,26,48,.96);backdrop-filter:blur(10px);
+    border-top:1px solid var(--line);z-index:30;padding-bottom:env(safe-area-inset-bottom)}
+  nav button{flex:1;background:none;border:none;color:var(--txt3);font-size:11px;padding:9px 0 8px;
+    display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-family:inherit;position:relative}
+  nav button .ic{font-size:20px;line-height:1}
+  nav button.on{color:var(--accent2)}
+  nav button .bdg{position:absolute;top:4px;right:calc(50% - 22px);background:var(--red);color:#fff;
+    font-size:9px;font-weight:800;border-radius:99px;padding:1px 5px;min-width:15px}
+  .page{display:none;padding:6px 16px 30px;animation:fadein .25s}
+  .page.on{display:block}
+  @keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .map-wrap{position:relative;padding:10px 0 20px}
+  .map-line{position:absolute;left:50%;top:0;bottom:0;width:3px;transform:translateX(-50%);
+    background:repeating-linear-gradient(180deg,var(--line) 0 8px,transparent 8px 16px)}
+  .lv-row{position:relative;display:flex;margin:18px 0;min-height:96px;align-items:center}
+  .lv-row .dot{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;
+    border-radius:50%;background:var(--card);border:3px solid var(--line);z-index:2}
+  .lv-row.done .dot{background:var(--green);border-color:var(--green);box-shadow:0 0 12px rgba(61,220,151,.6)}
+  .lv-row.open .dot{background:var(--accent);border-color:var(--accent);animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 6px rgba(124,108,255,.5)}50%{box-shadow:0 0 16px rgba(124,108,255,.95)}}
+  .lv-card{width:46%;background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:13px 13px 11px;cursor:pointer;transition:transform .15s;position:relative}
+  .lv-card:active{transform:scale(.97)}
+  .lv-row:nth-child(odd) .lv-card{margin-right:auto}
+  .lv-row:nth-child(even) .lv-card{margin-left:auto}
+  .lv-row.boss{justify-content:center}
+  .lv-row.boss .lv-card{width:78%;margin:0 auto;border-color:#5a4a12;
+    background:linear-gradient(160deg,#2a2340,#1a2138)}
+  .lv-row.open .lv-card{border-color:var(--accent)}
+  .lv-row.done .lv-card{border-color:rgba(61,220,151,.5)}
+  .lv-row.locked .lv-card{opacity:.55;filter:saturate(.4)}
+  .lv-ic{font-size:26px;margin-bottom:4px}
+  .lv-wk{font-size:10px;color:var(--txt3);font-weight:700;letter-spacing:.5px}
+  .lv-tt{font-size:14px;font-weight:800;margin:2px 0 6px;line-height:1.35}
+  .lv-meta{font-size:11px;color:var(--txt2);display:flex;flex-wrap:wrap;gap:3px 8px}
+  .lv-meta .ok{color:var(--green)}
+  .stars{color:var(--gold);font-size:12px;letter-spacing:1px}
+  .map-tip{background:var(--card);border:1px dashed var(--line);border-radius:14px;padding:11px 14px;
+    font-size:12.5px;color:var(--txt2);line-height:1.7;margin-bottom:4px}
+  .map-tip b{color:var(--accent2)}
+
+  .layer{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:14px;overflow:hidden}
+  .layer-hd{padding:12px 14px 10px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .layer-hd h3{font-size:14.5px;font-weight:800}
+  .layer-hd .sub{font-size:11px;color:var(--txt3);margin-top:2px}
+  .layer-pct{font-size:12px;font-weight:800;white-space:nowrap}
+  .layer-bar{height:5px;background:var(--bg);margin:0 14px}
+  .layer-bar i{display:block;height:100%;border-radius:99px;transition:width .4s}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;padding:12px 14px 14px}
+  .chip{font-size:12px;padding:7px 11px;border-radius:999px;border:1px solid var(--line);
+    color:var(--txt3);background:var(--bg2);cursor:pointer;user-select:none;transition:all .15s;line-height:1.3}
+  .chip.s1{color:var(--blue);border-color:rgba(91,156,255,.55);background:rgba(91,156,255,.1)}
+  .chip.s2{color:var(--green);border-color:rgba(61,220,151,.55);background:rgba(61,220,151,.1)}
+  .chip:active{transform:scale(.95)}
+  .tree-legend{display:flex;gap:14px;font-size:11.5px;color:var(--txt2);margin:2px 2px 12px;flex-wrap:wrap}
+  .tree-legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}
+
+  .today-hd{display:flex;justify-content:space-between;align-items:center;margin:4px 2px 12px}
+  .today-hd .d{font-size:15px;font-weight:800}
+  .streak{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 13px;
+    font-size:13px;font-weight:800;color:var(--gold)}
+  .step{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:13px 14px;margin-bottom:10px;cursor:pointer;transition:all .15s}
+  .step:active{transform:scale(.98)}
+  .step.ck{border-color:rgba(61,220,151,.5);background:rgba(61,220,151,.07)}
+  .step .box{width:24px;height:24px;border-radius:8px;border:2px solid var(--line);flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff}
+  .step.ck .box{background:var(--green);border-color:var(--green)}
+  .step .tt{font-size:13.5px;font-weight:700}
+  .step .ds{font-size:11.5px;color:var(--txt2);margin-top:2px;line-height:1.5}
+  .step .min{margin-left:auto;font-size:11px;font-weight:800;color:var(--accent2);
+    background:rgba(57,208,216,.12);padding:4px 8px;border-radius:8px;flex-shrink:0}
+  .sec-tt{font-size:13px;font-weight:800;color:var(--txt2);margin:20px 2px 10px;letter-spacing:.5px}
+  .done-banner{background:rgba(61,220,151,.12);border:1px solid rgba(61,220,151,.4);color:var(--green);
+    border-radius:14px;padding:12px 14px;font-size:13px;font-weight:700;text-align:center;margin-bottom:12px}
+  .review-cta{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,rgba(124,108,255,.18),rgba(57,208,216,.12));
+    border:1px solid var(--accent);border-radius:14px;padding:14px;margin-bottom:12px;cursor:pointer}
+  .review-cta .n{font-size:24px;font-weight:800;color:var(--accent2)}
+  .review-cta .t{font-size:13.5px;font-weight:700}
+  .review-cta .s{font-size:11.5px;color:var(--txt2);margin-top:2px}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 8px;text-align:center}
+  .stat b{font-size:20px;display:block}
+  .stat span{font-size:11px;color:var(--txt3)}
+  .plist{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:14px}
+  .prow{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);font-size:13px}
+  .prow:last-child{border-bottom:none}
+  .prow .st{margin-left:auto;font-size:11.5px;font-weight:700}
+  .btn{display:block;width:100%;border:none;border-radius:14px;padding:14px;font-size:14.5px;font-weight:800;
+    cursor:pointer;font-family:inherit;margin-bottom:10px;transition:transform .12s}
+  .btn:active{transform:scale(.98)}
+  .btn.primary{background:var(--grad);color:#0c0f1d}
+  .btn.ghost{background:var(--card);color:var(--txt);border:1px solid var(--line)}
+  .btn.danger{background:none;color:var(--red);border:1px solid rgba(255,107,129,.4)}
+  .btn:disabled{opacity:.45}
+  textarea{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:12px;color:var(--txt);
+    font-size:13px;padding:12px;font-family:inherit;margin-bottom:10px;resize:vertical;line-height:1.7}
+  textarea.code{font-family:Menlo,Consolas,monospace;font-size:12px}
+
+  .mask{position:fixed;inset:0;background:rgba(5,7,16,.78);backdrop-filter:blur(3px);z-index:50;
+    display:none;align-items:flex-end;justify-content:center}
+  .mask.on{display:flex}
+  .sheet{width:100%;max-width:560px;max-height:90vh;background:var(--bg2);border-radius:22px 22px 0 0;
+    overflow-y:auto;padding:20px 18px calc(24px + env(safe-area-inset-bottom));animation:up .28s}
+  @keyframes up{from{transform:translateY(60px);opacity:.5}to{transform:none;opacity:1}}
+  .sheet-grab{width:40px;height:4px;background:var(--line);border-radius:99px;margin:0 auto 16px}
+  .sheet h2{font-size:18px;font-weight:800;line-height:1.4}
+  .sheet .wk{font-size:11.5px;color:var(--accent2);font-weight:800;letter-spacing:1px;margin-bottom:4px}
+  .goalbox{background:var(--card);border-radius:14px;padding:12px 14px;margin:14px 0 0;font-size:13px;
+    color:var(--txt2);line-height:1.8}
+  .goalbox b{color:var(--txt);display:block;font-size:12.5px;margin-bottom:4px}
+  .evbox{background:rgba(255,201,77,.08);border:1px solid rgba(255,201,77,.35);border-radius:14px;
+    padding:12px 14px;margin-top:14px;font-size:12.5px;line-height:1.7;color:#e8d8ae}
+  .evbox b{color:var(--gold)}
+  .phase-tt{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:800;margin:20px 2px 10px}
+  .phase-tt .pn{background:var(--card2);border-radius:8px;padding:2px 8px;font-size:11px;color:var(--accent2)}
+  .lock-note{font-size:11.5px;color:var(--txt3);margin:-4px 2px 10px}
+  .row-item{display:flex;align-items:center;gap:11px;background:var(--card);border:1px solid var(--line);
+    border-radius:13px;padding:12px 13px;margin-bottom:8px;cursor:pointer;font-size:13px;line-height:1.5}
+  .row-item:active{transform:scale(.985)}
+  .row-item .ric{font-size:19px;flex-shrink:0}
+  .row-item .rst{margin-left:auto;font-size:11px;font-weight:800;flex-shrink:0}
+  .row-item.doneR{border-color:rgba(61,220,151,.45)}
+  .row-item.lockedR{opacity:.5}
+  .lesson-body{font-size:14px;line-height:1.9;color:var(--txt);margin-top:14px}
+  .lesson-body .ana{background:rgba(57,208,216,.09);border-left:3px solid var(--accent2);
+    padding:10px 13px;border-radius:0 12px 12px 0;margin:12px 0;font-size:13px;color:var(--txt2);line-height:1.8}
+  .lesson-body .exm{background:rgba(255,159,91,.08);border-left:3px solid var(--orange);
+    padding:10px 13px;border-radius:0 12px 12px 0;margin:12px 0;font-size:13px;color:var(--txt2);line-height:1.8}
+  .lesson-body .wrn{background:rgba(255,107,129,.08);border-left:3px solid var(--red);
+    padding:10px 13px;border-radius:0 12px 12px 0;margin:12px 0;font-size:13px;color:var(--txt2);line-height:1.8}
+  .lesson-body b{color:var(--accent2)}
+  .lesson-body .ana b{color:var(--accent2)} .lesson-body .exm b{color:var(--orange)} .lesson-body .wrn b{color:var(--red)}
+
+  .q-prog{display:flex;gap:5px;margin:14px 0 16px}
+  .q-prog i{flex:1;height:4px;border-radius:99px;background:var(--line)}
+  .q-prog i.cur{background:var(--accent)} .q-prog i.ok{background:var(--green)} .q-prog i.bad{background:var(--red)}
+  .q-text{font-size:15.5px;font-weight:700;line-height:1.65;margin-bottom:16px}
+  .opt{display:block;width:100%;text-align:left;background:var(--card);border:1.5px solid var(--line);
+    color:var(--txt);border-radius:13px;padding:13px 14px;font-size:13.5px;margin-bottom:9px;cursor:pointer;
+    font-family:inherit;line-height:1.55;transition:all .15s}
+  .opt:active{transform:scale(.98)}
+  .opt.right{border-color:var(--green);background:rgba(61,220,151,.12);color:var(--green)}
+  .opt.wrong{border-color:var(--red);background:rgba(255,107,129,.1);color:var(--red)}
+  .opt.pickedCat{border-color:var(--accent)}
+  .opt:disabled{cursor:default}
+  .explain{background:var(--card);border-left:3px solid var(--accent2);border-radius:0 12px 12px 0;
+    padding:11px 13px;font-size:12.5px;color:var(--txt2);line-height:1.7;margin:4px 0 14px;animation:fadein .3s}
+  .explain b{color:var(--accent2)}
+  .result-emoji{font-size:52px;text-align:center;margin:10px 0}
+  .result-tt{font-size:20px;font-weight:800;text-align:center;margin-bottom:6px}
+  .result-sub{font-size:13px;color:var(--txt2);text-align:center;line-height:1.7;margin-bottom:18px}
+
+  .item-card{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:16px 15px;
+    font-size:14.5px;font-weight:700;line-height:1.7;margin-bottom:14px;min-height:74px;
+    display:flex;align-items:center;justify-content:center;text-align:center}
+  .cat-row{display:flex;flex-wrap:wrap;gap:8px}
+  .cat-btn{flex:1;min-width:30%;background:var(--card);border:1.5px solid var(--line);color:var(--txt);
+    border-radius:12px;padding:12px 8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;
+    transition:all .15s;line-height:1.4}
+  .cat-btn:active{transform:scale(.96)}
+  .cat-btn.right{border-color:var(--green);background:rgba(61,220,151,.14);color:var(--green)}
+  .cat-btn.wrong{border-color:var(--red);background:rgba(255,107,129,.12);color:var(--red)}
+  .mistake-tag{font-size:11.5px;color:var(--txt3);text-align:right;margin-bottom:8px}
+  .mistake-tag b{color:var(--red)}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+  .shake{animation:shake .3s}
+
+  .order-done{background:var(--card);border:1px solid rgba(61,220,151,.4);border-radius:12px;
+    padding:9px 13px;font-size:12.5px;color:var(--green);margin-bottom:7px;line-height:1.5}
+  .pool{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+  .pool .opt{margin-bottom:0}
+  .pool .opt.usedS{opacity:.25;pointer-events:none}
+
+  .match-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .m-cell{background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:11px 10px;
+    font-size:12px;line-height:1.5;cursor:pointer;transition:all .15s;color:var(--txt)}
+  .m-cell.sel{border-color:var(--accent);background:rgba(124,108,255,.12)}
+  .m-cell.okM{border-color:rgba(61,220,151,.5);background:rgba(61,220,151,.09);color:var(--txt3);pointer-events:none}
+  .m-cell:active{transform:scale(.97)}
+
+  .rub{display:flex;gap:9px;align-items:flex-start;background:var(--card);border-radius:11px;
+    padding:10px 12px;margin-bottom:7px;font-size:12.5px;line-height:1.6}
+  .rub .ri{flex-shrink:0;font-size:14px}
+  .rub.okR{border-left:3px solid var(--green)} .rub.noR{border-left:3px solid var(--red);color:var(--txt2)}
+
+  .fc{background:var(--card2);border:1px solid var(--line);border-radius:18px;min-height:190px;
+    display:flex;align-items:center;justify-content:center;text-align:center;padding:22px 18px;
+    font-size:15.5px;font-weight:700;line-height:1.8;margin:14px 0}
+  .fc.back-side{border-color:var(--accent2);font-weight:500;font-size:14px;color:var(--txt2)}
+  .fc-meta{font-size:11.5px;color:var(--txt3);text-align:center;margin-bottom:4px}
+  .fc-btns{display:flex;gap:10px}
+  .fc-btns .btn{flex:1}
+  .btn.forget{background:rgba(255,107,129,.12);color:var(--red);border:1px solid rgba(255,107,129,.4)}
+  .btn.remember{background:rgba(61,220,151,.14);color:var(--green);border:1px solid rgba(61,220,151,.5)}
+
+  .confetti{position:fixed;top:-10px;z-index:99;font-size:22px;animation:fall linear forwards;pointer-events:none}
+  @keyframes fall{to{transform:translateY(105vh) rotate(600deg);opacity:.6}}
+  .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#2b3358;color:#fff;
+    padding:10px 18px;border-radius:99px;font-size:13px;font-weight:700;z-index:99;opacity:0;
+    transition:opacity .3s;pointer-events:none;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
+  .toast.on{opacity:1}
+</style>
+<style>
+  .codex-checkin{position:fixed;right:18px;bottom:18px;z-index:80;display:flex;align-items:center;gap:8px;
+    padding:11px 14px;border:1px solid rgba(57,208,216,.48);border-radius:999px;background:rgba(12,19,36,.94);
+    color:#baf6ef;font:800 12px/1 inherit;cursor:pointer;box-shadow:0 10px 28px rgba(0,0,0,.28)}
+  .codex-checkin:hover{transform:translateY(-2px);border-color:#39d0d8}
+  .note-panel{margin-top:18px;padding:16px;border:1px solid rgba(57,208,216,.34);border-radius:14px;
+    background:rgba(57,208,216,.06)}
+  .note-panel h3{margin:0 0 5px;color:var(--accent2);font-size:17px}
+  .note-panel .note-sub{color:var(--txt2);font-size:12px;line-height:1.65;margin-bottom:12px}
+  .note-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .note-field{display:block;color:var(--txt2);font-size:12px;font-weight:700}
+  .note-field textarea{display:block;width:100%;height:88px;margin-top:5px;padding:10px;border:1px solid var(--line);
+    border-radius:10px;background:var(--bg2);color:var(--txt);font:13px/1.65 inherit;resize:vertical}
+  .note-field textarea:focus{outline:none;border-color:var(--accent2)}
+  .note-state{margin-top:10px;color:var(--txt2);font-size:12px}
+  .note-state.ok{color:var(--green)}
+  @media(max-width:600px){
+    .codex-checkin{right:12px;bottom:12px;padding:10px 12px}
+    .note-grid{grid-template-columns:1fr}
+  }
+</style>
+  <link rel="stylesheet" href="pixel-guild-upgrade.css?v=20260727" data-pixel-upgrade>
+</head>
+<body>
+<button class="codex-checkin" id="codexCheckin" type="button">⌘ 复制学习快照给 Codex</button>
+<div id="app">
+  <header>
+    <div class="hd-row">
+      <div class="logo">GOGO GO · <span>AI 从业者闯关之路</span></div>
+      <div class="xp-pill">⚡ <b id="xpNum">0</b> XP</div>
+    </div>
+    <div class="title-bar">
+      <div class="rank-name"><span>当前称号：<b id="rankName">见习生</b></span><span id="rankNext"></span></div>
+      <div class="xpbar"><i id="xpBar" style="width:0%"></i></div>
+    </div>
+  </header>
+
+  <div class="page on" id="pg-map">
+    <div class="map-tip" id="mapTip"></div>
+    <div class="map-wrap" id="mapWrap"><div class="map-line"></div></div>
+  </div>
+
+  <div class="page" id="pg-tree">
+    <div class="tree-legend">
+      <span><i style="background:var(--txt3)"></i>未开始（点标签切换）</span>
+      <span><i style="background:var(--blue)"></i>学习中</span>
+      <span><i style="background:var(--green)"></i>已掌握</span>
+    </div>
+    <div id="treeWrap"></div>
+  </div>
+
+  <div class="page" id="pg-daily">
+    <div class="today-hd">
+      <div class="d" id="todayStr"></div>
+      <div class="streak">🔥 连续 <span id="streakN">0</span> 天</div>
+    </div>
+    <div id="reviewCta"></div>
+    <div id="dailyDone"></div>
+    <div id="stepsWrap"></div>
+    <div class="sec-tt">📦 本周验收 · 四类证据（每周一重置）</div>
+    <div id="weeklyWrap"></div>
+  </div>
+
+  <div class="page" id="pg-me">
+    <div class="stat-grid">
+      <div class="stat"><b id="stLv">0/6</b><span>已通关</span></div>
+      <div class="stat"><b id="stSk">0%</b><span>技能掌握</span></div>
+      <div class="stat"><b id="stCard">0</b><span>复习卡</span></div>
+    </div>
+    <div class="plist" id="meLevels"></div>
+    <button class="btn ghost" id="btnExport">📤 导出进度（备份 / 换设备）</button>
+    <textarea id="ioArea" style="height:90px" class="code" placeholder="导出的进度 JSON 显示在这里；导入时粘贴 JSON 再点导入"></textarea>
+    <button class="btn ghost" id="btnImport">📥 导入进度</button>
+    <button class="btn ghost" id="btnHelp">❓ 玩法说明</button>
+    <button class="btn danger" id="btnReset">重置全部进度</button>
+  </div>
+
+  <nav>
+    <button class="on" data-pg="map"><span class="ic">🗺️</span>闯关地图</button>
+    <button data-pg="tree"><span class="ic">🌳</span>技能树</button>
+    <button data-pg="daily"><span class="ic">📚</span>复习打卡<span class="bdg" id="navBdg" style="display:none"></span></button>
+    <button data-pg="me"><span class="ic">🏆</span>我的进度</button>
+  </nav>
+</div>
+
+<div class="mask" id="mask"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================================================================
+   GOGO GO · AI 从业者闯关之路 v2
+   每关三段式：📖 学（精读课卡）→ 🎮 练（页内互动练习，系统判分）
+   → ⚔️ 战（通关测验）。全部数据在 GAME_DATA，可复制修改。
+================================================================ */
+var GAME_DATA = {
+levels:[
+/* ============ 第 1 关 ============ */
+{ id:"l1", icon:"🎯", weeks:"第 1–2 周", title:"提示设计 · 系统分工 · Evals",
+  goal:"能区分模型、RAG、工具、记忆、规则和人工各自负责什么，并建立评估意识。",
+  lessons:[
+   {t:"任务规格：让 AI 听懂人话的唯一方法",
+    body:'高质量 Prompt 的重点不是"神奇措辞"，而是<b>减少任务歧义</b>。一份完整任务规格包含：目标、受众、背景、已知事实、约束、输出格式、验收标准、未知信息处理方式。'
+    +'<div class="ana"><b>类比</b>：装修委托书。只说"帮我装得温馨点"，工人只能瞎猜；写清"预算 8 万、两居室、有猫（禁用易碎搁板）、10 月前完工、完工标准是……"才可能满意。</div>'
+    +'<div class="exm"><b>宠物场景</b>："帮我设计首页" ❌ → "为已充值会员设计首屏，目标是 10 秒内找到余额，约束是移动端单手操作，验收标准是三个任务各 3 步内完成" ✅</div>'
+    +'<div class="wrn"><b>你踩过的坑</b>："有粘性、简单方便"是体验愿景不是验收标准；"移动端"是平台约束不是输出格式；首屏 ≠ 整个首页。</div>',
+    card:["一份完整任务规格包含哪几个要素？","目标 / 受众 / 背景 / 已知事实与来源 / 约束 / 输出格式 / 验收标准 / 未知信息处理方式。核心目的：减少任务歧义。"]},
+   {t:"系统分工：AI 产品是一支球队，不是一个球星",
+    body:'AI 产品不是"页面里接一个聊天模型"，而是多种能力的组合。判断框架：<b>语言理解生成→LLM；企业文档政策→RAG；余额价格库存→工具调用；长期偏好→Memory；金额权限资格→规则引擎；例外与高风险→人工（HITL）</b>。'
+    +'<div class="ana"><b>类比</b>：餐厅。服务员（LLM）负责沟通；菜谱手册（RAG）负责标准说法；收银系统（工具）负责真实金额；熟客本（Memory）记口味；店规（规则）定谁能赊账；店长（人工）处理投诉。让服务员心算账单必然出错。</div>'
+    +'<div class="exm"><b>核心原则</b>：模型负责理解和生成；权威系统负责事实；规则负责边界；人负责高风险判断。</div>',
+    card:["查余额、解释退款政策、记住狗狗忌口、审批例外退款，分别该由哪个系统负责？","余额→工具调用（实时 API）；政策→RAG 版本化文档；忌口→Memory（结构化+再确认）；例外审批→人工 HITL。"]},
+   {t:"三层评估：结果对了不等于系统可靠",
+    body:'Evals 从三层检查 AI：<b>结果评估</b>（答案对不对）、<b>过程评估</b>(是否调对工具、顺序正确)、<b>安全约束</b>（是否遵守权限、确认、资金边界）。三层必须分开看。'
+    +'<div class="ana"><b>类比</b>：考驾照。到达目的地（结果）、是否按规程打灯看镜（过程）、是否闯红灯（安全）。闯了红灯，到得再快也是不及格。</div>'
+    +'<div class="exm"><b>你笔记里的案例</b>：套餐碰巧不含鸡肉但没读过敏档案 = 结果对、过程与安全失败；余额调对工具但 680 说成 860 = 过程对、结果与安全失败；信息全对但未确认就扣款 = 严重安全失败。</div>',
+    card:["Evals 的三层评估分别检查什么？","结果评估：最终回答/操作是否正确；过程评估：是否调用正确工具、遵守正确顺序；安全约束：是否遵守权限、确认、资金与健康边界。"]},
+   {t:"硬性失败 vs 体验指标：先保安全，再谈好看",
+    body:'<b>硬性失败（Hard Failure）</b>不能被其他分数抵消：金额错误、未确认扣款、推荐过敏食材、虚构订单成功、用过期数据交易、泄露隐私。<b>体验指标（Soft Metric）</b>可以评分优化：文案是否友好、语气是否符合品牌、回答是否略长。'
+    +'<div class="ana"><b>类比</b>：航空公司。餐食难吃（体验）可以慢慢改进；起落架故障（硬性）一次都不行，服务再好也不能起飞。</div>'
+    +'<div class="wrn"><b>判断口诀</b>：会造成真实损失（钱、健康、隐私、信任）的是硬性失败；只影响感受的是体验指标。</div>',
+    card:["硬性失败和体验指标的判断标准是什么？","硬性失败：会造成真实损失（金额错、未确认扣款、过敏推荐、虚构成功、过期数据交易、泄露隐私），不能被其他分数抵消。体验指标：只影响感受（文案、语气、美观），可评分优化。"]}
+  ],
+  exercises:[
+   {id:"e1",type:"classify",t:"失败分诊台：硬性失败还是体验问题？",icon:"🚨",
+    intro:"你是 AI 系统的质检员。判断每个案例属于哪类——含你笔记里的 3 个待办案例。",
+    cats:["硬性失败","体验指标"],
+    items:[
+     {x:"AI 解释退款政策，但给不出来源和版本",c:0,e:"政策类回答必须可追溯权威来源，无依据即 Grounding 硬性失败。"},
+     {x:"按钮文案写成「点这里」，不够友好",c:1,e:"文案可以评分优化，不影响安全资金，是体验指标。"},
+     {x:"使用昨日库存数据执行了今天的交易",c:0,e:"用过期数据执行交易会造成真实损失，硬性失败。"},
+     {x:"回答正确但比理想长度多了两句",c:1,e:"略长只影响体验，可优化。"},
+     {x:"推荐的套餐里含有档案中记录的过敏食材鸡肉",c:0,e:"健康风险，硬性失败——过敏推荐一次都不允许。"},
+     {x:"未经用户确认直接从余额扣款 99 元",c:0,e:"资金操作必须过确认边界，严重安全失败。"},
+     {x:"页面配色不够符合品牌调性",c:1,e:"美观问题是体验指标。"},
+     {x:"没有订单编号就告诉用户「下单成功」",c:0,e:"虚构成功状态，硬性失败——必须有可验证的订单编号和状态。"}]},
+   {id:"e2",type:"classify",t:"系统调度中心：这事该谁干？",icon:"🎛️",
+    intro:"你是宠物鲜食 App 的架构师。每个需求进来，分派给正确的系统。",
+    cats:["LLM 模型","RAG 检索","工具调用","Memory","规则引擎","人工 HITL"],
+    items:[
+     {x:"用户问：帮我总结一下这次投诉的经过",c:0,e:"语言理解与总结是 LLM 的主场。"},
+     {x:"用户问：你们的退款政策具体怎么规定的？",c:1,e:"政策要引用版本化文档，用 RAG。"},
+     {x:"用户问：我的会员卡现在还剩多少钱？",c:2,e:"实时余额必须调交易系统 API，工具调用。"},
+     {x:"记住这位用户的狗狗不吃鸡肉",c:3,e:"长期偏好存 Memory（结构化保存+高风险再确认）。"},
+     {x:"判断这位用户是否有资格参加满 500 减 50",c:4,e:"资格判断用确定性规则引擎，不让模型猜。"},
+     {x:"用户申请超出政策范围的特殊退款",c:5,e:"例外与责任判断转人工 HITL。"},
+     {x:"把商品介绍改写得更亲切一些",c:0,e:"文字生成改写，LLM 负责。"},
+     {x:"查询今天鸡肉鲜食套餐还有没有库存",c:2,e:"实时库存是工具调用，不是 RAG 里的旧文档。"}]},
+   {id:"e3",type:"essay",t:"写作任务：会员余额查询的任务规格",icon:"✍️",
+    intro:"用任务规格八要素，为「会员在 App 里查询余额」这个 AI 功能写一份规格说明。写完点「提交审核」，系统按评分标准逐项检查；也可以复制到当前 Codex 对话获得深度点评。",
+    min:100,
+    rub:[
+     {k:"目标（要解决什么问题）",words:["目标","为了","解决","让用户"]},
+     {k:"受众 / 用户（谁在用）",words:["用户","会员","受众","客户"]},
+     {k:"约束（平台 / 安全 / 边界）",words:["约束","限制","不能","必须","禁止","边界"]},
+     {k:"数据来源（余额从哪来）",words:["来源","API","接口","系统","工具","实时"]},
+     {k:"输出格式（怎么呈现）",words:["格式","展示","显示","输出","JSON","页面"]},
+     {k:"验收标准（怎么算做对了）",words:["验收","标准","秒","步","成功率","指标","测试"]},
+     {k:"未知信息处理（查不到怎么办）",words:["未知","查不到","失败","超时","错误","降级"]}],
+    claudeTitle:"会员余额查询功能的任务规格"},
+   {id:"e4",type:"classify",t:"任务规格诊断室：每句话属于哪一项？",icon:"🧩",
+    intro:"同一句需求中经常混着目标、约束和验收标准。把下面 14 句话放回正确位置，训练你写出可交付的任务规格。",
+    cats:["目标","受众","约束","数据来源","输出格式","验收标准","未知信息处理"],
+    items:[
+     {x:"让会员在不联系客服的情况下确认当前可用余额和最近一次充值是否到账",c:0,e:"说明要解决的用户问题和业务结果，属于目标。"},
+     {x:"主要用户是已登录并绑定会员账户的普通会员，客服仅在人工复核时使用",c:1,e:"明确谁在用以及角色差异，属于受众。"},
+     {x:"返回金额前必须校验登录身份与会员账户归属，不得展示其他会员数据",c:2,e:"规定安全、权限和隐私边界，属于约束。"},
+     {x:"余额以会员账户系统的实时 balance 字段为唯一事实来源",c:3,e:"明确权威系统和具体字段，属于数据来源。"},
+     {x:"首屏展示可用余额、冻结余额、币种和数据更新时间",c:4,e:"规定信息如何呈现，属于输出格式。"},
+     {x:"95% 的正常查询在 2 秒内返回，结果与账户系统完全一致",c:5,e:"有可测时间和一致性指标，属于验收标准。"},
+     {x:"接口超时不得推测余额，应说明暂时无法查询并提供人工复核入口",c:6,e:"规定查不到或不确定时怎么办，属于未知信息处理。"},
+     {x:"页面需适配移动端单手操作，金额默认隐藏部分数字",c:2,e:"平台和隐私展示要求都是约束。"},
+     {x:"若会员账户不存在，要区分显示「未开通会员」而不是「系统故障」",c:6,e:"区分未知状态和真实业务状态，属于异常处理。"},
+     {x:"客服人员只能在获得用户授权后查看完整交易记录",c:1,e:"这句话首先明确了客服这一使用角色及其使用条件。"},
+     {x:"系统只能依据工具返回结果作答，不能根据充值流水自行推算余额",c:2,e:"限制模型行为和计算边界，属于约束。"},
+     {x:"充值流水来自交易流水服务，仅用于余额异常时的审计复核",c:3,e:"说明辅助数据来自哪里以及用途，属于数据来源。"},
+     {x:"金额保留两位小数，交易记录只显示最近 5 条",c:4,e:"这是具体的呈现结构与范围。"},
+     {x:"未授权用户查询时必须拒绝返回金额，并记录一次安全审计事件",c:5,e:"这是可以直接写成测试用例的验收条件。"}]}
+  ],
+  quizTake:8,
+  quiz:[
+   {q:"工具返回余额 680 元，模型却回答 860 元。错误发生在哪一层？",
+    o:["工具选择层","生成与结果映射层","检索层"],a:1,
+    e:"工具调对了、数据也对，是模型生成时没有忠实使用工具结果——Grounding 失败。"},
+   {q:"最终推荐的套餐碰巧不含鸡肉，但 Agent 全程没有读取过敏档案。这属于？",
+    o:["完全通过","结果碰巧正确，但过程与安全失败","只是体验问题"],a:1,
+    e:"三层评估分开看：结果通过 ≠ 过程评估和安全约束通过。"},
+   {q:"查询会员实时余额，应该优先用？",
+    o:["RAG 检索知识库","工具调用（Tool Calling）","Agent Memory"],a:1,
+    e:"余额的事实来源（Source of Truth）是交易系统 API。"},
+   {q:"「帮我把首页做得有粘性、简单方便」这句话的问题是？",
+    o:["说得太长了","体验愿景没有转化为可测试的验收标准","不该对 AI 提要求"],a:1,
+    e:"「有粘性」要变成「7 日复访率」「3 步内完成下单」这样可验收的指标。"},
+   {q:"高风险信息（如宠物过敏）存入 Memory 的正确姿势是？",
+    o:["存成一句对话摘要就行","结构化保存，记录来源和确认时间，使用前再次确认","高风险信息绝不能存"],a:1,
+    e:"可以存，但要结构化+可追溯+使用时再确认，不能只是模糊摘要。"},
+   {q:"三层评估中，「是否调用了正确的工具、顺序是否正确」属于？",
+    o:["结果评估","过程评估","安全约束"],a:1,
+    e:"这是过程评估（Trajectory Evaluation）。"},
+   {q:"规格中写「调用余额 API」已经足以说明数据来源了吗？",
+    o:["足够，API 就是数据来源","不够，还要说明 API 背后的权威系统、字段和更新时间","不需要写数据来源"],a:1,
+    e:"API 是访问方式，不等于事实来源。应明确会员账户系统及其权威字段。"},
+   {q:"以下哪条是可测试的验收标准？",
+    o:["页面要简单好用","用户应该喜欢这个功能","授权用户看到的余额必须与账户系统一致，95% 查询在 2 秒内返回"],a:2,
+    e:"验收标准必须能观察和判定，最好包含对象、条件、指标和阈值。"},
+   {q:"余额为 0 元时，系统应该怎么处理？",
+    o:["当作查询失败","如实展示 0 元，并与接口超时、账户不存在区分","转人工，不向用户显示"],a:1,
+    e:"0 是有效业务数据，不是未知状态。规格要区分零值、无账户和系统错误。"},
+   {q:"为什么任务规格必须写清受众？",
+    o:["为了让文案更长","不同角色的权限、信息范围和操作目标不同","因为所有 Prompt 都要求写受众"],a:1,
+    e:"普通会员、客服和管理员的权限与可见信息不同，受众会直接改变系统行为。"},
+   {q:"连续三次读取同一个余额接口都返回 680 元，能证明余额绝对正确吗？",
+    o:["能，三次相同就是三重复核","不能，重复同一来源不是独立证据，还要确认权威来源、身份和数据时效","只要模型相信就行"],a:1,
+    e:"重复同一来源只能说明结果稳定，不能替代来源权威性、权限与时效验证。"},
+   {q:"余额接口超时，最可靠的回答是？",
+    o:["你的余额大概是 680 元","余额为 0 元","当前无法取得可靠余额，未返回任何估算值，并提供重试或人工复核"],a:2,
+    e:"未知信息不能猜测，也不能把技术失败误写成业务零值。"},
+   {q:"哪一句最适合放在「约束」中？",
+    o:["让用户更放心","余额来自会员账户系统","未完成身份和账户归属校验时不得返回金额"],a:2,
+    e:"约束规定系统不能做什么、必须满足什么边界。"},
+   {q:"系统返回正确余额，但同时展示了另一位会员的交易记录，应如何判定？",
+    o:["结果正确，可以通过","体验略差，扣一点分","隐私硬性失败，整体不通过"],a:2,
+    e:"隐私泄露属于硬性失败，不能被余额正确或体验分数抵消。"}
+  ]},
+/* ============ 第 2 关 ============ */
+{ id:"l2", icon:"🐍", weeks:"第 3–4 周", title:"Python · JSON · API · HTTP · Git",
+  goal:"能看懂并修改一个最小 API 程序；理解请求、响应、错误和版本管理。",
+  lessons:[
+   {t:"HTTP：程序之间的点外卖",
+    body:'程序间对话遵循 HTTP：一方发<b>请求（Request）</b>，另一方回<b>响应（Response）</b>。响应带<b>状态码</b>：200 成功、404 资源不存在、500 服务器内部错误、超时则是规定时间内没等到回音。常用方法：<b>GET 取数据，POST 交数据</b>。'
+    +'<div class="ana"><b>类比</b>：点外卖。下单=发请求；餐送到=200；店铺不存在=404；厨房着火做不出来=500；骑手失联=超时（注意：失联不代表餐没做！）。看菜单=GET，下订单=POST。</div>'
+    +'<div class="exm"><b>宠物场景</b>：App 查余额就是向交易系统发 GET 请求：GET /api/member/123/balance → 响应 200 + {"balance": 680}。</div>',
+    card:["HTTP 状态码 200 / 404 / 500 / 超时分别代表什么？GET 和 POST 的分工？","200 成功；404 资源不存在；500 服务器内部错误；超时=没等到回音（不代表失败）。GET 取数据，POST 提交数据。"]},
+   {t:"JSON：数据世界的标准快递面单",
+    body:'JSON 是程序间交换数据的通用格式。规则很死板但因此可靠：<b>键名必须双引号</b>、字符串必须双引号、不允许尾逗号、值可以是字符串/数字/布尔/数组/对象/null。'
+    +'<div class="exm"><b>合法例子</b>：{"pet_name": "豆豆", "allergy": ["鸡肉"], "vip": true, "balance": 680}</div>'
+    +'<div class="wrn"><b>三大高频错误</b>：① 用了单引号 ② 最后一项后面多写了逗号 ③ 键名忘了加引号。程序读 JSON 用 parse，一个字符错就整个报错——这正是结构化输出需要 Schema 验证的原因。</div>',
+    card:["JSON 的三大高频语法错误是什么？","① 用单引号（必须双引号）② 尾逗号（最后一项后不能有逗号）③ 键名没加引号。一个字符错，整个 parse 失败。"]},
+   {t:"超时与幂等键：你已经懂的工程难题",
+    body:'你在 Agent 可靠性里学过的原则，本质是工程问题：<b>超时 ≠ 失败</b>，订单可能已创建只是结果丢了。处理顺序：超时 → 用请求编号查状态 → 已成功则直接展示 / 未知则用<b>相同幂等键</b>重试 → 都失败才补偿或转人工。'
+    +'<div class="ana"><b>类比</b>：给朋友转账后 App 闪退。你不会立刻再转一次，而是先查账单确认到没到账。幂等键就是那笔转账的单号。</div>'
+    +'<div class="wrn"><b>口诀</b>：同一件事重试用旧键；用户真正发起新交易才用新键。重试换新键=可能重复扣款。</div>',
+    card:["下单请求超时后的正确处理顺序是？","① 用请求编号查询状态 → ② 已成功则展示结果 → ③ 状态未知用相同幂等键重试 → ④ 仍失败则补偿处理或转人工。绝不能直接宣称失败或换新键重下。"]},
+   {t:"Git：代码世界的游戏存档",
+    body:'Git 给代码打<b>存档点（commit）</b>：改坏了可以回滚，每次提交记录"改了什么、为什么"。核心动作只有几个：add（选中要存的改动）→ commit（存档+写说明）→ log（看历史）。'
+    +'<div class="ana"><b>类比</b>：打 BOSS 前存档。没存档就浪，团灭只能重来；好的 commit 信息像存档命名——「打败火龙前」比「存档 37」有用得多。</div>'
+    +'<div class="exm"><b>好的 commit 信息</b>："修复余额查询超时后未复用幂等键的问题" ✅ 而不是 "改了点东西" ❌</div>',
+    card:["Git 的三个核心动作和好 commit 信息的标准？","add 选中改动 → commit 存档并写说明 → log 查看历史。好的 commit 说明「改了什么、为什么」，如：修复超时后未复用幂等键的问题。"]}
+  ],
+  exercises:[
+   {id:"e1",type:"json",t:"修复坏掉的 JSON：宠物档案抢救",icon:"🔧",mode:"fix",
+    intro:"下面这份宠物档案 JSON 有 3 处语法错误（单引号 / 尾逗号 / 键名缺引号）。直接在文本框里修好它，点「运行检查」——和真实编程一样，改到程序能读为止。",
+    start:"{\n  'pet_name': \"豆豆\",\n  breed: \"柯基\",\n  \"allergy\": [\"鸡肉\", \"牛肉\",],\n  \"vip\": true\n}",
+    fields:["pet_name","breed","allergy","vip"],
+    hint:"提示：① pet_name 的引号 ② breed 键名 ③ 牛肉后面的逗号"},
+   {id:"e2",type:"json",t:"从零写 JSON：会员资产卡数据",icon:"📝",mode:"write",
+    intro:"把这条需求写成合法 JSON：「会员资产卡模块，模块 ID 是 member_asset，优先级 1，数据来源是会员账户系统，成功指标是用户 10 秒内找到余额」。字段名必须包含：module_id、priority、data_source、success_metric。",
+    start:"{\n  \n}",
+    fields:["module_id","priority","data_source","success_metric"],
+    hint:"提示：键和字符串值都要双引号，数字不用引号，字段之间用逗号（最后一个后面不加）"},
+   {id:"e3",type:"order",t:"急救流程：下单请求超时了！",icon:"⏱️",
+    intro:"用户点了「购买」，请求超时。把正确的处理步骤按顺序点出来——点错会记一次失误。",
+    steps:["发起下单请求（幂等键 request_001）","请求超时，未收到响应","用 request_001 查询订单状态","状态未知，用相同的 request_001 重试","仍然失败，执行补偿处理或转人工","向用户展示可验证的最终状态"],
+    e:"核心：先查状态再重试，重试必须复用旧幂等键，最后展示的必须是可验证状态——绝不虚构成功。"},
+   {id:"e4",type:"classify",t:"状态码急诊室",icon:"🏥",
+    intro:"每个场景发生了什么？选择对应的诊断。",
+    cats:["200 成功","404 不存在","500 服务器错误","超时"],
+    items:[
+     {x:"查询余额，返回 {\"balance\": 680}",c:0,e:"正常返回数据 = 200。"},
+     {x:"请求 /api/member/999，但这个会员 ID 不存在",c:1,e:"资源不存在 = 404。"},
+     {x:"服务器代码出了 bug，崩了",c:2,e:"服务器内部错误 = 500。"},
+     {x:"等了 30 秒没有任何回音",c:3,e:"超时——注意这不代表操作失败！"},
+     {x:"提交订单成功，返回订单编号",c:0,e:"成功创建 = 200（严格说是 201，也算成功族）。"},
+     {x:"请求的接口地址拼错了一个字母",c:1,e:"地址不存在 = 404。"}]}
+  ],
+  quiz:[
+   {q:"HTTP 状态码 404 表示？",
+    o:["请求成功","请求的资源不存在","服务器内部错误"],a:1,
+    e:"404 = 找不到资源；500 才是服务器内部错误。"},
+   {q:"JSON 里合法的字符串写法是？",
+    o:["'单引号'","\"双引号\""],a:1,
+    e:"JSON 只允许双引号，键名也必须双引号。"},
+   {q:"下单请求超时了，能直接告诉用户「下单失败请重试」吗？",
+    o:["能，超时就是失败","不能，订单可能已创建，应先用请求编号查状态"],a:1,
+    e:"超时 ≠ 失败。先查状态，否则可能重复下单。"},
+   {q:"重试同一次下单操作，幂等键应该？",
+    o:["每次生成新键","使用相同的旧键"],a:1,
+    e:"同一件事重试用旧键；新交易才用新键。"},
+   {q:"GET 与 POST 的常见分工是？",
+    o:["GET 获取数据，POST 提交数据","两者没有区别"],a:0,
+    e:"GET 读、POST 写。看懂这点，API 文档就不难了。"}
+  ]},
+/* ============ 第 3 关 ============ */
+{ id:"l3", icon:"📊", weeks:"第 5–6 周", title:"机器学习基础",
+  goal:"能解释训练 / 验证 / 测试、过拟合，以及为什么指标选择比准确率更重要。",
+  lessons:[
+   {t:"三套卷子：训练、验证、测试",
+    body:'机器学习 = 让系统从数据学规律。数据要分三份：<b>训练集</b>（学习用）、<b>验证集</b>（调参用）、<b>测试集</b>（最终考核，只用一次）。'
+    +'<div class="ana"><b>类比</b>：练习册（训练集）反复做；模拟考（验证集）决定复习策略；高考（测试集）只考一次。拿高考真题当练习册，分数就不可信了——这叫数据泄漏。</div>'
+    +'<div class="exm"><b>宠物场景</b>：预测会员流失，用 1–10 月数据训练、11 月验证调参、12 月测试。不能反过来用 12 月训练去预测 11 月。</div>',
+    card:["训练集 / 验证集 / 测试集各自的用途？","训练集：学规律；验证集：调参和选模型；测试集：最终考核，只用一次。用测试集调参=数据泄漏，成绩不可信。"]},
+   {t:"过拟合：背题的学霸上考场就崩",
+    body:'<b>过拟合（Overfitting）</b>：模型把训练数据背得太死，学到了噪声而不是规律，遇到新数据就崩。信号：训练集分数很高、测试集分数掉得厉害。反面是<b>欠拟合</b>：连训练集都学不好，模型太简单。'
+    +'<div class="ana"><b>类比</b>：背熟了练习册每道题的答案（包括印刷错误），换个数字就不会做了。</div>'
+    +'<div class="exm"><b>判断口诀</b>：训练好+测试差=过拟合；训练差+测试差=欠拟合；训练好+测试好=刚刚好。</div>',
+    card:["如何用训练/测试表现判断过拟合与欠拟合？","训练好+测试差=过拟合（背题）；训练差+测试差=欠拟合（没学会）；训练好+测试好=泛化良好。"]},
+   {t:"分类与回归：预测类别还是预测数字",
+    body:'监督学习两大任务：<b>分类</b>输出类别（会/不会复购、是/不是过敏体质），<b>回归</b>输出连续数值（下月销量、预计客单价）。判断方法就一句话：<b>答案是选项还是数字？</b>'
+    +'<div class="exm"><b>宠物场景</b>：判断会员会不会流失=分类；预测这只柯基的理想日粮克数=回归；识别照片里是猫还是狗=分类；预测双十一销售额=回归。</div>',
+    card:["分类和回归的判断标准？","看输出：答案是类别/选项 → 分类；答案是连续数字 → 回归。"]},
+   {t:"准确率陷阱：95 分的模型可能一无是处",
+    body:'类别不平衡时准确率会骗人：如果 95% 的样本是"健康"，模型无脑全答"健康"就有 95% 准确率——但一个病例都没查出来。要看<b>精确率</b>（说有事的里面多少真有事）和<b>召回率</b>（真有事的里面抓住了多少），按业务代价取舍。'
+    +'<div class="exm"><b>宠物场景</b>：过敏食材筛查要高召回率——宁可错杀（多标记疑似过敏原让人复核），不可放过（漏一个就是硬性失败）。营销短信推送要高精确率——错发太多会被拉黑。</div>'
+    +'<div class="wrn"><b>连接你已学的</b>：这就是 Evals 思维在 ML 的源头——指标必须匹配业务代价，演示分数会骗人。</div>',
+    card:["为什么高准确率可能毫无意义？精确率和召回率怎么选？","类别不平衡时无脑猜多数类也有高准确率。召回率=真有事的抓住多少（漏掉代价大时优先，如过敏筛查）；精确率=报警的有多少是真的（误报代价大时优先，如营销推送）。"]}
+  ],
+  exercises:[
+   {id:"e1",type:"classify",t:"任务分拣机：分类还是回归？",icon:"🔀",
+    intro:"宠物鲜食公司的数据需求来了，逐个判断任务类型。",
+    cats:["分类","回归"],
+    items:[
+     {x:"预测这位会员下个月会不会流失",c:0,e:"输出是「会/不会」→ 分类。"},
+     {x:"预测猫粮下个月的销量",c:1,e:"输出是连续数字 → 回归。"},
+     {x:"识别用户上传的照片是猫还是狗",c:0,e:"输出类别 → 分类。"},
+     {x:"根据体重年龄预测柯基的理想日粮克数",c:1,e:"输出克数 → 回归。"},
+     {x:"判断一条评论是好评、中评还是差评",c:0,e:"三个类别也是分类。"},
+     {x:"预测新品上市首周的销售额",c:1,e:"金额是连续值 → 回归。"}]},
+   {id:"e2",type:"classify",t:"模型体检中心：过拟合、欠拟合还是健康？",icon:"🩺",
+    intro:"根据训练集和测试集的表现，给每个模型下诊断。",
+    cats:["过拟合","欠拟合","泛化良好"],
+    items:[
+     {x:"训练集 99% 正确，测试集只有 60%",c:0,e:"背题型选手，过拟合。"},
+     {x:"训练集 55%，测试集 54%",c:1,e:"连练习册都不会，欠拟合（模型太简单或特征不够）。"},
+     {x:"训练集 88%，测试集 86%",c:2,e:"训练测试接近且都不错，泛化良好。"},
+     {x:"把 500 条数据的每个细节都记住了，新数据一来就错",c:0,e:"记住噪声=过拟合。"},
+     {x:"只用「体重」一个特征预测所有宠物的健康状况，哪儿都不准",c:1,e:"信息太少学不到规律，欠拟合。"},
+     {x:"训练 91%、验证 89%、测试 88%",c:2,e:"三者接近，健康模型。"}]},
+   {id:"e3",type:"order",t:"建模流水线：把项目步骤排对",icon:"🏗️",
+    intro:"要做「会员流失预测」模型，把流程按正确顺序点出来。",
+    steps:["明确业务问题和成功指标","收集并清洗历史会员数据","划分训练集 / 验证集 / 测试集","用训练集训练模型","用验证集调参并选择模型","用测试集做最终评估（只一次）","上线并持续监控真实表现"],
+    e:"先定指标再动手；测试集只用一次；上线不是终点，监控才能发现数据漂移。"}
+  ],
+  quiz:[
+   {q:"调整超参数时，应该看哪个数据集上的表现？",
+    o:["训练集","验证集","测试集"],a:1,
+    e:"验证集调参，测试集只在最后用一次。"},
+   {q:"模型在训练集 99% 正确、测试集只有 60%，最可能是？",
+    o:["欠拟合","过拟合"],a:1,
+    e:"背熟了练习册、上考场就不会——过拟合。"},
+   {q:"预测猫粮下个月的销量，属于？",
+    o:["分类问题","回归问题"],a:1,
+    e:"连续数值 → 回归；类别 → 分类。"},
+   {q:"95% 样本是健康的数据集上，模型全预测「健康」拿到 95% 准确率。说明？",
+    o:["模型很好","类别不平衡时准确率会误导，要看召回率等指标"],a:1,
+    e:"一个病例都没查出来。指标必须匹配业务代价。"},
+   {q:"过敏食材筛查模型，应该优先保证？",
+    o:["高精确率（少误报）","高召回率（少漏报）"],a:1,
+    e:"漏掉过敏原是硬性失败，宁可误报让人复核。"}
+  ]},
+/* ============ 第 4 关 ============ */
+{ id:"l4", icon:"🧠", weeks:"第 7–8 周", title:"神经网络与 Transformer 心智模型",
+  goal:"能用自己的话解释 LLM 如何处理输入并生成输出。",
+  lessons:[
+   {t:"Token：模型眼里的乐高积木",
+    body:'模型不按"字"或"词"读文字，而是切成<b>Token（词元）</b>——可能是一个字、半个词或一个词组。上下文窗口的容量、API 计费、生成速度都以 token 为单位。'
+    +'<div class="ana"><b>类比</b>：乐高积木。一句话拆成标准积木块，模型只认积木不认整句。「宠物鲜食」可能被切成「宠物」+「鲜」+「食」三块。</div>'
+    +'<div class="exm"><b>直觉校准</b>：中文 1 个字 ≈ 1–2 个 token；英文 1 个单词 ≈ 1–1.3 个 token。这解释了为什么长文档又贵又慢。</div>',
+    card:["什么是 Token？它和费用、上下文窗口什么关系？","模型处理文字的基本单位（字/词片段）。上下文窗口容量、API 计费、生成速度都按 token 计算。中文约 1 字=1–2 token。"]},
+   {t:"Embedding：给语义装上坐标",
+    body:'<b>Embedding（向量嵌入）</b>把内容转成一串数字（向量），语义相近的内容坐标就近。这是 RAG 检索的引擎：「狗狗拉肚子」能匹配到「犬类腹泻护理」，靠的不是关键词而是语义距离。'
+    +'<div class="ana"><b>类比</b>：城市地图坐标。「猫粮」和「宠物食品」是隔壁小区；「猫粮」和「汽车轮胎」隔了一个城市。有了坐标，"找附近"变成了数学题。</div>',
+    card:["Embedding 是什么？它和 RAG 检索什么关系？","把内容转成数值向量，语义相近则向量距离近。RAG 靠它实现语义检索——「狗狗拉肚子」能匹配「犬类腹泻护理」。"]},
+   {t:"Attention：阅读时的荧光笔",
+    body:'生成每个 token 时，<b>Attention（注意力）机制</b>给上下文中不同位置分配不同权重——相关的部分权重高。这是 Transformer 的核心创新：不是平均地看所有内容，而是动态决定看哪里。'
+    +'<div class="ana"><b>类比</b>：做阅读理解。回答「作者为什么难过」时，你的目光自动锁定第三段那句关键话，其他段落权重降低。Attention 就是模型的这种"目光聚焦"。</div>'
+    +'<div class="wrn"><b>连接你已学的</b>：上下文塞太满时重要信息被淹没——因为注意力被大量无关内容稀释了。这就是上下文工程的底层原理。</div>',
+    card:["Attention 机制做什么？它如何解释「上下文塞太满会变笨」？","生成每个 token 时给上下文不同位置分配注意力权重，聚焦相关部分。塞太满=注意力被无关内容稀释，重要信息被淹没。"]},
+   {t:"生成循环：一场超大规模的文字接龙",
+    body:'LLM 的完整流程：文本 → 切成 token → 转成向量 → Attention 计算 → <b>预测下一个 token 的概率分布</b> → 选一个输出 → 把它加进上下文 → 重复。它是概率系统：流畅 ≠ 正确，同题可能不同答，可能编造来源——幻觉是这个机制的天然副产品。'
+    +'<div class="ana"><b>类比</b>：世界上最强的接龙选手。读过海量文本后，它接的每个词都"最像人话"，但它并不在数据库里查证事实——它在算概率。</div>'
+    +'<div class="exm"><b>这解释了</b>：为什么关键金额要程序直接显示（模型重新生成一遍 680 可能变 860）；为什么要 RAG 和工具提供事实依据。</div>',
+    card:["用一句话说清 LLM 如何生成回答，以及幻觉为什么是天然副产品？","把输入切 token 转向量，经 Attention 计算后反复预测下一个最可能的 token。它算的是概率不是查事实，所以流畅≠正确，编造来源（幻觉）是机制的天然副产品。"]}
+  ],
+  exercises:[
+   {id:"e1",type:"match",t:"术语配对战：核心概念连连看",icon:"🃏",
+    intro:"左边术语，右边定义。先点术语再点定义，配对成功会锁定。",
+    pairs:[
+     ["Token","模型处理文字的基本单位"],
+     ["Embedding","把内容转成可比较的数值向量"],
+     ["Attention","给上下文不同位置分配注意力权重"],
+     ["上下文窗口","模型一次能处理的信息量上限"],
+     ["推理 Inference","模型根据输入生成输出的运行阶段"],
+     ["幻觉","生成看似合理但缺乏依据的内容"]]},
+   {id:"e2",type:"order",t:"拼装生成流水线",icon:"⚙️",
+    intro:"把 LLM 处理一次输入的步骤按顺序点出来。",
+    steps:["接收输入文本","切分成 Token","转成向量表示","Attention 计算各位置的关联权重","预测下一个 token 的概率分布","输出一个 token 并加入上下文","重复预测直到生成结束"],
+    e:"记住这条流水线，你就能解释：计费为什么按 token、幻觉为什么天然存在、为什么同题不同答。"},
+   {id:"e3",type:"essay",t:"费曼时刻：给朋友讲明白 LLM",icon:"🎤",
+    intro:"不看资料，用自己的话写 150 字以上：「LLM 是如何生成回答的，为什么它会幻觉」。想象读者是完全不懂 AI 的朋友。写完提交审核。",
+    min:150,
+    rub:[
+     {k:"提到 token / 词元（模型的处理单位）",words:["token","词元","切分","单位"]},
+     {k:"提到预测下一个词的机制",words:["预测","下一个","接龙","概率"]},
+     {k:"说明它是概率系统而非查数据库",words:["概率","不是查","数据库","统计","可能性"]},
+     {k:"解释幻觉的成因",words:["幻觉","编造","看似合理","没有依据","不可靠"]},
+     {k:"用了类比或生活化例子",words:["比如","就像","好比","类似","例如"]}],
+    claudeTitle:"用自己的话解释 LLM 生成机制与幻觉成因"}
+  ],
+  quiz:[
+   {q:"LLM 生成文本的基本机制是？",
+    o:["从数据库里检索现成答案","根据上下文反复预测下一个 token"],a:1,
+    e:"概率生成系统——这也是幻觉存在的根本原因。"},
+   {q:"Embedding（向量嵌入）的作用是？",
+    o:["压缩文件体积","把内容转成可比较相似度的数值向量"],a:1,
+    e:"RAG 能找到语义相近的片段，靠的就是它。"},
+   {q:"Attention 机制解决的核心问题是？",
+    o:["让模型关注上下文中最相关的部分","提高模型打字速度"],a:0,
+    e:"生成每个 token 时动态分配注意力权重。"},
+   {q:"上下文塞得过满，可能导致？",
+    o:["回答一定更准确","重要信息被淹没或截断，成本和延迟上升"],a:1,
+    e:"注意力被稀释——不是塞得越多越好，而是给对的信息。"},
+   {q:"为什么关键金额应该由程序直接显示，而不是让模型复述？",
+    o:["程序显示更美观","模型是概率生成，复述数字可能出错（680 变 860）"],a:1,
+    e:"你笔记里的原则：关键金额由程序直接显示和计算。"}
+  ]},
+/* ============ 第 5 关 ============ */
+{ id:"l5", icon:"🔌", weeks:"第 9–10 周", title:"LLM API · RAG · 工具调用实战",
+  goal:"能判断什么信息进入上下文、什么必须调用工具，并亲手实现。",
+  lessons:[
+   {t:"RAG 流水线与它的四种死法",
+    body:'RAG 流程：用户问题 → 在知识库<b>检索</b>相关片段 → 片段放入上下文 → 模型<b>依据片段</b>回答 → 返回<b>引用</b>。四种失败：文档过期、切分破坏语义、检索找错片段、模型没忠实引用。'
+    +'<div class="ana"><b>类比</b>：开卷考试。先翻书找到相关页（检索），照着写答案（生成），注明页码（引用）。书是旧版（过期）、撕页撕断了句子（切分）、翻错章节（检索错）、看着书还瞎写（不忠实）——四种死法。</div>'
+    +'<div class="exm"><b>政策更新五步</b>：更新权威源 → 标版本和生效日期 → 停用旧版 → 重新索引 → 清缓存跑测试。少一步都可能答旧政策。</div>',
+    card:["RAG 的四种典型失败方式和政策更新五步？","失败：文档过期/切分破坏语义/检索错片段/模型不忠实引用。更新：改权威源→标版本→停旧版→重新索引→清缓存跑测试。"]},
+   {t:"事实来源：谁说了算",
+    body:'<b>Source of Truth（事实来源）</b>=某类数据的最终权威系统。信息优先级：<b>实时 API > 规则配置 > RAG 版本化文档 > Agent Memory > 模型旧知识</b>。模型本身通常不是事实来源。'
+    +'<div class="exm"><b>你笔记里的经典案例</b>：RAG 价目表 99 元 vs API 返回 109 元 → 按 109 结算并报告知识库过期；昨天有库存+今天工具挂了 → 不能声称今天有货。</div>'
+    +'<div class="wrn"><b>口诀</b>：越实时越权威，越陈旧越只能参考。资料"在内部"不代表比实时 API 新。</div>',
+    card:["信息权威优先级从高到低是？","实时 API > 当前规则配置 > RAG 版本化文档 > Agent Memory > 模型参数旧知识。模型本身通常不是事实来源。"]},
+   {t:"工具调用：模型点菜，后厨做菜",
+    body:'<b>工具调用</b>=模型请求外部程序查询或执行：模型决定"需要调什么、传什么参数"，工具返回真实数据，模型基于结果回答。可靠 Agent 还需要：状态管理、工具边界、失败恢复、权限控制、人工确认、可追踪日志。'
+    +'<div class="ana"><b>类比</b>：服务员点菜。顾客说"来份熟的"（模糊需求）→ 服务员翻译成标准菜单项（结构化调用）→ 后厨做菜（工具执行）→ 服务员端上来并如实报菜名（忠实引用）。服务员自己下厨（模型编数据）就出事了。</div>'
+    +'<div class="exm"><b>验证要点</b>：工具返回 680，模型必须说 680。测试时专门检查这条——就是你学过的工具结果忠实性。</div>',
+    card:["工具调用中模型、工具各自负责什么？可靠 Agent 还需要哪些配套？","模型：决定调什么、传参数、忠实引用结果；工具：返回真实数据/执行动作。配套：状态管理、边界、失败恢复、权限、人工确认、日志。"]},
+   {t:"结构化输出 + Schema 验证：给生成上保险",
+    body:'要求模型输出固定字段的 JSON，程序才能读。但<b>结构完整 ≠ 事实正确</b>：JSON 里照样可能有幻觉。所以要两道保险：<b>Schema 验证</b>（字段、类型、格式对不对）+ <b>事实校验</b>（关键值和权威系统核对）。'
+    +'<div class="exm"><b>宠物场景</b>：模型输出 {"balance": 860}，Schema 验证通过（是数字没错），但事实校验发现 API 返回 680 → 拦截。两道保险缺一不可。</div>',
+    card:["为什么 Schema 验证通过还不够？","Schema 只查结构（字段/类型/格式），不查事实。JSON 里照样可能幻觉，关键值必须再和权威系统核对（事实校验）。"]}
+  ],
+  exercises:[
+   {id:"e1",type:"order",t:"搭建 RAG 流水线",icon:"🔗",
+    intro:"把 RAG 回答一个政策问题的步骤按顺序点出来。",
+    steps:["用户提问：跨店能用余额吗？","把问题转成向量并在知识库检索","取回最相关的政策片段","片段放入模型上下文","模型依据片段生成回答","返回回答并附上来源引用"],
+    e:"每一步都有失败方式：检索错、切分坏、文档旧、不忠实——测试要覆盖全流程。"},
+   {id:"e2",type:"order",t:"权威金字塔：谁说了算？",icon:"👑",
+    intro:"按权威优先级从高到低，把信息来源依次点出来。",
+    steps:["交易系统实时 API","当前有效的规则配置","RAG 检索的版本化文档","Agent Memory","模型参数中学到的旧知识"],
+    e:"越实时越权威。冲突时听高层的，并报告低层可能过期。"},
+   {id:"e3",type:"classify",t:"信息安置所：这条信息放哪里？",icon:"🗂️",
+    intro:"为宠物鲜食 App 的每类信息选择正确的存放/获取方式。",
+    cats:["实时 API / 工具","RAG 文档","Memory","规则引擎"],
+    items:[
+     {x:"会员卡当前余额",c:0,e:"实时资产必须查交易系统。"},
+     {x:"退款政策全文和适用条件",c:1,e:"版本化文档进 RAG。"},
+     {x:"用户偏好每周三收货",c:2,e:"长期偏好存 Memory。"},
+     {x:"满 500 减 50 的资格判断逻辑",c:3,e:"资格计算用确定性规则。"},
+     {x:"今天鸡肉套餐的库存数量",c:0,e:"实时库存查工具，昨天的数据不算数。"},
+     {x:"门店营业时间说明手册",c:1,e:"说明类知识进 RAG（注意保持版本更新）。"},
+     {x:"狗狗对牛肉过敏（用户已确认）",c:2,e:"结构化存 Memory，使用前再确认。"},
+     {x:"单笔退款超 500 元必须人工审批的红线",c:3,e:"硬边界写进规则引擎，不靠模型自觉。"}]},
+   {id:"e4",type:"json",t:"设计工具返回格式：余额查询接口",icon:"🛠️",mode:"write",
+    intro:"为「查询会员余额」工具设计返回 JSON。必须包含字段：balance（数字）、currency、expires_at（有效期）、source（数据来源标识）。想想为什么每个字段都不可省略。",
+    start:"{\n  \n}",
+    fields:["balance","currency","expires_at","source"],
+    hint:"提示：balance 用数字不加引号；expires_at 和 source 让下游能做事实校验和过期判断——这是你学过的可验证性"}
+  ],
+  quiz:[
+   {q:"RAG 价目表写 99 元，商品 API 返回 109 元。结算应该按？",
+    o:["99 元，知识库是内部资料更可信","109 元，并报告知识库可能过期"],a:1,
+    e:"实时 API > RAG 文档。"},
+   {q:"向用户解释企业退款政策，应该用？",
+    o:["模型参数里的记忆","RAG 检索版本化文档","Agent Memory"],a:1,
+    e:"政策要可追溯版本和生效日期。"},
+   {q:"政策更新后只改了原文档、没有重新索引，会发生什么？",
+    o:["系统自动同步新内容","检索仍返回旧片段"],a:1,
+    e:"五步缺一不可：改源→标版本→停旧版→重索引→清缓存跑测试。"},
+   {q:"模型输出的 JSON 通过了 Schema 验证，说明？",
+    o:["内容一定正确","只是结构合法，关键值仍需事实校验"],a:1,
+    e:"结构完整 ≠ 事实正确，JSON 里照样可能幻觉。"},
+   {q:"昨天资料显示有库存，今天库存工具不可用。应该？",
+    o:["按昨天的数据告诉用户有货","如实说明当前无法确认库存"],a:1,
+    e:"不能用过期数据执行或承诺交易——硬性失败红线。"}
+  ]},
+/* ============ 第 6 关 ============ */
+{ id:"l6", icon:"🏆", weeks:"第 11–12 周 · BOSS 关", title:"小型 AI 产品 · 岗位方向验证",
+  goal:"做出可运行原型（含测试集、失败记录、用户反馈），完成第一次职业方向选择。",
+  lessons:[
+   {t:"从演示到可靠：从业者的分界线",
+    body:'爱好者做 Demo，从业者做<b>可测、可控、可上线的系统</b>。差距就是四样东西：<b>测试集</b>（不是跑一次看看）、<b>失败记录</b>（定位错在 Prompt/检索/工具/代码/产品哪一层）、<b>安全边界</b>（硬性失败清单）、<b>真实用户反馈</b>（不是自己觉得好用）。'
+    +'<div class="exm"><b>你的毕业标准</b>：能说清"自己做了什么、AI 做了什么、为什么接受或修改 AI 的方案"——这就是不可替代的专业壁垒。</div>',
+    card:["Demo 和可靠系统之间差哪四样东西？","测试集、失败记录（分层定位原因）、安全边界（硬性失败清单）、真实用户反馈。"]},
+   {t:"用户访谈：你的十年经验开始变现",
+    body:'技术学两个月只是入门，但<b>需求发现</b>你已经练了十年。访谈要领：问<b>过去的具体行为</b>（上次怎么处理的）而不是未来的意愿（你会不会用）；记录<b>当前工作流</b>的完整步骤；找<b>高频、可验证、不涉无审核医疗建议</b>的问题。'
+    +'<div class="ana"><b>类比</b>：你做商业地产招商时的商户访谈——问流水和动线，不问"你觉得这里好不好"。方法完全通用。</div>'
+    +'<div class="wrn"><b>常见陷阱</b>："你会不会用 AI 推荐食谱？"（意愿题，答案无效）→ "上次给狗狗换粮，你是怎么决定的？"（行为题，金矿）。</div>',
+    card:["用户访谈的黄金法则是什么？","问过去的具体行为，不问未来的意愿。「上次你是怎么处理的」比「你会不会用」有效一百倍。"]},
+   {t:"方案对比：不用 AI 也是一种方案",
+    body:'验证问题后，对比至少三种方案：<b>不用 AI</b>（固定流程+规则能不能解决）、<b>只用搜索/RAG</b>、<b>用 Agent</b>。为每种建立质量、安全和商业指标再选。很多问题规则就够了——知道"这里不需要 AI"正是技术判断力的证明。'
+    +'<div class="exm"><b>宠物场景</b>：会员余额提醒——定时任务+短信就够，不需要 AI；个性化换粮过渡方案——需要理解狗狗情况，AI 有价值；退款审批——规则引擎+人工，AI 只做解释。</div>',
+    card:["拿到一个业务问题，应该对比哪三类方案？","① 不用 AI（规则+流程）② 只用搜索/RAG ③ 用 Agent。分别建立质量、安全、商业指标再选。「这里不需要 AI」也是专业判断。"]},
+   {t:"岗位验证：用证据而不是感觉做选择",
+    body:'12 周结束时回答一个问题：你在<b>产品</b>（问题定义、指标、优先级）、<b>设计</b>（交互状态、原型、审美）、<b>工程</b>（代码、调试、系统）三条线上，哪条<b>做起来最顺、证据最强、愿意持续投入</b>？用两个真实项目的表现回答，不用想象回答。'
+    +'<div class="exm"><b>证据形式</b>：产品线看你的指标设计和取舍记录；设计线看你的状态设计和原型；工程线看你的代码提交和失败修复记录。三份摊开，答案通常很明显。</div>',
+    card:["如何科学地做第一次职业方向选择？","用两个真实项目在产品/设计/工程三条线的表现证据对比：哪条做起来最顺、产出证据最强、愿意持续投入。用证据回答，不用感觉回答。"]}
+  ],
+  exercises:[
+   {id:"e1",type:"classify",t:"作品集评审团：这条素材有说服力吗？",icon:"⚖️",
+    intro:"你是招聘方。判断候选人作品集里的每条素材是强证据还是弱证据。",
+    cats:["强证据","弱证据"],
+    items:[
+     {x:"能在线访问、真的能用的产品原型",c:0,e:"能运行的产品 > 一切截图。"},
+     {x:"「精通 ChatGPT、Midjourney 等 20 种工具」",c:1,e:"工具清单没有壁垒，人人都能写。"},
+     {x:"测试集 + 评估结果 + 5 个失败案例的原因定位",c:0,e:"这是从业者思维的直接证明。"},
+     {x:"一张好看的产品概念图，没有任何实现",c:1,e:"只有截图属于演示观感。"},
+     {x:"真实用户使用一周后的反馈和迭代记录",c:0,e:"真实使用数据是最硬的证据。"},
+     {x:"「学习了 300 小时 AI 课程」",c:1,e:"投入时长不等于能力证据。"},
+     {x:"对成本、延迟、隐私边界的分析文档",c:0,e:"说明你考虑过生产环境，不只是 Demo。"},
+     {x:"证书截图九宫格",c:1,e:"证书可辅助，作品才是主角。"}]},
+   {id:"e2",type:"order",t:"BOSS 战流程：产品验证七步",icon:"🗡️",
+    intro:"把小型 AI 产品从想法到复盘的步骤按顺序点出来。",
+    steps:["从真实场景选一个高频可验证的问题","访谈真实用户，记录当前工作流","定义成功指标和硬性失败红线","对比不用 AI / 只用 RAG / 用 Agent 三种方案","做可运行原型并建立测试集","小范围上线收集真实反馈","按产品/设计/工程三条线复盘证据"],
+    e:"先问题后方案，先指标后原型，先小范围后扩大——每一步都在降低做错方向的成本。"},
+   {id:"e3",type:"essay",t:"终极写作：我的岗位验证复盘计划",icon:"🎓",
+    intro:"写 150 字以上：你打算用什么项目、收集什么证据、按什么标准，在 12 周后判断自己更适合产品、设计还是工程方向。这是给 3 个月后的自己的信。",
+    min:150,
+    rub:[
+     {k:"提到具体项目载体（网站/宠物场景）",words:["网站","宠物","项目","鲜食","会员"]},
+     {k:"提到三条方向线的对比",words:["产品","设计","工程"]},
+     {k:"提到证据形式（而非感觉）",words:["证据","记录","作品","数据","反馈","测试"]},
+     {k:"提到判断标准",words:["标准","顺手","投入","擅长","指标","判断"]},
+     {k:"有具体的时间或里程碑",words:["周","月","阶段","里程碑","时间"]}],
+    claudeTitle:"12 周岗位验证复盘计划"}
+  ],
+  quiz:[
+   {q:"判断一个 AI 产品是否可靠，依据是？",
+    o:["演示看起来很流畅","测试集 + 评估结果 + 失败分析"],a:1,
+    e:"从演示到可靠系统，正是从业者和爱好者的分界线。"},
+   {q:"用户访谈时，下面哪个问题更有效？",
+    o:["你会不会用 AI 推荐食谱？","上次给狗狗换粮，你是怎么决定的？"],a:1,
+    e:"问过去的具体行为，不问未来的意愿。"},
+   {q:"用户说「直接扣余额买」，系统应该？",
+    o:["立即执行扣款，尊重用户意愿","展示商品、金额、扣款后余额，再次确认后由固定程序执行"],a:1,
+    e:"资金操作必须过确认边界，由确定性程序执行。"},
+   {q:"「这个需求用规则引擎就够了，不需要 AI」这句话说明？",
+    o:["说话的人不懂 AI","这是技术判断力的证明","AI 时代不该这么想"],a:1,
+    e:"判断模型、搜索、RAG、工具或规则哪种更适合，正是专业壁垒模型第 2 条。"},
+   {q:"验证职业方向的正确方式是？",
+    o:["看哪个岗位薪资最高","用真实项目对比自己在产品、设计、工程上的表现证据"],a:1,
+    e:"你的 12 周计划核心：不是求职，而是用证据判断分支。"}
+  ]}
+],
+tree:[
+{ id:"A", name:"A · AI 与模型基础", color:"#7c6cff",
+  sub:"解释模型为什么有效、为什么失败",
+  skills:[["AI/ML/DL/GenAI 关系",2],["LLM 工作方式与 Token",2],["训练 / 微调 / 推理",2],
+   ["幻觉与验证",2],["多模态",2],["神经网络与 Transformer",0],["模型评估与能力边界",1]]},
+{ id:"B", name:"B · LLM 应用工程", color:"#39d0d8",
+  sub:"从能跑的演示到可测可控的系统",
+  skills:[["Prompt 设计与任务规格",2],["上下文与 Memory",2],["结构化输出与验证",2],
+   ["RAG",2],["工具调用与系统分工",2],["Agent 可靠性与异常恢复",1],["Evals 评估",1],
+   ["可观测性 / 成本 / 安全",0]]},
+{ id:"C", name:"C · 软件工程基础", color:"#5b9cff",
+  sub:"AI 可以帮写，但自己能读、能改、能调试",
+  skills:[["Python 基础",0],["JSON 与 API 调用",0],["HTTP 与错误处理",0],
+   ["Git 与命令行",0],["HTML/CSS/JS",0],["测试与调试",0],["部署与云服务",0]]},
+{ id:"D", name:"D · AI 产品与设计", color:"#ff9f5b",
+  sub:"你的差异化：审美 + AI 交互",
+  skills:[["用户问题与产品价值",1],["信息架构与视觉层级",1],["设计系统与组件",0],
+   ["动效与状态设计",0],["AI 交互模式（流式/纠错/引用）",0],["可用性与无障碍",0]]},
+{ id:"E", name:"E · 行业与产品落地", color:"#3ddc97",
+  sub:"你的主场：十年商业经验的变现区",
+  skills:[["需求发现与用户访谈",1],["用例排序与成功指标",1],["架构草图与迭代计划",0],
+   ["上线 / 监控 / adoption",0],["案例研究沉淀",0]]}
+],
+daily:[
+ ["复述昨天","不看笔记，用自己的话复述昨天学的核心概念",15],
+ ["学新概念","在闯关地图里读 1–2 节课卡，术语记成「中文（English）」",30],
+ ["动手练习","完成 1 个页内互动练习，或课外代码/产品实验",30],
+ ["复盘记录","写下：我理解了什么、哪里判断错了、如何验证",15]
+],
+weekly:[
+ "一页概念笔记",
+ "一个可运行或可检查的练习",
+ "一条真实失败案例及原因定位",
+ "一次不堆术语的口头或文字复述"
+],
+ranks:[[0,"见习生"],[250,"AI 学徒"],[600,"实践者"],[1100,"准从业者"],[1700,"AI 从业者"],[2600,"从业者 Pro"]]
+};
+
+/* ================= state ================= */
+var KEY="gogogo_ai_quest_v2";
+var OLDKEY="gogogo_ai_quest_v1";
+var S=null;
+function freshState(){
+  var s={xp:0,levels:{},skills:{},cards:{},extraCards:[],
+    lessonNotes:{},
+    daily:{date:"",steps:[false,false,false,false]},streak:0,lastFull:"",
+    weekly:{key:"",items:[false,false,false,false]},intro:false};
+  GAME_DATA.levels.forEach(function(l){
+    s.levels[l.id]={les:l.lessons.map(function(){return false;}),
+      ex:l.exercises.map(function(){return {p:false,m:-1};}),quiz:false};
+  });
+  GAME_DATA.tree.forEach(function(t){t.skills.forEach(function(sk,i){s.skills[t.id+i]=sk[1];});});
+  return s;
+}
+function migrateV1(s){
+  try{
+    var raw=localStorage.getItem(OLDKEY);
+    if(!raw) return s;
+    var o=JSON.parse(raw);
+    if(o.xp) s.xp=Math.min(o.xp, 400);
+    if(o.streak) s.streak=o.streak;
+    if(o.lastFull) s.lastFull=o.lastFull;
+    if(o.skills) for(var k in o.skills){ if(s.skills[k]!==undefined) s.skills[k]=o.skills[k]; }
+    if(o.levels) GAME_DATA.levels.forEach(function(l){
+      if(o.levels[l.id] && o.levels[l.id].done) s.levels[l.id].quiz=true;
+    });
+    s.intro=false;
+  }catch(e){}
+  return s;
+}
+function load(){
+  try{var raw=localStorage.getItem(KEY); if(raw) S=JSON.parse(raw);}catch(e){}
+  if(!S){ S=migrateV1(freshState()); save(); }
+  var f=freshState();
+  for(var k in f){ if(S[k]===undefined) S[k]=f[k]; }
+  GAME_DATA.levels.forEach(function(l){
+    if(!S.levels[l.id]) S.levels[l.id]=f.levels[l.id];
+    var st=S.levels[l.id];
+    while(st.les.length<l.lessons.length) st.les.push(false);
+    while(st.ex.length<l.exercises.length) st.ex.push({p:false,m:-1});
+  });
+  rolloverDaily(); rolloverWeekly();
+}
+function save(){ try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){} }
+function todayStr(){ var d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function dstr(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function addDays(n){ var d=new Date(); d.setDate(d.getDate()+n); return dstr(d); }
+function mondayKey(){ var d=new Date(); var day=(d.getDay()+6)%7; d.setDate(d.getDate()-day); return dstr(d); }
+function rolloverDaily(){
+  var t=todayStr();
+  if(S.daily.date!==t){
+    if(S.lastFull){
+      var y=new Date(); y.setDate(y.getDate()-1);
+      if(S.lastFull!==dstr(y) && S.lastFull!==t) S.streak=0;
+    }
+    S.daily={date:t,steps:[false,false,false,false]}; save();
+  }
+}
+function rolloverWeekly(){
+  var k=mondayKey();
+  if(S.weekly.key!==k){ S.weekly={key:k,items:GAME_DATA.weekly.map(function(){return false;})}; save(); }
+}
+
+/* ================= xp & rank ================= */
+function addXP(n,msg){ S.xp+=n; save(); renderHeader(); if(msg) toast("+"+n+" XP · "+msg); }
+function subXP(n){ S.xp=Math.max(0,S.xp-n); save(); renderHeader(); }
+function rankInfo(){
+  var r=GAME_DATA.ranks,cur=r[0],next=null;
+  for(var i=0;i<r.length;i++){ if(S.xp>=r[i][0]) cur=r[i]; else {next=r[i]; break;} }
+  return {cur:cur,next:next};
+}
+function renderHeader(){
+  document.getElementById("xpNum").textContent=S.xp;
+  var ri=rankInfo();
+  document.getElementById("rankName").textContent=ri.cur[1];
+  var nEl=document.getElementById("rankNext"), bar=document.getElementById("xpBar");
+  if(ri.next){
+    nEl.textContent="距「"+ri.next[1]+"」还差 "+(ri.next[0]-S.xp)+" XP";
+    bar.style.width=Math.min(100,Math.round((S.xp-ri.cur[0])/(ri.next[0]-ri.cur[0])*100))+"%";
+  } else { nEl.textContent="已达最高称号 🎉"; bar.style.width="100%"; }
+}
+
+/* ================= level progress helpers ================= */
+function lesDone(l){ return S.levels[l.id].les.filter(Boolean).length; }
+function exDone(l){ return S.levels[l.id].ex.filter(function(e){return e.p;}).length; }
+function noteKey(l,j){ return l.id+"_note_"+j; }
+function noteComplete(n){
+  return !!n && String(n.explain||"").trim().length>=12
+    && String(n.boundary||"").trim().length>=12
+    && String(n.evidence||"").trim().length>=12;
+}
+function notesDone(l){
+  if(l.id!=="l1") return l.lessons.length;
+  return l.lessons.filter(function(_,j){return noteComplete(S.lessonNotes[noteKey(l,j)]);}).length;
+}
+function allLes(l){ return lesDone(l)===l.lessons.length; }
+function allNotes(l){ return l.id!=="l1" || notesDone(l)===l.lessons.length; }
+function allEx(l){ return exDone(l)===l.exercises.length; }
+function isDone(l){ return allLes(l)&&allNotes(l)&&allEx(l)&&S.levels[l.id].quiz; }
+function levelUnlocked(i){ return i===0 || isDone(GAME_DATA.levels[i-1]); }
+
+/* ================= tabs ================= */
+document.querySelectorAll("nav button").forEach(function(b){
+  b.onclick=function(){
+    document.querySelectorAll("nav button").forEach(function(x){x.classList.remove("on");});
+    b.classList.add("on");
+    document.querySelectorAll(".page").forEach(function(p){p.classList.remove("on");});
+    document.getElementById("pg-"+b.dataset.pg).classList.add("on");
+    window.scrollTo(0,0);
+  };
+});
+
+/* ================= map ================= */
+function renderMap(){
+  var wrap=document.getElementById("mapWrap");
+  wrap.querySelectorAll(".lv-row").forEach(function(e){e.remove();});
+  var doneCount=GAME_DATA.levels.filter(isDone).length;
+  document.getElementById("mapTip").innerHTML=
+    doneCount===GAME_DATA.levels.length
+    ? "🎉 <b>全部通关！</b>你已完成 12 周共同基础。下一步：进入阶段 3「生产可靠性」，并把这份游戏的 GAME_DATA 换成新赛季内容。"
+    : "🎯 每关三段式：<b>📖 学</b>（读课卡）→ <b>🎮 练</b>（页内练习，系统判分）→ <b>⚔️ 战</b>（测验全对通关）。顺序解锁，不能跳级。";
+  GAME_DATA.levels.forEach(function(l,i){
+    var st=S.levels[l.id], unlocked=levelUnlocked(i), fin=isDone(l);
+    var row=document.createElement("div");
+    row.className="lv-row "+(fin?"done":unlocked?"open":"locked")+(i===GAME_DATA.levels.length-1?" boss":"");
+    row.innerHTML='<div class="dot"></div><div class="lv-card">'
+      +'<div class="lv-ic">'+(unlocked?l.icon:"🔒")+'</div>'
+      +'<div class="lv-wk">'+l.weeks+'</div>'
+      +'<div class="lv-tt">'+l.title+'</div>'
+      +'<div class="lv-meta">'
+      +'<span>📖 <span class="'+(allLes(l)?"ok":"")+'">'+lesDone(l)+"/"+l.lessons.length+'</span></span>'
+      +(l.id==="l1"?'<span>📝 <span class="'+(allNotes(l)?"ok":"")+'">'+notesDone(l)+"/"+l.lessons.length+'</span></span>':"")
+      +'<span>🎮 <span class="'+(allEx(l)?"ok":"")+'">'+exDone(l)+"/"+l.exercises.length+'</span></span>'
+      +'<span>⚔️ <span class="'+(st.quiz?"ok":"")+'">'+(st.quiz?"✓":"–")+'</span></span>'
+      +(fin?'<span class="stars">★ 已通关</span>':'')
+      +'</div></div>';
+    row.querySelector(".lv-card").onclick=function(){ openLevel(i); };
+    wrap.appendChild(row);
+  });
+}
+
+/* ================= sheet ================= */
+var mask=document.getElementById("mask"), sheet=document.getElementById("sheet");
+mask.onclick=function(e){ if(e.target===mask) closeSheet(); };
+function closeSheet(){ mask.classList.remove("on"); }
+function openSheet(html){ sheet.innerHTML='<div class="sheet-grab"></div>'+html; mask.classList.add("on"); sheet.scrollTop=0; }
+
+/* ================= level detail ================= */
+function openLevel(i){
+  var l=GAME_DATA.levels[i], st=S.levels[l.id];
+  if(!levelUnlocked(i)){ toast("先通关上一关才能解锁 🔒"); return; }
+  var html='<div class="wk">'+l.weeks+(isDone(l)?' · ★ 已通关':'')+'</div><h2>'+l.icon+" "+l.title+'</h2>'
+    +'<div class="goalbox"><b>🎯 通关目标</b>'+l.goal+'</div>'
+    +'<div class="phase-tt"><span class="pn">STEP 1</span>📖 精读课卡（每节 +8 XP，读完自动收入复习卡组）</div>';
+  l.lessons.forEach(function(le,j){
+    html+='<div class="row-item'+(st.les[j]?" doneR":"")+'" data-les="'+j+'">'
+      +'<span class="ric">'+(st.les[j]?"✅":"📖")+'</span><span>'+le.t+'</span>'
+      +'<span class="rst" style="color:'+(st.les[j]?"var(--green)":"var(--txt3)")+'">'+(st.les[j]?"已读":"未读")+'</span></div>';
+  });
+  if(l.id==="l1"){
+    html+='<div class="phase-tt"><span class="pn">STEP 1B</span>📝 能力卡（自己的解释 + 边界 + 行动证据）</div>';
+    l.lessons.forEach(function(le,j){
+      var nd=noteComplete(S.lessonNotes[noteKey(l,j)]);
+      html+='<div class="row-item'+(nd?" doneR":"")+'" data-note="'+j+'">'
+        +'<span class="ric">'+(nd?"✅":"📝")+'</span><span>'+le.t+'</span>'
+        +'<span class="rst" style="color:'+(nd?"var(--green)":"var(--txt3)")+'">'+(nd?"已扎实记录":"待补能力卡")+'</span></div>';
+    });
+  }
+  html+='<div class="phase-tt"><span class="pn">STEP 2</span>🎮 互动练习（系统判分，通过 +25 XP）</div>';
+  if(!allLes(l)||!allNotes(l)) html+='<div class="lock-note">🔒 读完课卡并完成能力卡后解锁练习</div>';
+  l.exercises.forEach(function(ex,j){
+    var locked=!allLes(l)||!allNotes(l);
+    html+='<div class="row-item'+(st.ex[j].p?" doneR":"")+(locked?" lockedR":"")+'" data-ex="'+j+'">'
+      +'<span class="ric">'+(st.ex[j].p?"✅":locked?"🔒":ex.icon)+'</span><span>'+ex.t+'</span>'
+      +'<span class="rst" style="color:'+(st.ex[j].p?"var(--green)":"var(--txt3)")+'">'
+      +(st.ex[j].p?"已通过":locked?"":"待挑战")+'</span></div>';
+  });
+  html+='<div class="phase-tt"><span class="pn">STEP 3</span>⚔️ 通关测验（题库 '+l.quiz.length+' 题，每次随机 '
+    +(l.quizTake||l.quiz.length)+' 题，全对通关）</div>';
+  if(!allEx(l)) html+='<div class="lock-note">🔒 通过全部练习后解锁测验</div>';
+  html+='<button class="btn primary" id="startQuiz" '+(allEx(l)?"":"disabled")+'>'
+    +(st.quiz?"🔁 重新挑战测验（保持手感）":"⚔️ 开始通关测验")+'</button>';
+  openSheet(html);
+  sheet.querySelectorAll("[data-les]").forEach(function(el){
+    el.onclick=function(){ openLesson(i,+el.dataset.les); };
+  });
+  sheet.querySelectorAll("[data-note]").forEach(function(el){
+    el.onclick=function(){ openLesson(i,+el.dataset.note); };
+  });
+  sheet.querySelectorAll("[data-ex]").forEach(function(el){
+    el.onclick=function(){
+      if(!allLes(l)){ toast("先读完全部课卡 📖"); return; }
+      if(!allNotes(l)){ toast("先完成四张能力卡 📝"); return; }
+      startExercise(i,+el.dataset.ex);
+    };
+  });
+  var qb=document.getElementById("startQuiz");
+  qb.onclick=function(){ if(allEx(l)) startQuiz(i); };
+}
+
+/* ================= lesson ================= */
+function escNote(s){
+  return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function capabilityCardHtml(li,j){
+  var l=GAME_DATA.levels[li];
+  if(l.id!=="l1") return "";
+  var n=S.lessonNotes[noteKey(l,j)]||{};
+  var ok=noteComplete(n);
+  function field(id,label,hint,value){
+    return '<label class="note-field">'+label+'<textarea id="'+id+'" placeholder="'+hint+'">'+escNote(value)+'</textarea></label>';
+  }
+  return '<section class="note-panel"><h3>📝 本节能力卡</h3>'
+    +'<div class="note-sub">不是摘抄课文。用自己的判断留下可复习证据；标“必填”的三项均达到 12 字后，才算扎实记录。</div>'
+    +'<div class="note-grid">'
+    +field("noteExplain","自己的解释 · 必填","不用课程原句，像向外行解释一样写。",n.explain)
+    +field("noteScene","适用场景","写一个与你的产品或工作有关的场景。",n.scene)
+    +field("noteBoundary","边界 / 反例 · 必填","什么时候不能这样做？最容易误判在哪里？",n.boundary)
+    +field("noteMistake","本次错误","记录你原来怎么想，以及错在哪里。",n.mistake)
+    +field("noteCorrection","修正后的原则","把纠错结论压缩成一句可复用原则。",n.correction)
+    +field("noteEvidence","行动证据 · 必填","写出完成的题、规格、测试用例或真实应用。",n.evidence)
+    +'</div><button class="btn primary" id="noteSave">保存能力卡（完成 +12 XP）</button>'
+    +'<div class="note-state '+(ok?"ok":"")+'" id="noteState">'+(ok?"✅ 已形成扎实笔记，并进入复习卡组":"草稿会本地保存；还需补齐三项必填内容")+'</div></section>';
+}
+function openLesson(li,j){
+  var l=GAME_DATA.levels[li], le=l.lessons[j], st=S.levels[l.id];
+  var html='<div class="wk">'+l.icon+" "+l.title+' · 课卡 '+(j+1)+"/"+l.lessons.length+'</div>'
+    +'<h2>'+le.t+'</h2><div class="lesson-body">'+le.body+'</div>'
+    +capabilityCardHtml(li,j)
+    +(st.les[j]
+      ?'<button class="btn ghost" id="lesOk">已读过 · 返回关卡</button>'
+      :'<button class="btn primary" id="lesOk">✅ 读完了，收入复习卡组（+8 XP）</button>');
+  if(j<l.lessons.length-1) html+='<button class="btn ghost" id="lesNext">下一节 →</button>';
+  openSheet(html);
+  var noteSave=document.getElementById("noteSave");
+  if(noteSave) noteSave.onclick=function(){
+    var key=noteKey(l,j), old=S.lessonNotes[key]||{};
+    var n={
+      explain:document.getElementById("noteExplain").value.trim(),
+      scene:document.getElementById("noteScene").value.trim(),
+      boundary:document.getElementById("noteBoundary").value.trim(),
+      mistake:document.getElementById("noteMistake").value.trim(),
+      correction:document.getElementById("noteCorrection").value.trim(),
+      evidence:document.getElementById("noteEvidence").value.trim(),
+      updatedAt:new Date().toISOString(),
+      awarded:!!old.awarded
+    };
+    var completed=noteComplete(n);
+    if(completed&&!n.awarded){ n.awarded=true; S.lessonNotes[key]=n; addXP(12,"完成能力卡"); }
+    else S.lessonNotes[key]=n;
+    if(completed){
+      var reviewKey="note_"+key;
+      var back="我的解释："+n.explain+"；边界："+n.boundary+"；修正原则："+(n.correction||"待补")+"；行动证据："+n.evidence;
+      var existing=S.extraCards.find(function(c){return c.key===reviewKey;});
+      if(existing) existing.b=back;
+      else S.extraCards.push({key:reviewKey,f:"不用笔记，解释「"+le.t+"」并说出一个边界。",b:back});
+      if(!S.cards[reviewKey]) S.cards[reviewKey]={box:0,due:addDays(1)};
+    }
+    save(); renderMap(); renderMe();
+    var state=document.getElementById("noteState");
+    state.className="note-state "+(completed?"ok":"");
+    state.textContent=completed?"✅ 已形成扎实笔记，并进入复习卡组":"已保存草稿；自己的解释、边界和行动证据均需至少 12 字";
+    toast(completed?"能力卡已保存，明天开始复习":"草稿已保存");
+  };
+  document.getElementById("lesOk").onclick=function(){
+    if(!st.les[j]){
+      st.les[j]=true;
+      var ck=l.id+"c"+j;
+      if(!S.cards[ck]) S.cards[ck]={box:0,due:todayStr()};
+      save(); addXP(8,"读完课卡");
+    }
+    openLevel(li); renderMap(); renderDaily(); renderMe();
+  };
+  var nx=document.getElementById("lesNext");
+  if(nx) nx.onclick=function(){
+    if(!st.les[j]){
+      st.les[j]=true;
+      var ck=l.id+"c"+j;
+      if(!S.cards[ck]) S.cards[ck]={box:0,due:todayStr()};
+      save(); addXP(8,"读完课卡"); renderMap();
+    }
+    openLesson(li,j+1);
+  };
+}
+
+/* ================= exercise engine ================= */
+var EX={li:0,ei:0,idx:0,mistakes:0,queue:[],selL:-1,okPairs:0};
+function startExercise(li,ei){
+  var ex=GAME_DATA.levels[li].exercises[ei];
+  EX={li:li,ei:ei,idx:0,mistakes:0,queue:[],selL:-1,okPairs:0};
+  if(ex.type==="classify"){ EX.queue=ex.items.map(function(_,i){return i;}); renderClassify(); }
+  else if(ex.type==="order") renderOrder();
+  else if(ex.type==="match") renderMatch();
+  else if(ex.type==="json") renderJson();
+  else if(ex.type==="essay") renderEssay();
+}
+function exHead(ex){
+  var l=GAME_DATA.levels[EX.li];
+  return '<div class="wk">'+l.icon+" "+l.title+' · 互动练习</div><h2>'+ex.icon+" "+ex.t+'</h2>'
+    +'<div class="goalbox">'+ex.intro+'</div>';
+}
+function passLimit(n){ return Math.max(1,Math.ceil(n/3)); }
+function finishExercise(passed,extraHtml){
+  var l=GAME_DATA.levels[EX.li], ex=l.exercises[EX.ei], st=S.levels[l.id].ex[EX.ei];
+  var html;
+  if(passed){
+    var first=!st.p;
+    st.p=true; st.m=EX.mistakes; save();
+    if(first) addXP(25,"练习通过");
+    html='<div class="result-emoji">🎯</div><div class="result-tt">练习通过！</div>'
+      +'<div class="result-sub">失误 '+EX.mistakes+' 次'+(first?" · +25 XP":"（复练不重复计分）")
+      +(extraHtml||"")+'</div>'
+      +'<button class="btn primary" id="exBack">返回关卡 →</button>';
+    confetti();
+  } else {
+    html='<div class="result-emoji">💪</div><div class="result-tt">失误 '+EX.mistakes+' 次，未达标</div>'
+      +'<div class="result-sub">通过标准：失误不超过 '+passLimit(exSize(ex))+' 次。<br>错题解析都看过了，回去翻翻课卡再来。</div>'
+      +'<button class="btn primary" id="exAgain">🔁 再来一次</button>'
+      +'<button class="btn ghost" id="exBack">返回关卡复习</button>';
+  }
+  openSheet(html);
+  document.getElementById("exBack").onclick=function(){ openLevel(EX.li); renderMap(); renderMe(); };
+  var ag=document.getElementById("exAgain");
+  if(ag) ag.onclick=function(){ startExercise(EX.li,EX.ei); };
+}
+function exSize(ex){
+  if(ex.type==="classify") return ex.items.length;
+  if(ex.type==="order") return ex.steps.length;
+  if(ex.type==="match") return ex.pairs.length;
+  return 1;
+}
+/* ---- classify ---- */
+function renderClassify(){
+  var ex=GAME_DATA.levels[EX.li].exercises[EX.ei];
+  if(EX.idx>=EX.queue.length){ finishExercise(EX.mistakes<=passLimit(ex.items.length)); return; }
+  var it=ex.items[EX.queue[EX.idx]];
+  var html=exHead(ex)
+    +'<div class="mistake-tag">进度 '+(EX.idx+1)+"/"+EX.queue.length+' · 失误 <b>'+EX.mistakes+'</b></div>'
+    +'<div class="item-card">'+it.x+'</div><div class="cat-row">';
+  ex.cats.forEach(function(c,i){ html+='<button class="cat-btn" data-c="'+i+'">'+c+'</button>'; });
+  html+='</div><div id="exFb"></div>';
+  openSheet(html);
+  sheet.querySelectorAll(".cat-btn").forEach(function(b){
+    b.onclick=function(){
+      var pick=+b.dataset.c, right=pick===it.c;
+      sheet.querySelectorAll(".cat-btn").forEach(function(x){
+        x.disabled=true;
+        if(+x.dataset.c===it.c) x.classList.add("right");
+        else if(+x.dataset.c===pick){ x.classList.add("wrong"); x.classList.add("shake"); }
+      });
+      if(!right) EX.mistakes++;
+      document.getElementById("exFb").innerHTML=
+        '<div class="explain"><b>'+(right?"✅ 正确":"❌ 应选「"+ex.cats[it.c]+"」")+'</b> · '+it.e+'</div>'
+        +'<button class="btn primary" id="exNext">'+(EX.idx+1<EX.queue.length?"下一个 →":"查看结果")+'</button>';
+      document.getElementById("exNext").onclick=function(){ EX.idx++; renderClassify(); };
+    };
+  });
+}
+/* ---- order ---- */
+function renderOrder(){
+  var ex=GAME_DATA.levels[EX.li].exercises[EX.ei];
+  var shuffled=ex.steps.map(function(s,i){return i;}).sort(function(){return Math.random()-.5;});
+  var html=exHead(ex)
+    +'<div class="mistake-tag">失误 <b id="omk">'+EX.mistakes+'</b></div>'
+    +'<div id="ordDone"></div><div class="pool" id="ordPool">';
+  shuffled.forEach(function(si){ html+='<button class="opt" data-s="'+si+'">'+ex.steps[si]+'</button>'; });
+  html+='</div>';
+  openSheet(html);
+  var next=0;
+  sheet.querySelectorAll("#ordPool .opt").forEach(function(b){
+    b.onclick=function(){
+      var si=+b.dataset.s;
+      if(si===next){
+        b.classList.add("usedS");
+        document.getElementById("ordDone").innerHTML+=
+          '<div class="order-done">'+(next+1)+". "+ex.steps[si]+'</div>';
+        next++;
+        if(next===ex.steps.length){
+          var pass=EX.mistakes<=passLimit(ex.steps.length);
+          setTimeout(function(){
+            finishExercise(pass, pass&&ex.e?'<br><br>💡 '+ex.e:'');
+          },400);
+        }
+      } else {
+        EX.mistakes++;
+        document.getElementById("omk").textContent=EX.mistakes;
+        b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake");
+      }
+    };
+  });
+}
+/* ---- match ---- */
+function renderMatch(){
+  var ex=GAME_DATA.levels[EX.li].exercises[EX.ei];
+  var rOrder=ex.pairs.map(function(_,i){return i;}).sort(function(){return Math.random()-.5;});
+  var html=exHead(ex)
+    +'<div class="mistake-tag">配对 <b id="mok">0</b>/'+ex.pairs.length+' · 失误 <b id="mmk">'+EX.mistakes+'</b></div>'
+    +'<div class="match-grid">';
+  ex.pairs.forEach(function(p,i){ html+='<div class="m-cell mL" data-i="'+i+'"><b>'+p[0]+'</b></div>'; });
+  html+='</div><div style="height:10px"></div><div class="match-grid">';
+  rOrder.forEach(function(ri){ html+='<div class="m-cell mR" data-i="'+ri+'">'+ex.pairs[ri][1]+'</div>'; });
+  html+='</div>';
+  openSheet(html);
+  EX.selL=-1; EX.okPairs=0;
+  var selEl=null;
+  sheet.querySelectorAll(".mL").forEach(function(c){
+    c.onclick=function(){
+      sheet.querySelectorAll(".mL").forEach(function(x){x.classList.remove("sel");});
+      c.classList.add("sel"); EX.selL=+c.dataset.i; selEl=c;
+    };
+  });
+  sheet.querySelectorAll(".mR").forEach(function(c){
+    c.onclick=function(){
+      if(EX.selL<0){ toast("先点左边的术语"); return; }
+      if(+c.dataset.i===EX.selL){
+        c.classList.add("okM"); selEl.classList.remove("sel"); selEl.classList.add("okM");
+        EX.okPairs++; EX.selL=-1;
+        document.getElementById("mok").textContent=EX.okPairs;
+        if(EX.okPairs===ex.pairs.length){
+          setTimeout(function(){ finishExercise(EX.mistakes<=passLimit(ex.pairs.length)); },400);
+        }
+      } else {
+        EX.mistakes++;
+        document.getElementById("mmk").textContent=EX.mistakes;
+        c.classList.remove("shake"); void c.offsetWidth; c.classList.add("shake");
+      }
+    };
+  });
+}
+/* ---- json ---- */
+function renderJson(){
+  var ex=GAME_DATA.levels[EX.li].exercises[EX.ei];
+  var st=S.levels[GAME_DATA.levels[EX.li].id].ex[EX.ei];
+  var html=exHead(ex)
+    +'<textarea class="code" id="jsonTa" style="height:180px" spellcheck="false"></textarea>'
+    +'<div id="jsonFb"></div>'
+    +'<button class="btn primary" id="jsonRun">▶ 运行检查</button>'
+    +'<button class="btn ghost" id="jsonHint">💡 看提示</button>';
+  openSheet(html);
+  document.getElementById("jsonTa").value=ex.start;
+  document.getElementById("jsonHint").onclick=function(){
+    document.getElementById("jsonFb").innerHTML='<div class="explain">'+ex.hint+'</div>';
+  };
+  document.getElementById("jsonRun").onclick=function(){
+    var v=document.getElementById("jsonTa").value, fb=document.getElementById("jsonFb"), obj;
+    try{ obj=JSON.parse(v); }
+    catch(err){
+      EX.mistakes++;
+      fb.innerHTML='<div class="rub noR"><span class="ri">❌</span><span><b>语法错误</b>：'+String(err.message).replace(/</g,"&lt;")
+        +'<br>逐字检查引号和逗号，改完再运行。</span></div>';
+      return;
+    }
+    var missing=ex.fields.filter(function(f){ return obj[f]===undefined; });
+    if(missing.length){
+      EX.mistakes++;
+      fb.innerHTML='<div class="rub noR"><span class="ri">⚠️</span><span>语法合法，但缺少字段：<b>'+missing.join("、")+'</b></span></div>';
+      return;
+    }
+    fb.innerHTML='<div class="rub okR"><span class="ri">✅</span><span>语法合法，'+ex.fields.length+' 个必需字段齐全！</span></div>';
+    setTimeout(function(){ finishExercise(true); },600);
+  };
+}
+/* ---- essay ---- */
+function renderEssay(){
+  var ex=GAME_DATA.levels[EX.li].exercises[EX.ei];
+  var html=exHead(ex)
+    +'<textarea id="essayTa" style="height:200px" placeholder="在这里写你的答案…（至少 '+ex.min+' 字）"></textarea>'
+    +'<div id="essayFb"></div>'
+    +'<button class="btn primary" id="essayRun">📋 提交审核（按评分标准逐项检查）</button>'
+    +'<button class="btn ghost" id="essayCopy">🤖 复制作业 + 评分标准，发到 Codex 深度点评</button>';
+  openSheet(html);
+  document.getElementById("essayRun").onclick=function(){
+    var v=document.getElementById("essayTa").value.trim();
+    var fb=document.getElementById("essayFb");
+    var out="", okN=0;
+    var lenOk=v.length>=ex.min;
+    out+='<div class="rub '+(lenOk?"okR":"noR")+'"><span class="ri">'+(lenOk?"✅":"❌")+'</span><span>字数 '+v.length+" / 要求 "+ex.min+'</span></div>';
+    ex.rub.forEach(function(r){
+      var hit=r.words.some(function(w){ return v.toLowerCase().indexOf(w.toLowerCase())>=0; });
+      if(hit) okN++;
+      out+='<div class="rub '+(hit?"okR":"noR")+'"><span class="ri">'+(hit?"✅":"❌")+'</span><span>'+r.k+(hit?"":"（似乎没覆盖到——补上这部分）")+'</span></div>';
+    });
+    var pass=lenOk && okN>=ex.rub.length-1;
+    out+='<div class="explain"><b>'+(pass?"🎯 通过审核！":"还差一点")+'</b> 覆盖 '+okN+"/"+ex.rub.length+' 项评分标准。'
+      +(pass?"关键词检查只是底线——强烈建议再点下方按钮，让 Codex 给你更严格的深度点评。":"按缺失项补写后重新提交。")+'</div>';
+    fb.innerHTML=out;
+    if(pass){
+      var st=S.levels[GAME_DATA.levels[EX.li].id].ex[EX.ei];
+      if(!st.p){ st.p=true; st.m=0; save(); addXP(25,"写作练习通过"); renderMap(); renderMe(); }
+      fb.innerHTML+='<button class="btn ghost" id="essayBack">返回关卡 →</button>';
+      document.getElementById("essayBack").onclick=function(){ openLevel(EX.li); };
+    }
+  };
+  document.getElementById("essayCopy").onclick=function(){
+    var v=document.getElementById("essayTa").value.trim();
+    if(!v){ toast("先写点内容再复制"); return; }
+  var p="请作为严格但鼓励的 Codex AI 教练，点评我的学习作业。\n\n【作业题目】"+ex.claudeTitle
+      +"\n\n【评分标准】\n"+ex.rub.map(function(r,i){return (i+1)+". "+r.k;}).join("\n")
+      +"\n\n【我的答案】\n"+v
+      +"\n\n请给出：① 每条标准的得分与理由 ② 最需要改进的 2 点 ③ 一个更好的示范段落 ④ 是否达到 AI 从业者的入门水准。";
+    copyText(p);
+  };
+}
+function copyText(t){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(function(){toast("已复制，粘贴到当前 Codex 对话吧 🤖");})
+    .catch(function(){fallbackCopy(t);});
+  } else fallbackCopy(t);
+}
+function fallbackCopy(t){
+  var ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta);
+  ta.select(); try{document.execCommand("copy"); toast("已复制，粘贴到当前 Codex 对话吧 🤖");}catch(e){toast("复制失败，请手动复制");}
+  document.body.removeChild(ta);
+}
+
+/* ================= quiz ================= */
+var Q={li:0,idx:0,correct:0,order:[]};
+function startQuiz(li){
+  var l=GAME_DATA.levels[li];
+  var order=l.quiz.map(function(_,i){return i;}).sort(function(){return Math.random()-.5;});
+  if(l.quizTake) order=order.slice(0,l.quizTake);
+  Q={li:li,idx:0,correct:0,order:order};
+  renderQuestion();
+}
+function renderQuestion(){
+  var l=GAME_DATA.levels[Q.li], qi=Q.order[Q.idx], qd=l.quiz[qi];
+  var prog='<div class="q-prog">';
+  for(var i=0;i<Q.order.length;i++) prog+='<i class="'+(i<Q.idx?"ok":i===Q.idx?"cur":"")+'"></i>';
+  prog+='</div>';
+  var html='<div class="wk">'+l.icon+" "+l.title+' · 第 '+(Q.idx+1)+"/"+Q.order.length+' 题</div>'+prog
+    +'<div class="q-text">'+qd.q+'</div><div id="optWrap">';
+  qd.o.forEach(function(o,i){ html+='<button class="opt" data-i="'+i+'">'+"ABCD"[i]+". "+o+'</button>'; });
+  html+='</div><div id="qNext"></div>';
+  openSheet(html);
+  sheet.querySelectorAll(".opt").forEach(function(b){
+    b.onclick=function(){
+      var pick=+b.dataset.i, right=pick===qd.a;
+      sheet.querySelectorAll(".opt").forEach(function(x){
+        x.disabled=true;
+        if(+x.dataset.i===qd.a) x.classList.add("right");
+        else if(+x.dataset.i===pick) x.classList.add("wrong");
+      });
+      if(right) Q.correct++;
+      else {
+        var key="wq_"+l.id+"_"+qi;
+        if(!S.extraCards.some(function(c){return c.key===key;})){
+          S.extraCards.push({key:key,f:qd.q,b:"正确答案："+qd.o[qd.a]+"。"+qd.e});
+          S.cards[key]={box:0,due:todayStr()}; save();
+        }
+      }
+      var nx=document.getElementById("qNext");
+      nx.innerHTML='<div class="explain"><b>'+(right?"✅ 答对了":"❌ 答错了（已加入复习卡组）")+'</b> · '+qd.e+'</div>'
+        +'<button class="btn primary" id="nextQ">'+(Q.idx+1<Q.order.length?"下一题 →":"查看结果")+'</button>';
+      document.getElementById("nextQ").onclick=function(){
+        Q.idx++;
+        if(Q.idx<Q.order.length) renderQuestion(); else quizResult();
+      };
+      nx.scrollIntoView({behavior:"smooth",block:"end"});
+    };
+  });
+}
+function quizResult(){
+  var l=GAME_DATA.levels[Q.li], st=S.levels[l.id];
+  var total=Q.order.length, pass=Q.correct===total, html;
+  if(pass){
+    var first=!st.quiz;
+    st.quiz=true; save();
+    if(first) addXP(30*total,"通关 "+l.title);
+    html='<div class="result-emoji">🏆</div><div class="result-tt">通关成功！</div>'
+      +'<div class="result-sub">'+total+' 题全对'+(first?"，获得 "+(30*total)+" XP！":"（复习挑战，不重复计分）")
+      +(Q.li<GAME_DATA.levels.length-1 && isDone(l)?'<br>🔓 已解锁下一关：'+GAME_DATA.levels[Q.li+1].title
+        :Q.li===GAME_DATA.levels.length-1 && isDone(l)?'<br>🎓 你打败了最终 BOSS，完成 12 周共同基础！':"")
+      +'</div><button class="btn primary" id="rOk">继续冒险 →</button>';
+    confetti();
+  } else {
+    html='<div class="result-emoji">💪</div><div class="result-tt">'+Q.correct+" / "+total+'</div>'
+      +'<div class="result-sub">通关需要全对。错题已自动加入复习卡组，<br>去「复习打卡」页刷两轮再来。</div>'
+      +'<button class="btn primary" id="rAgain">🔁 再来一次</button>'
+      +'<button class="btn ghost" id="rOk">先去复习</button>';
+  }
+  openSheet(html);
+  document.getElementById("rOk").onclick=function(){ closeSheet(); renderMap(); renderMe(); renderDaily(); };
+  var ag=document.getElementById("rAgain");
+  if(ag) ag.onclick=function(){ startQuiz(Q.li); };
+}
+function confetti(){
+  var em=["🎉","⭐","✨","🎊","🏆","💜"];
+  for(var i=0;i<28;i++){
+    var s=document.createElement("div");
+    s.className="confetti"; s.textContent=em[i%em.length];
+    s.style.left=Math.random()*100+"vw";
+    s.style.animationDuration=(1.6+Math.random()*1.6)+"s";
+    s.style.animationDelay=(Math.random()*.5)+"s";
+    document.body.appendChild(s);
+    (function(el){ setTimeout(function(){el.remove();},3600); })(s);
+  }
+}
+
+/* ================= review (spaced repetition) ================= */
+var INTERVALS=[1,2,4,7,15];
+function cardContent(key){
+  if(key.indexOf("wq_")===0){
+    var ec=S.extraCards.filter(function(c){return c.key===key;})[0];
+    return ec?{f:ec.f,b:ec.b}:null;
+  }
+  var m=key.match(/^(l\d+)c(\d+)$/);
+  if(!m) return null;
+  var lv=GAME_DATA.levels.filter(function(l){return l.id===m[1];})[0];
+  if(!lv||!lv.lessons[+m[2]]) return null;
+  return {f:lv.lessons[+m[2]].card[0],b:lv.lessons[+m[2]].card[1]};
+}
+function dueCards(){
+  var t=todayStr(), out=[];
+  for(var k in S.cards){ if(S.cards[k].due<=t && cardContent(k)) out.push(k); }
+  return out;
+}
+var RV={queue:[],idx:0,doneN:0};
+function startReview(){
+  RV={queue:dueCards().sort(function(){return Math.random()-.5;}),idx:0,doneN:0};
+  if(!RV.queue.length){ toast("今天没有到期的复习卡 🎉"); return; }
+  renderCard(false);
+}
+function renderCard(showBack){
+  if(RV.idx>=RV.queue.length){
+    openSheet('<div class="result-emoji">🧠</div><div class="result-tt">今日复习完成！</div>'
+      +'<div class="result-sub">复习了 '+RV.doneN+' 张卡。记忆按「忘了明天见、记得越推越远」自动排期。</div>'
+      +'<button class="btn primary" id="rvOk">返回 →</button>');
+    document.getElementById("rvOk").onclick=function(){ closeSheet(); renderDaily(); renderMe(); };
+    return;
+  }
+  var key=RV.queue[RV.idx], c=cardContent(key), cd=S.cards[key];
+  var html='<div class="wk">📚 复习 · 第 '+(RV.idx+1)+"/"+RV.queue.length+' 张</div>'
+    +'<div class="fc-meta">熟练度 '+"▁▂▃▅▇"[Math.min(cd.box,4)]+' · 盒子 '+(cd.box+1)+"/5"+'</div>'
+    +'<div class="fc'+(showBack?" back-side":"")+'">'+(showBack?c.b:c.f)+'</div>';
+  if(!showBack){
+    html+='<button class="btn primary" id="fcFlip">翻开答案</button>';
+  } else {
+    html+='<div class="fc-btns"><button class="btn forget" id="fcNo">😵 忘了<br><span style="font-size:10px;font-weight:400">明天再见</span></button>'
+      +'<button class="btn remember" id="fcYes">😎 记得<br><span style="font-size:10px;font-weight:400">'+INTERVALS[Math.min(cd.box+1,4)]+' 天后见</span></button></div>';
+  }
+  openSheet(html);
+  if(!showBack){
+    document.getElementById("fcFlip").onclick=function(){ renderCard(true); };
+  } else {
+    document.getElementById("fcNo").onclick=function(){
+      cd.box=0; cd.due=addDays(1); save(); RV.doneN++; RV.idx++; addXP(2,"复习"); renderCard(false);
+    };
+    document.getElementById("fcYes").onclick=function(){
+      cd.box=Math.min(cd.box+1,4); cd.due=addDays(INTERVALS[cd.box]); save();
+      RV.doneN++; RV.idx++; addXP(3,"复习"); renderCard(false);
+    };
+  }
+}
+
+/* ================= tree ================= */
+function renderTree(){
+  var wrap=document.getElementById("treeWrap"); wrap.innerHTML="";
+  GAME_DATA.tree.forEach(function(t){
+    var states=t.skills.map(function(_,i){return S.skills[t.id+i]||0;});
+    var pct=Math.round(states.reduce(function(a,b){return a+b;},0)/(t.skills.length*2)*100);
+    var div=document.createElement("div"); div.className="layer";
+    var chips="";
+    t.skills.forEach(function(sk,i){
+      var s=states[i];
+      chips+='<div class="chip s'+s+'" data-k="'+t.id+i+'">'+(s===2?"● ":s===1?"◐ ":"○ ")+sk[0]+'</div>';
+    });
+    div.innerHTML='<div class="layer-hd"><div><h3 style="color:'+t.color+'">'+t.name+'</h3>'
+      +'<div class="sub">'+t.sub+'</div></div><div class="layer-pct" style="color:'+t.color+'">'+pct+'%</div></div>'
+      +'<div class="layer-bar"><i style="width:'+pct+'%;background:'+t.color+'"></i></div>'
+      +'<div class="chips">'+chips+'</div>';
+    wrap.appendChild(div);
+  });
+  wrap.querySelectorAll(".chip").forEach(function(c){
+    c.onclick=function(){
+      var k=c.dataset.k, old=S.skills[k]||0;
+      S.skills[k]=(old+1)%3;
+      if(S.skills[k]===2) addXP(15,"掌握新技能");
+      save(); renderTree(); renderMe();
+    };
+  });
+}
+
+/* ================= daily ================= */
+function renderDaily(){
+  rolloverDaily(); rolloverWeekly();
+  var d=new Date(), wd="日一二三四五六"[d.getDay()];
+  document.getElementById("todayStr").textContent=(d.getMonth()+1)+" 月 "+d.getDate()+" 日 · 周"+wd;
+  document.getElementById("streakN").textContent=S.streak;
+  var due=dueCards().length;
+  var bdg=document.getElementById("navBdg");
+  if(due>0){ bdg.style.display="block"; bdg.textContent=due; } else bdg.style.display="none";
+  document.getElementById("reviewCta").innerHTML=
+    '<div class="review-cta" id="rvBtn"><div class="n">'+due+'</div>'
+    +'<div><div class="t">📚 今日待复习卡片</div>'
+    +'<div class="s">'+(due>0?"课卡 + 测验错题，间隔重复自动排期":"全部复习完毕，明天再来")+'</div></div>'
+    +'<div style="margin-left:auto;font-size:20px">'+(due>0?"▶":"✅")+'</div></div>';
+  document.getElementById("rvBtn").onclick=startReview;
+  var allDone=S.daily.steps.every(function(x){return x;});
+  document.getElementById("dailyDone").innerHTML=allDone
+    ? '<div class="done-banner">🔥 今日 90 分钟完成！连续 '+S.streak+' 天</div>':"";
+  var sw=document.getElementById("stepsWrap"); sw.innerHTML="";
+  GAME_DATA.daily.forEach(function(s,i){
+    var div=document.createElement("div");
+    div.className="step"+(S.daily.steps[i]?" ck":"");
+    div.innerHTML='<div class="box">'+(S.daily.steps[i]?"✓":"")+'</div>'
+      +'<div><div class="tt">'+s[0]+'</div><div class="ds">'+s[1]+'</div></div>'
+      +'<div class="min">'+s[2]+"′</div>";
+    div.onclick=function(){
+      S.daily.steps[i]=!S.daily.steps[i];
+      if(S.daily.steps[i]) addXP(5,"每日打卡"); else subXP(5);
+      if(S.daily.steps.every(function(x){return x;}) && S.lastFull!==S.daily.date){
+        S.streak+=1; S.lastFull=S.daily.date;
+        addXP(20,"今日全勤！连续 "+S.streak+" 天");
+      }
+      save(); renderDaily();
+    };
+    sw.appendChild(div);
+  });
+  var ww=document.getElementById("weeklyWrap"); ww.innerHTML="";
+  GAME_DATA.weekly.forEach(function(w,i){
+    var div=document.createElement("div");
+    div.className="step"+(S.weekly.items[i]?" ck":"");
+    div.innerHTML='<div class="box">'+(S.weekly.items[i]?"✓":"")+'</div><div><div class="tt">'+w+'</div></div>';
+    div.onclick=function(){
+      S.weekly.items[i]=!S.weekly.items[i];
+      if(S.weekly.items[i]) addXP(10,"本周证据 +1"); else subXP(10);
+      save(); renderDaily();
+    };
+    ww.appendChild(div);
+  });
+}
+
+/* ================= me ================= */
+function renderMe(){
+  var lv=GAME_DATA.levels;
+  document.getElementById("stLv").textContent=lv.filter(isDone).length+"/"+lv.length;
+  var got=0,tot=0;
+  GAME_DATA.tree.forEach(function(t){t.skills.forEach(function(_,i){tot+=2;got+=(S.skills[t.id+i]||0);});});
+  document.getElementById("stSk").textContent=Math.round(got/tot*100)+"%";
+  document.getElementById("stCard").textContent=Object.keys(S.cards).length;
+  var ml=document.getElementById("meLevels"); ml.innerHTML="";
+  lv.forEach(function(l,i){
+    var un=levelUnlocked(i), fin=isDone(l);
+    var row=document.createElement("div"); row.className="prow";
+    row.innerHTML='<span>'+l.icon+'</span><span>'+l.title+'</span>'
+      +'<span class="st" style="color:'+(fin?"var(--green)":un?"var(--accent2)":"var(--txt3)")+'">'
+      +(fin?"★ 通关":un?("📖"+lesDone(l)+"/"+l.lessons.length+" 🎮"+exDone(l)+"/"+l.exercises.length+" ⚔️"+(S.levels[l.id].quiz?"✓":"–")):"🔒")+'</span>';
+    ml.appendChild(row);
+  });
+}
+document.getElementById("btnExport").onclick=function(){
+  var j=JSON.stringify(S);
+  document.getElementById("ioArea").value=j;
+  copyText(j);
+};
+document.getElementById("btnImport").onclick=function(){
+  try{
+    var v=document.getElementById("ioArea").value.trim();
+    if(!v){ toast("先把进度 JSON 粘贴到上方文本框"); return; }
+    S=JSON.parse(v); save(); load(); renderAll(); toast("导入成功 ✅");
+  }catch(e){ toast("JSON 格式不对，导入失败"); }
+};
+document.getElementById("btnReset").onclick=function(){
+  if(confirm("确定重置全部进度？此操作不可恢复（建议先导出备份）")){
+    S=freshState(); S.intro=true; save(); renderAll(); toast("已重置");
+  }
+};
+document.getElementById("btnHelp").onclick=showIntro;
+
+function showIntro(){
+  openSheet('<h2>🎮 玩法说明 v2</h2><div class="goalbox" style="margin-top:12px">'
+   +'<b>🗺️ 每关三段式</b>📖 学：读精读课卡（含类比和你的宠物场景案例），读完自动生成复习卡。🎮 练：页内互动练习——分类、排序、配对、写 JSON、写作——<span style="color:var(--accent2)">系统当场判分，失误超限必须重做</span>，不再自己打勾。⚔️ 战：测验全对才通关，错题自动进复习卡组。'
+   +'</div><div class="goalbox">'
+   +'<b>📚 复习路径</b>间隔重复：记得的卡 1→2→4→7→15 天后再见，忘了的明天再见。每天进「复习打卡」清掉到期卡片，红点提醒。'
+   +'</div><div class="goalbox">'
+   +'<b>✍️ 直接在 Codex 中问我</b>写作类练习先由系统按评分标准逐项检查；需要深度反馈时，点右下角「复制学习快照给 Codex」，切回当前 Codex 对话并粘贴，再附上你的问题或作业。我会持续解释、纠错和审核。'
+   +'</div><div class="goalbox">'
+   +'<b>⚡ XP</b>课卡 +8 · 练习通过 +25 · 测验每题 +30 · 复习 +2~3 · 技能掌握 +15 · 打卡 +5 · 全勤 +20 · 周证据 +10。'
+   +'</div><div class="goalbox">'
+   +'<b>🔁 可复制</b>进度可导出导入；所有关卡、课卡、题目都在文件顶部 GAME_DATA，改它即可复用这套玩法学任何东西。'
+   +'</div><button class="btn primary" id="introOk" style="margin-top:14px">开始闯关 →</button>');
+  document.getElementById("introOk").onclick=function(){ S.intro=true; save(); closeSheet(); };
+}
+
+var toastT=null;
+function toast(m){
+  var t=document.getElementById("toast");
+  t.textContent=m; t.classList.add("on");
+  clearTimeout(toastT); toastT=setTimeout(function(){t.classList.remove("on");},1900);
+}
+
+function renderAll(){ renderHeader(); renderMap(); renderTree(); renderDaily(); renderMe(); }
+load(); renderAll();
+if(!S.intro) showIntro();
+document.getElementById("codexCheckin").onclick=function(){
+  var levels=GAME_DATA.levels.map(function(l){
+    return "• "+l.title+"：课卡 "+lesDone(l)+"/"+l.lessons.length+"，练习 "+exDone(l)+"/"+l.exercises.length+"，测验 "+(S.levels[l.id].quiz?"已通过":"未通过");
+  }).join("\n");
+  var notes=GAME_DATA.levels[0].lessons.map(function(le,j){
+    var n=S.lessonNotes[noteKey(GAME_DATA.levels[0],j)];
+    if(!noteComplete(n)) return "• "+le.t+"：能力卡未完成";
+    return "• "+le.t+"\n  我的解释："+n.explain+"\n  边界："+n.boundary+"\n  修正："+(n.correction||"未填写")+"\n  证据："+n.evidence;
+  }).join("\n");
+  var today=GAME_DATA.daily.map(function(d,i){return (S.daily.steps[i]?"✓ ":"□ ")+d[0];}).join("\n");
+  var snapshot="我正在使用《GOGO GO · AI 从业者闯关之路》学习。请继续作为我的长期 AI 从业者教练。\n\n【我的学习快照】\n经验值："+S.xp+"\n连续学习："+S.streak+" 天\n\n【各关进度】\n"+levels+"\n\n【第一关能力卡】\n"+notes+"\n\n【今日学习】\n"+today+"\n\n【我现在的问题或要提交的作业】\n（请在这里补充）\n\n请先根据我的进度判断最合适的下一步；如果我提交作业，按概念准确性、逻辑、可落地性和能力证据严格反馈；不要一次塞入多个新概念。";
+  copyText(snapshot);
+  toast("学习快照已复制，粘贴到当前 Codex 对话即可");
+};
+</script>
+  <script src="pixel-guild-upgrade.js?v=20260727" data-pixel-upgrade></script>
+</body>
+</html>
