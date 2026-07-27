@@ -1063,3 +1063,388 @@
     }
   }
 })();
+
+/* Linear learning flow v2: library -> workshop -> Codex -> retest -> artifact. */
+(() => {
+  const FLOW_KEY = "gogogo_learning_flow_v2";
+  const FLOW_LABELS = ["学习", "训练", "审核", "复测", "归档"];
+  const FLOW_ACTION_STAGE = {
+    library: 0,
+    workshop: 1,
+    evidence: 1,
+    codex: 2,
+    retest: 3,
+    artifact: 4,
+  };
+
+  let flowSyncQueued = false;
+  let flowObserver = null;
+  let flowStateCache = null;
+  const sessionLibraryDone = new Set();
+
+  const getLevelNumber = () => {
+    const label = document.querySelector("#pg-level-label")?.textContent || "第 1 关";
+    const match = label.match(/第\s*(\d+)\s*关/);
+    return Math.max(1, Number(match?.[1] || 1));
+  };
+
+  const loadFlowState = () => {
+    if (flowStateCache) return flowStateCache;
+    try {
+      flowStateCache =
+        JSON.parse(window.localStorage.getItem(FLOW_KEY) || "{}") || {};
+    } catch (_error) {
+      flowStateCache = {};
+    }
+    return flowStateCache;
+  };
+
+  const saveFlowState = (state) => {
+    flowStateCache = state;
+    try {
+      window.localStorage.setItem(FLOW_KEY, JSON.stringify(state));
+    } catch (_error) {
+      // The course remains usable when storage is unavailable.
+    }
+  };
+
+  const gateStates = () =>
+    [...document.querySelectorAll("#pg-gates .pg-gate")].map((gate) =>
+      gate.classList.contains("is-done")
+    );
+
+  const isLibraryDone = (level, gates = gateStates()) => {
+    const state = loadFlowState();
+    return (
+      sessionLibraryDone.has(level) ||
+      Boolean(state.libraryDoneByLevel?.[level]) ||
+      gates.some(Boolean)
+    );
+  };
+
+  const markLibraryDone = () => {
+    const level = getLevelNumber();
+    sessionLibraryDone.add(level);
+    const state = loadFlowState();
+    state.libraryDoneByLevel = state.libraryDoneByLevel || {};
+    state.libraryDoneByLevel[level] = true;
+    saveFlowState(state);
+  };
+
+  const deriveNext = () => {
+    const level = getLevelNumber();
+    const gates = gateStates();
+    const libraryDone = isLibraryDone(level, gates);
+
+    if (!libraryDone) {
+      return {
+        stage: 0,
+        action: "library",
+        title: "课程书库 · 学习本关课卡",
+        hint: "先建立概念并完成能力卡，再进入闭卷训练。",
+        button: "去书库学习",
+        libraryDone,
+        gates,
+      };
+    }
+
+    if (!gates[0]) {
+      return {
+        stage: 1,
+        action: "workshop",
+        title: "训练工坊 · 完成闭卷解释",
+        hint: "关闭课卡，用自己的话解释核心方法。",
+        button: "开始闭卷训练",
+        libraryDone,
+        gates,
+      };
+    }
+
+    if (!gates[1]) {
+      return {
+        stage: 1,
+        action: "workshop",
+        title: "训练工坊 · 完成变式任务",
+        hint: "把同一方法迁移到新的真实业务场景。",
+        button: "继续变式任务",
+        libraryDone,
+        gates,
+      };
+    }
+
+    if (!gates[2]) {
+      return {
+        stage: 2,
+        action: "codex",
+        title: "Codex 审核室 · 提交两份证据",
+        hint: "由 Codex 评分、指出问题并完成修订。",
+        button: "提交 Codex 审核",
+        libraryDone,
+        gates,
+      };
+    }
+
+    if (!gates[3]) {
+      return {
+        stage: 3,
+        action: "retest",
+        title: "72h 复测塔 · 验证长期掌握",
+        hint: "等待开放后，不看笔记完成新的迁移题。",
+        button: "查看 72h 复测",
+        libraryDone,
+        gates,
+      };
+    }
+
+    return {
+      stage: 4,
+      action: "artifact",
+      title: "作品门 · 归档本关能力证据",
+      hint: "保存最终版本、评分和修订记录，再进入下一关。",
+      button: "归档本关作品",
+      libraryDone,
+      gates,
+    };
+  };
+
+  const ensureFlowPanel = () => {
+    const panel = document.querySelector("#pg-mode-row");
+    if (!panel) return null;
+
+    if (!panel.querySelector(".pg-flow-now")) {
+      panel.className = "pg-flow-panel";
+      panel.setAttribute("aria-label", "本关学习流程");
+      panel.innerHTML = `
+        <div class="pg-flow-now">
+          <span class="pg-flow-index" id="pg-flow-index">下一步 1/5</span>
+          <strong class="pg-flow-title" id="pg-flow-title">课程书库 · 学习本关课卡</strong>
+          <span class="pg-flow-hint" id="pg-flow-hint">先建立概念并完成能力卡，再进入闭卷训练。</span>
+        </div>
+        <div class="pg-flow-track" aria-label="学习、训练、审核、复测、归档">
+          ${FLOW_LABELS.map(
+            (label, index) =>
+              `<span class="pg-flow-step" data-flow-step="${index}">${index + 1} ${label}</span>`
+          ).join("")}
+        </div>
+      `;
+    }
+
+    return panel;
+  };
+
+  const ensureLibraryCheckpoint = () => {
+    const header = document.querySelector(".pg-legacy-header");
+    if (!header) return null;
+
+    const title = header.querySelector("h2");
+    const note = header.querySelector(".pg-legacy-note");
+    if (title) title.textContent = "课程书库 · 本关学习";
+    if (note) {
+      note.textContent = "阅读本关课卡并完成能力卡；训练与验收回公会继续。";
+    }
+
+    const overlay = document.querySelector("#pg-legacy-overlay");
+    let button = document.querySelector("#pg-library-fixed-return");
+    if (!button) {
+      button = document.createElement("button");
+      button.id = "pg-library-fixed-return";
+      button.type = "button";
+      button.className = "pg-library-checkpoint pg-library-fixed-return";
+      Object.assign(button.style, {
+        position: "fixed",
+        top: "12px",
+        right: "18px",
+        zIndex: "2147483647",
+      });
+      document.body.appendChild(button);
+    }
+    const returnToGuild = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      markLibraryDone();
+      syncFlow();
+      if (overlay) overlay.hidden = true;
+      button.hidden = true;
+    };
+    button.onpointerdown = returnToGuild;
+    button.onclick = returnToGuild;
+    button.hidden = Boolean(overlay?.hidden);
+
+    const next = deriveNext();
+    const buttonLabel = next.libraryDone
+      ? "返回公会 · 继续下一步"
+      : "完成学习 → 进入训练";
+    if (button.textContent !== buttonLabel) button.textContent = buttonLabel;
+    button.setAttribute("aria-label", buttonLabel);
+    return button;
+  };
+
+  const renderFlow = () => {
+    const panel = ensureFlowPanel();
+    if (!panel) return;
+
+    const next = deriveNext();
+    const index = panel.querySelector("#pg-flow-index");
+    const title = panel.querySelector("#pg-flow-title");
+    const hint = panel.querySelector("#pg-flow-hint");
+
+    const indexLabel = `下一步 ${next.stage + 1}/5`;
+    if (index && index.textContent !== indexLabel) index.textContent = indexLabel;
+    if (title && title.textContent !== next.title) title.textContent = next.title;
+    if (hint && hint.textContent !== next.hint) hint.textContent = next.hint;
+
+    panel.querySelectorAll("[data-flow-step]").forEach((step) => {
+      const stepIndex = Number(step.dataset.flowStep);
+      step.classList.toggle("is-done", stepIndex < next.stage);
+      step.classList.toggle("is-current", stepIndex === next.stage);
+      step.classList.toggle("is-locked", stepIndex > next.stage);
+    });
+
+    const primary = document.querySelector(".pg-primary");
+    if (primary) {
+      if (primary.textContent !== next.button) primary.textContent = next.button;
+      primary.dataset.action = next.action;
+      primary.dataset.flowNext = "true";
+      primary.setAttribute("aria-label", next.button);
+    }
+
+    document.querySelector("#pg-gates")?.setAttribute("aria-label", "本关四份验收证据");
+
+    document.querySelectorAll("[data-action]").forEach((control) => {
+      if (control === primary) return;
+      const controlStage = FLOW_ACTION_STAGE[control.dataset.action];
+      if (controlStage === undefined) return;
+      control.classList.toggle("is-flow-done", controlStage < next.stage);
+      control.classList.toggle("is-flow-current", controlStage === next.stage);
+      control.classList.toggle("is-flow-locked", controlStage > next.stage);
+      if (controlStage === next.stage) {
+        control.setAttribute("aria-current", "step");
+      } else {
+        control.removeAttribute("aria-current");
+      }
+    });
+
+    ensureLibraryCheckpoint();
+  };
+
+  const scheduleFlowSync = () => {
+    if (flowSyncQueued) return;
+    flowSyncQueued = true;
+    queueMicrotask(() => {
+      flowSyncQueued = false;
+      renderFlow();
+    });
+  };
+
+  const openCurrentLesson = () => {
+    const overlay = document.querySelector("#pg-legacy-overlay");
+    if (!overlay || overlay.getAttribute("aria-hidden") === "true") return;
+    window.setTimeout(() => {
+      const returnButton = ensureLibraryCheckpoint();
+      if (returnButton) returnButton.hidden = false;
+    }, 260);
+
+    const activeMask = overlay.querySelector("#mask.on");
+    if (activeMask?.textContent.includes("本节能力卡")) {
+      markLibraryDone();
+      syncFlow();
+      ensureLibraryCheckpoint();
+      activeMask.scrollTop = 0;
+      return;
+    }
+
+    if (activeMask?.textContent.includes("玩法说明 v2")) {
+      const begin = [...activeMask.querySelectorAll("button")].find((button) =>
+        button.textContent.includes("开始闯关")
+      );
+      begin?.click();
+    }
+
+    const levelNumber = getLevelNumber();
+    const lessonGlobalIndex = Math.max(0, levelNumber - 1);
+    const legacyLevelIndex = Math.floor(lessonGlobalIndex / 4);
+    const legacyLessonIndex = lessonGlobalIndex % 4;
+    const mapButton = overlay.querySelector('[data-pg="map"]');
+    if (mapButton && !mapButton.classList.contains("on")) mapButton.click();
+
+    queueMicrotask(() => {
+      let mask = overlay.querySelector("#mask.on");
+      if (!mask) {
+        const levelCards = [...overlay.querySelectorAll(".lv-card")];
+        const levelCard = levelCards[legacyLevelIndex];
+        if (levelCard && !levelCard.textContent.includes("🔒")) levelCard.click();
+        mask = overlay.querySelector("#mask.on");
+      }
+
+      queueMicrotask(() => {
+        const currentMask = overlay.querySelector("#mask.on");
+        if (
+          currentMask &&
+          currentMask.textContent.includes("通关目标") &&
+          !currentMask.textContent.includes("本节能力卡")
+        ) {
+          currentMask
+            .querySelector(`[data-les="${legacyLessonIndex}"]`)
+            ?.click();
+        }
+        const content = overlay.querySelector(".pg-legacy-content");
+        if (content) content.scrollTop = 0;
+        const finalMask = overlay.querySelector("#mask.on");
+        if (finalMask) finalMask.scrollTop = 0;
+        markLibraryDone();
+        syncFlow();
+        ensureLibraryCheckpoint();
+        requestAnimationFrame(ensureLibraryCheckpoint);
+      });
+    });
+  };
+
+  const syncFlow = () => {
+    document.body.classList.add("pg-flow-v2");
+    renderFlow();
+  };
+
+  const bootFlow = () => {
+    if (!document.querySelector(".pg-quest")) return;
+    syncFlow();
+
+    document.addEventListener("click", (event) => {
+      const actionControl = event.target.closest?.("[data-action]");
+      if (actionControl?.dataset.action === "library") {
+        queueMicrotask(openCurrentLesson);
+      }
+
+      const clickedText = event.target.closest?.("button")?.textContent || "";
+      if (clickedText.includes("读完了，收入复习卡组")) {
+        markLibraryDone();
+        scheduleFlowSync();
+      }
+      if (
+        clickedText.includes("记录解释证据") ||
+        clickedText.includes("记录变式证据") ||
+        clickedText.includes("保存审核结果") ||
+        clickedText.includes("记录复测证据")
+      ) {
+        requestAnimationFrame(scheduleFlowSync);
+      }
+    });
+
+    const gates = document.querySelector("#pg-gates");
+    if (gates) {
+      flowObserver = new MutationObserver(scheduleFlowSync);
+      flowObserver.observe(gates, {
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["class"],
+      });
+    }
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => requestAnimationFrame(bootFlow), {
+      once: true,
+    });
+  } else {
+    requestAnimationFrame(bootFlow);
+  }
+})();
