@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  var VERSION = "20260727-unified2";
+  var VERSION = "20260727-unified3";
   var STORE_KEY = "gogogo_unified_learning_v1";
   var course = window.GAME_DATA;
   if (!course || !Array.isArray(course.levels)) return;
@@ -887,16 +887,7 @@
           '</div>' +
         '</div>';
     }
-    if (gates.dataset.ulSignature === signature && gates.querySelector(".ul-home-flow")) return;
-    gates.dataset.ulSignature = signature;
     gates.setAttribute("aria-label", "本关四步学习进度");
-    gates.innerHTML =
-      '<div class="ul-home-flow">' +
-        '<button class="ul-home-step' + (read === lessons.length ? " is-done" : "") + '" data-ul-launch="library"><span>STEP 01</span><strong>课卡 ' + read + "/" + lessons.length + '</strong></button>' +
-        '<button class="ul-home-step' + (best >= 80 ? " is-done" : "") + '" data-ul-launch="training"><span>STEP 02</span><strong>训练 ' + (best ? best + " 分" : "未开始") + '</strong></button>' +
-        '<button class="ul-home-step' + (!wrong && best >= 80 ? " is-done" : "") + '" data-ul-launch="wrong"><span>STEP 03</span><strong>错题 ' + wrong + ' 道</strong></button>' +
-        '<button class="ul-home-step" data-action="retest"><span>STEP 04</span><strong>72h 复测</strong></button>' +
-      '</div>';
     var primary = document.querySelector(".pg-quest-footer .pg-primary");
     if (primary) {
       if (currentStep === 0) {
@@ -912,7 +903,17 @@
         primary.dataset.action = "retest";
         primary.textContent = "进入 72h 复测";
       }
+      primary.setAttribute("aria-label", primary.textContent);
     }
+    if (gates.dataset.ulSignature === signature && gates.querySelector(".ul-home-flow")) return;
+    gates.dataset.ulSignature = signature;
+    gates.innerHTML =
+      '<div class="ul-home-flow">' +
+        '<button class="ul-home-step' + (read === lessons.length ? " is-done" : "") + '" data-ul-launch="library"><span>STEP 01</span><strong>课卡 ' + read + "/" + lessons.length + '</strong></button>' +
+        '<button class="ul-home-step' + (best >= 80 ? " is-done" : "") + '" data-ul-launch="training"><span>STEP 02</span><strong>训练 ' + (best ? best + " 分" : "未开始") + '</strong></button>' +
+        '<button class="ul-home-step' + (!wrong && best >= 80 ? " is-done" : "") + '" data-ul-launch="wrong"><span>STEP 03</span><strong>错题 ' + wrong + ' 道</strong></button>' +
+        '<button class="ul-home-step" data-action="retest"><span>STEP 04</span><strong>72h 复测</strong></button>' +
+      '</div>';
   }
 
   function refreshHomeSoon() {
