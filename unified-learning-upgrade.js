@@ -1,10 +1,11 @@
 (function () {
   "use strict";
 
-  var VERSION = "20260727-unified3";
+  var VERSION = "20260728-depth1";
   var STORE_KEY = "gogogo_unified_learning_v1";
   var course = window.GAME_DATA;
   if (!course || !Array.isArray(course.levels)) return;
+  var deepCurriculum = window.GOGOGO_DEEP_CURRICULUM || {};
 
   function choice(id, question, options, answer, explain, tag) {
     return { id: id, type: "choice", q: question, options: options, answer: answer, explain: explain, tag: tag };
@@ -125,10 +126,20 @@
     ]
   };
 
+  Object.keys(deepCurriculum.extraQuestions || {}).forEach(function (levelIndex) {
+    var additions = deepCurriculum.extraQuestions[levelIndex];
+    if (!Array.isArray(additions)) return;
+    if (!Array.isArray(QUESTION_BANK[levelIndex])) QUESTION_BANK[levelIndex] = [];
+    QUESTION_BANK[levelIndex] = QUESTION_BANK[levelIndex].concat(additions);
+  });
+
+  var QUESTION_LESSONS = deepCurriculum.questionLessons || {};
+
   var defaults = {
     version: VERSION,
     activeLevel: 0,
     readFallback: {},
+    deepRead: {},
     notes: {},
     best: {},
     passed: {},
@@ -156,7 +167,7 @@
       });
     }
     var next = Object.assign({}, defaults, raw);
-    ["readFallback", "notes", "best", "passed", "wrong", "lastSession", "lastResult", "rewarded"].forEach(function (key) {
+    ["readFallback", "deepRead", "notes", "best", "passed", "wrong", "lastSession", "lastResult", "rewarded"].forEach(function (key) {
       if (!next[key] || typeof next[key] !== "object") next[key] = {};
     });
     next.version = VERSION;
@@ -283,14 +294,36 @@
     return window.S.levels[level.id] || null;
   }
 
+  function curriculumLessons(levelIndex) {
+    var deepLevels = deepCurriculum.levels || {};
+    var deepLessons = deepLevels[levelIndex];
+    if (Array.isArray(deepLessons) && deepLessons.length) return deepLessons;
+    var level = course.levels[levelIndex] || {};
+    return level.lessons || [];
+  }
+
+  function lessonProgressKey(levelIndex, lessonIndex) {
+    var lesson = curriculumLessons(levelIndex)[lessonIndex] || {};
+    return levelIndex + ":" + (lesson.id || lessonIndex);
+  }
+
+  function legacyLessonIndex(levelIndex, lessonIndex) {
+    var lesson = curriculumLessons(levelIndex)[lessonIndex];
+    if (!lesson || !Object.prototype.hasOwnProperty.call(lesson, "legacyIndex")) return lessonIndex;
+    return Number.isInteger(lesson.legacyIndex) ? lesson.legacyIndex : null;
+  }
+
   function lessonIsRead(levelIndex, lessonIndex) {
+    if (state.deepRead[lessonProgressKey(levelIndex, lessonIndex)]) return true;
+    var legacyIndex = legacyLessonIndex(levelIndex, lessonIndex);
+    if (legacyIndex === null) return false;
     var legacy = getLegacyLevelState(levelIndex);
-    if (legacy && Array.isArray(legacy.les)) return Boolean(legacy.les[lessonIndex]);
-    return Boolean(state.readFallback[levelIndex + ":" + lessonIndex]);
+    if (legacy && Array.isArray(legacy.les) && legacy.les[legacyIndex]) return true;
+    return Boolean(state.readFallback[levelIndex + ":" + legacyIndex]);
   }
 
   function readCount(levelIndex) {
-    var lessons = course.levels[levelIndex].lessons || [];
+    var lessons = curriculumLessons(levelIndex);
     return lessons.reduce(function (sum, lesson, index) {
       return sum + (lessonIsRead(levelIndex, index) ? 1 : 0);
     }, 0);
@@ -306,6 +339,11 @@
 
   function questionById(levelIndex, id) {
     return bank(levelIndex).filter(function (item) { return item.id === id; })[0] || null;
+  }
+
+  function questionLessonNumber(levelIndex, id) {
+    var levelMap = QUESTION_LESSONS[levelIndex] || {};
+    return Number(levelMap[id]) || 0;
   }
 
   function shuffle(items) {
@@ -372,7 +410,7 @@
     return '<div class="ul-level-tabs">' + course.levels.map(function (level, index) {
       var current = index === state.activeLevel;
       var read = readCount(index);
-      var total = (level.lessons || []).length;
+      var total = curriculumLessons(index).length;
       return '<button class="ul-level-tab' + (current ? " is-active" : "") + '" data-ul-action="level" data-level="' + index + '">' +
         '<span>LEVEL ' + String(index + 1).padStart(2, "0") + " / " + read + "/" + total + '</span>' +
         '<strong>' + esc(levelName(index)) + '</strong>' +
@@ -391,7 +429,7 @@
     openOverlay("library", "课程书库");
     var levelIndex = state.activeLevel;
     var level = course.levels[levelIndex];
-    var lessons = level.lessons || [];
+    var lessons = curriculumLessons(levelIndex);
     var read = readCount(levelIndex);
     var books = lessons.map(function (lesson, index) {
       var done = lessonIsRead(levelIndex, index);
@@ -426,7 +464,7 @@
   function renderLesson(lessonIndex) {
     var levelIndex = state.activeLevel;
     var level = course.levels[levelIndex];
-    var lessons = level.lessons || [];
+    var lessons = curriculumLessons(levelIndex);
     var lesson = lessons[lessonIndex];
     if (!lesson) {
       renderLibrary();
@@ -434,7 +472,10 @@
     }
     openOverlay("lesson", "课程书库");
     var done = lessonIsRead(levelIndex, lessonIndex);
-    var noteKey = levelIndex + ":" + lessonIndex;
+    var noteKey = lessonProgressKey(levelIndex, lessonIndex);
+    var legacyIndex = legacyLessonIndex(levelIndex, lessonIndex);
+    var legacyNoteKey = legacyIndex === null ? "" : levelIndex + ":" + legacyIndex;
+    var noteValue = state.notes[noteKey] || (legacyNoteKey ? state.notes[legacyNoteKey] : "") || "";
     content.innerHTML =
       '<div class="ul-lesson-shell">' +
         '<button class="ul-button ul-back" data-ul-action="library">返回本关书库</button>' +
@@ -447,7 +488,7 @@
         '<section class="ul-question-note">' +
           '<label for="ul-note">我还没懂什么？（可选，不是作业）</label>' +
           '<small>只记录真实疑问，之后可以随学习快照交给 Codex。已经理解就留空。</small>' +
-          '<textarea id="ul-note" data-note-key="' + esc(noteKey) + '" placeholder="例如：我还分不清 RAG 和工具调用的边界。">' + esc(state.notes[noteKey] || "") + '</textarea>' +
+          '<textarea id="ul-note" data-note-key="' + esc(noteKey) + '" placeholder="例如：我还分不清 RAG 和工具调用的边界。">' + esc(noteValue) + '</textarea>' +
           '<div class="ul-button-row" style="margin-top:10px"><button class="ul-button" data-ul-action="save-note">保存疑问</button></div>' +
         '</section>' +
         '<footer class="ul-footer-action">' +
@@ -464,9 +505,11 @@
     var levelIndex = state.activeLevel;
     var level = course.levels[levelIndex];
     var wasRead = lessonIsRead(levelIndex, lessonIndex);
-    state.readFallback[levelIndex + ":" + lessonIndex] = true;
+    state.deepRead[lessonProgressKey(levelIndex, lessonIndex)] = true;
+    var legacyIndex = legacyLessonIndex(levelIndex, lessonIndex);
+    if (legacyIndex !== null) state.readFallback[levelIndex + ":" + legacyIndex] = true;
     var legacy = getLegacyLevelState(levelIndex);
-    if (legacy && Array.isArray(legacy.les)) legacy.les[lessonIndex] = true;
+    if (legacyIndex !== null && legacy && Array.isArray(legacy.les)) legacy.les[legacyIndex] = true;
     if (!wasRead && typeof window.addXP === "function") {
       window.addXP(8, "读完课卡");
     }
@@ -482,7 +525,7 @@
   function renderTrainingHome(focusWrong) {
     openOverlay("training", "本关训练与审核");
     var levelIndex = state.activeLevel;
-    var lessons = course.levels[levelIndex].lessons || [];
+    var lessons = curriculumLessons(levelIndex);
     var read = readCount(levelIndex);
     var total = bank(levelIndex).length;
     var best = Number(state.best[levelIndex]) || 0;
@@ -564,6 +607,8 @@
     var total = session.ids.length;
     var number = session.index + 1;
     var progress = Math.round((number / total) * 100);
+    var sourceLesson = questionLessonNumber(session.levelIndex, item.id);
+    var sourceLabel = sourceLesson ? "课卡 " + String(sourceLesson).padStart(2, "0") : "本关综合";
     var letters = ["A", "B", "C", "D", "E"];
     var answers = item.options.map(function (option, index) {
       var classes = "ul-answer";
@@ -579,6 +624,7 @@
       feedback = '<div class="ul-feedback ' + (correct ? "is-correct" : "is-wrong") + '">' +
         '<strong>' + (correct ? "判断正确" : "判断错误，正确答案是 " + esc(item.options[item.answer])) + '</strong>' +
         esc(item.explain) +
+        '<small class="ul-source-hint">知识来源：' + esc(sourceLabel) + '</small>' +
       '</div>' +
       '<div class="ul-button-row" style="margin-top:16px"><button class="ul-button is-primary" data-ul-action="next-question">' + (number === total ? "查看审核结果" : "下一题") + '</button></div>';
     }
@@ -587,7 +633,7 @@
         '<div class="ul-progress-head"><span>' + esc(levelName(session.levelIndex)) + '</span><strong>' + number + " / " + total + '</strong></div>' +
         '<div class="ul-progress-track"><span style="width:' + progress + '%"></span></div>' +
         '<section class="ul-question-card">' +
-          '<span class="ul-question-type">' + (item.type === "judge" ? "判断题" : "单项选择题") + " / " + esc(item.tag) + '</span>' +
+          '<span class="ul-question-type">' + (item.type === "judge" ? "判断题" : "单项选择题") + " / " + esc(sourceLabel) + " / " + esc(item.tag) + '</span>' +
           '<h2>' + esc(item.q) + '</h2>' +
           '<div class="ul-answers">' + answers + '</div>' +
           feedback +
@@ -702,11 +748,14 @@
     var cards = ids.map(function (id) {
       var item = questionById(levelIndex, id);
       if (!item) return "";
+      var sourceLesson = questionLessonNumber(levelIndex, item.id);
+      var sourceLabel = sourceLesson ? "课卡 " + String(sourceLesson).padStart(2, "0") : "本关综合";
       return '<article class="ul-wrong-card">' +
-        '<span class="ul-question-type">' + esc(item.tag) + '</span>' +
+        '<span class="ul-question-type">' + esc(sourceLabel) + " / " + esc(item.tag) + '</span>' +
         '<h3>' + esc(item.q) + '</h3>' +
         '<p><strong>正确答案：</strong>' + esc(item.options[item.answer]) + '</p>' +
         '<p>' + esc(item.explain) + '</p>' +
+        '<small class="ul-source-hint">知识来源：本关' + esc(sourceLabel) + '</small>' +
       '</article>';
     }).join("");
     content.innerHTML =
@@ -860,7 +909,7 @@
     var gates = document.getElementById("pg-gates");
     if (!gates) return;
     var levelIndex = state.activeLevel;
-    var lessons = course.levels[levelIndex].lessons || [];
+    var lessons = curriculumLessons(levelIndex);
     var read = readCount(levelIndex);
     var best = Number(state.best[levelIndex]) || 0;
     var wrong = wrongIds(levelIndex).length;
