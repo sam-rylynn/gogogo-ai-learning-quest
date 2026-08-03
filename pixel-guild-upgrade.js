@@ -70,6 +70,34 @@
     }
   ];
 
+  const ADVANCED_PIXEL_PROFILE = [
+    { rank: "工作助手架构师", hardFail: "越权连接外部系统、泄露凭证、自动执行高风险动作", retest: "把助手迁移到另一个办公任务，并重新做权限与失败测试。" },
+    { rank: "智能体编排师", hardFail: "插件空返回后编造事实、工作流无失败出口、发布权限越界", retest: "为同一工作流增加一类异常输入和一条回归测试。" },
+    { rank: "Agent 工程师", hardFail: "破坏用户文件、提交密钥、把 Commit 误报为线上部署", retest: "在最小权限环境重新复现 CLI 流程并演练回退。" },
+    { rank: "AI 产品策划师", hardFail: "没有用户证据、让模型执行确定性高风险动作、用体验分掩盖安全失败", retest: "为另一个角色重写问题证据、非目标和上线门槛。" },
+    { rank: "运营自动化师", hardFail: "编造营销数据、未经授权承诺金额、让概率文本直接驱动 RPA", retest: "用一组新数据复测效率、质量、返工和硬性错误。" },
+    { rank: "AI 视觉设计师", hardFail: "使用未授权素材、泄露云端密钥、忽略持续计费", retest: "用同一视觉规范制作一个新尺寸，并复核来源与一致性。" },
+    { rank: "AI 影音制作人", hardFail: "未经同意克隆肖像或声音、隐瞒合成身份、发布未授权素材", retest: "把成片改编为另一平台规格并重跑完整 QC。" },
+    { rank: "高级 AI 从业者", hardFail: "重复冒充证据、隐瞒失败、把候选或提交状态说成已验证上线", retest: "用 10 分钟答辩两个核心项目，并回答一个失败追问。" }
+  ];
+
+  const advancedCourseLevels = window.GAME_DATA && Array.isArray(window.GAME_DATA.levels)
+    ? window.GAME_DATA.levels.slice(6, 14)
+    : [];
+  advancedCourseLevels.forEach((level, index) => {
+    const profile = ADVANCED_PIXEL_PROFILE[index];
+    LEVELS.push({
+      id: index + 7,
+      name: level.title,
+      rank: profile.rank,
+      mission: level.goal,
+      promise: level.goal,
+      artifact: level.deliverable,
+      hardFail: profile.hardFail,
+      retest: profile.retest
+    });
+  });
+
   const MODES = {
     minimum: {
       label: "最小 25 分",
@@ -157,6 +185,21 @@
       boundary: "项目没有真实用户数据时，如何诚实表达验证范围并设计下一步实验？"
     }
   };
+
+  LEVELS.filter((level) => level.id > 6).forEach((level) => {
+    const bank = window.GOGOGO_DEEP_CURRICULUM && window.GOGOGO_DEEP_CURRICULUM.extraQuestions
+      ? (window.GOGOGO_DEEP_CURRICULUM.extraQuestions[level.id - 1] || [])
+      : [];
+    const firstQuestion = bank.find((item) => item && item.q && Array.isArray(item.options));
+    TRAINING[level.id] = {
+      explain: `不看课卡，用自己的话说明“${level.name}”解决什么问题、依赖哪些系统能力、最危险的边界是什么。`,
+      recall: firstQuestion
+        ? { prompt: firstQuestion.q, options: firstQuestion.options, answer: firstQuestion.answer, why: firstQuestion.explain }
+        : { prompt: `本关“${level.name}”最需要证明什么？`, options: ["可复现作品与边界", "工具数量", "学习时长", "页面截图"], answer: 0, why: "高级能力必须落到可复现产物、测试和边界。" },
+      transfer: `把本关方法迁移到一个新的 AI 产品运营场景，完成“${level.artifact}”的最小版本，并写清用户、输入、流程、输出和验收。`,
+      boundary: `为“${level.name}”写一个会阻断发布的硬性失败，并说明发现后如何停止、恢复和回归测试。`
+    };
+  });
 
   function emptyGate() {
     return { status: "open", answer: "", submittedAt: 0, score: 0, feedback: "", availableAt: 0 };
@@ -248,7 +291,7 @@
     });
 
     merged.questions = Array.isArray(saved.questions) ? saved.questions : [];
-    merged.activeLevel = Math.min(6, Math.max(1, Number(merged.activeLevel) || 1));
+    merged.activeLevel = Math.min(LEVELS.length, Math.max(1, Number(merged.activeLevel) || 1));
     merged.activeStation = Math.min(4, Math.max(0, Number(merged.activeStation) || 0));
     if (!MODES[merged.dailyMode]) merged.dailyMode = "standard";
     return merged;
@@ -414,7 +457,7 @@
   function unlockedLevel() {
     let unlocked = 1;
     LEVELS.forEach((level) => {
-      if (completedGateCount(level.id) === 4) unlocked = Math.min(6, level.id + 1);
+      if (completedGateCount(level.id) === 4) unlocked = Math.min(LEVELS.length, level.id + 1);
     });
     return unlocked;
   }
@@ -635,10 +678,11 @@
 
   function gateExplainCard(gate, focused) {
     const done = gate.status === "recorded";
+    const prompt = (TRAINING[state.activeLevel] && TRAINING[state.activeLevel].explain) || "不看课卡，用自己的话解释本关核心概念、适用场景和失败边界。";
     return `
       <section class="pg-panel-card${done ? " is-complete" : ""}"${focused ? " data-focused=\"true\"" : ""}>
         <div class="pg-card-heading"><h3>01 闭卷解释</h3><span class="pg-status${done ? " is-complete" : ""}">${done ? "已记录" : "待完成"}</span></div>
-        <p>不看课卡，用自己的话说明：一份可执行的 AI 任务规格为什么必须包含目标、用户、约束、事实来源、输出、验收和未知信息处理？</p>
+        <p>${escapeHtml(prompt)}</p>
         <form data-form="explain">
           <label class="pg-form-label" for="pg-explain-answer">你的闭卷解释（至少 80 字）</label>
           <textarea class="pg-textarea" id="pg-explain-answer" name="answer" required minlength="80">${escapeHtml(gate.answer)}</textarea>

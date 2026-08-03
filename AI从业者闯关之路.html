@@ -1016,8 +1016,8 @@ function renderMap(){
   var doneCount=GAME_DATA.levels.filter(isDone).length;
   document.getElementById("mapTip").innerHTML=
     doneCount===GAME_DATA.levels.length
-    ? "🎉 <b>全部通关！</b>你已完成 12 周共同基础。下一步：进入阶段 3「生产可靠性」，并把这份游戏的 GAME_DATA 换成新赛季内容。"
-    : "🎯 每关三段式：<b>📖 学</b>（读课卡）→ <b>🎮 练</b>（页内练习，系统判分）→ <b>⚔️ 战</b>（测验全对通关）。顺序解锁，不能跳级。";
+    ? "🎉 <b>全部通关！</b>你已完成 32 周基础与高级证书路线，并留下作品、评估和模考证据。"
+    : "🎯 两阶段路线：前 12 周打牢 AI 从业基础；第 13–32 周完成平台、工程、产品、运营、视觉、影音与作品集。每卡保留文字理解测试，高级模考须连续 3 次不低于 85 分。";
   GAME_DATA.levels.forEach(function(l,i){
     var st=S.levels[l.id], unlocked=levelUnlocked(i), fin=isDone(l);
     var row=document.createElement("div");
@@ -1494,7 +1494,7 @@ function quizResult(){
     html='<div class="result-emoji">🏆</div><div class="result-tt">通关成功！</div>'
       +'<div class="result-sub">'+total+' 题全对'+(first?"，获得 "+(30*total)+" XP！":"（复习挑战，不重复计分）")
       +(Q.li<GAME_DATA.levels.length-1 && isDone(l)?'<br>🔓 已解锁下一关：'+GAME_DATA.levels[Q.li+1].title
-        :Q.li===GAME_DATA.levels.length-1 && isDone(l)?'<br>🎓 你打败了最终 BOSS，完成 12 周共同基础！':"")
+        :Q.li===GAME_DATA.levels.length-1 && isDone(l)?'<br>🎓 你打败了最终 BOSS，完成 32 周全路径闯关！':"")
       +'</div><button class="btn primary" id="rOk">继续冒险 →</button>';
     confetti();
   } else {
@@ -1735,11 +1735,14 @@ document.getElementById("codexCheckin").onclick=function(){
   toast("学习快照已复制，粘贴到当前 Codex 对话即可");
 };
 </script>
-  <link rel="stylesheet" href="unified-learning-upgrade.css?v=20260728-depth1" data-unified-learning>
+  <link rel="stylesheet" href="unified-learning-upgrade.css?v=20260804-reviewfix1" data-unified-learning>
   <script src="curriculum-depth-upgrade.js?v=20260728-depth1" data-curriculum-depth></script>
   <script src="curriculum-detail-expansion.js?v=20260728-depth2" data-curriculum-detail></script>
-  <script src="pixel-guild-upgrade.js?v=20260727-flow2r" data-pixel-upgrade></script>
+  <script src="curriculum-beginner-reading.js?v=20260728-beginner1" data-curriculum-beginner></script>
+  <script src="advanced-certificate-expansion.js?v=20260804-reviewfix1" data-curriculum-advanced></script>
+  <script src="curriculum-reflection-prompts.js?v=20260804-reviewfix1" data-curriculum-reflections></script>
+  <script src="pixel-guild-upgrade.js?v=20260804-reviewfix1" data-pixel-upgrade></script>
   <script src="glossary-cards.js?v=20260727-1" data-glossary-cards></script>
-  <script src="unified-learning-upgrade.js?v=20260728-depth1" data-unified-learning></script>
+  <script src="unified-learning-upgrade.js?v=20260804-reviewfix3" data-unified-learning></script>
 </body>
 </html>

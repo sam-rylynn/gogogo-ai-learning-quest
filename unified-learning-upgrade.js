@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  var VERSION = "20260728-depth1";
+  var VERSION = "20260804-reviewfix3";
   var STORE_KEY = "gogogo_unified_learning_v1";
   var course = window.GAME_DATA;
   if (!course || !Array.isArray(course.levels)) return;
@@ -134,15 +134,19 @@
   });
 
   var QUESTION_LESSONS = deepCurriculum.questionLessons || {};
+  var QUESTION_GUIDES = deepCurriculum.questionGuides || {};
 
   var defaults = {
     version: VERSION,
     activeLevel: 0,
     readFallback: {},
     deepRead: {},
+    reflections: {},
+    reflectionRewarded: {},
     notes: {},
     best: {},
     passed: {},
+    mockStreak: {},
     wrong: {},
     lastSession: {},
     lastResult: {},
@@ -167,7 +171,7 @@
       });
     }
     var next = Object.assign({}, defaults, raw);
-    ["readFallback", "deepRead", "notes", "best", "passed", "wrong", "lastSession", "lastResult", "rewarded"].forEach(function (key) {
+    ["readFallback", "deepRead", "reflections", "reflectionRewarded", "notes", "best", "passed", "mockStreak", "wrong", "lastSession", "lastResult", "rewarded"].forEach(function (key) {
       if (!next[key] || typeof next[key] !== "object") next[key] = {};
     });
     next.version = VERSION;
@@ -177,6 +181,7 @@
 
   var state = loadState();
   var session = null;
+  var lessonReturnToQuestion = false;
   var overlay = null;
   var content = null;
   var brandTitle = null;
@@ -329,8 +334,39 @@
     }, 0);
   }
 
+  function reflectionValue(levelIndex, lessonIndex) {
+    return String(state.reflections[lessonProgressKey(levelIndex, lessonIndex)] || "");
+  }
+
+  function reflectionIsComplete(levelIndex, lessonIndex) {
+    return reflectionValue(levelIndex, lessonIndex).trim().length >= 20;
+  }
+
+  function reflectionCount(levelIndex) {
+    return curriculumLessons(levelIndex).reduce(function (sum, lesson, index) {
+      return sum + (reflectionIsComplete(levelIndex, index) ? 1 : 0);
+    }, 0);
+  }
+
   function bank(levelIndex) {
     return QUESTION_BANK[levelIndex] || [];
+  }
+
+  function isAdvancedLevel(levelIndex) {
+    return levelIndex >= 6;
+  }
+
+  function passThreshold(levelIndex) {
+    return isAdvancedLevel(levelIndex) ? 85 : 80;
+  }
+
+  function requiredMockStreak(levelIndex) {
+    return isAdvancedLevel(levelIndex) ? 3 : 1;
+  }
+
+  function sessionSize(levelIndex) {
+    if (isAdvancedLevel(levelIndex)) return 12;
+    return levelIndex === 0 ? 12 : 10;
   }
 
   function wrongIds(levelIndex) {
@@ -425,37 +461,92 @@
     '</header>';
   }
 
+  function credentialBrief(levelIndex) {
+    if (!isAdvancedLevel(levelIndex)) return "";
+    var level = course.levels[levelIndex] || {};
+    return '<section class="ul-credential-brief">' +
+      '<div class="ul-credential-title"><span>' + esc(level.phase || "高级证书阶段") + '</span><strong>' + esc(level.cluster || "综合能力") + '</strong></div>' +
+      '<div class="ul-credential-grid">' +
+        '<div><small>证书覆盖</small><b>' + esc(level.certificates || "高级证书共通能力") + '</b></div>' +
+        '<div><small>学习优先级</small><b>' + esc(level.priority || "按路线顺序推进") + '</b></div>' +
+        '<div><small>本关作品证据</small><b>' + esc(level.deliverable || "完成本关综合作品") + '</b></div>' +
+        '<div><small>验收门槛</small><b>' + esc(level.acceptance || "连续三次模考达线") + '</b></div>' +
+      '</div>' +
+      (level.hardware ? '<div class="ul-hardware-note"><span>DEVICE</span><p>' + esc(level.hardware) + '</p></div>' : "") +
+    '</section>';
+  }
+
   function renderLibrary() {
     openOverlay("library", "课程书库");
     var levelIndex = state.activeLevel;
     var level = course.levels[levelIndex];
     var lessons = curriculumLessons(levelIndex);
     var read = readCount(levelIndex);
+    var reflectedCount = reflectionCount(levelIndex);
     var books = lessons.map(function (lesson, index) {
       var done = lessonIsRead(levelIndex, index);
-      var preview = stripHtml(lesson.body || (lesson.card && lesson.card[1]) || "");
+      var reflected = reflectionIsComplete(levelIndex, index);
+      var preview = lesson.beginnerCore || stripHtml(lesson.body || (lesson.card && lesson.card[1]) || "");
       if (preview.length > 88) preview = preview.slice(0, 88) + "...";
       return '<button class="ul-book' + (done ? " is-read" : "") + '" data-ul-action="lesson" data-lesson="' + index + '">' +
         '<span class="ul-book-icon">' + (done ? "OK" : String(index + 1).padStart(2, "0")) + '</span>' +
         '<span class="ul-book-copy">' +
-          '<span class="ul-book-meta"><span>课卡 ' + String(index + 1).padStart(2, "0") + '</span><em>' + (done ? "已读" : "待读") + '</em></span>' +
+          '<span class="ul-book-meta"><span>课卡 ' + String(index + 1).padStart(2, "0") + '</span><em>' + (done ? "已读" : "待读") + '</em><em class="ul-expression-state' + (reflected ? " is-done" : "") + '">' + (reflected ? "表达已完成" : "表达待完成") + '</em></span>' +
           '<h3>' + esc(lessonName(lesson, index)) + '</h3>' +
           '<p>' + esc(preview || "打开课卡，掌握本节核心概念与案例。") + '</p>' +
         '</span>' +
       '</button>';
     }).join("");
+    var noteKeys = lessons.map(function (lesson, index) { return lessonProgressKey(levelIndex, index); });
+    var noteEntries = noteKeys.filter(function (key) { return (state.notes[key] || "").trim(); });
+    var doubtHtml = noteEntries.length
+      ? '<div class="ul-flow-note" style="margin-top:14px"><span>?</span><div><strong>本关有 ' + noteEntries.length + ' 个未解疑问</strong><button class="ul-button is-cyan" style="margin-top:8px" data-ul-action="view-doubts">查看全部疑问</button></div></div>'
+      : "";
     content.innerHTML =
-      pageHead("LIBRARY / INPUT", levelName(levelIndex), "书库只负责读懂概念、案例和术语；能力判断统一放到训练工坊，不再重复书写。", '<span class="ul-chip">课卡 <strong>' + read + "/" + lessons.length + '</strong></span>') +
+      pageHead("LIBRARY / INPUT", levelName(levelIndex), "先读懂概念，再用一段自己的话留下理解证据；客观判断仍在训练工坊完成。", '<span class="ul-chip">课卡 <strong>' + read + "/" + lessons.length + '</strong></span><span class="ul-chip">表达 <strong>' + reflectedCount + "/" + lessons.length + '</strong></span>') +
       levelTabs() +
-      '<div class="ul-flow-note"><span>i</span><div><strong>新的学习分工：</strong>书库负责输入，训练负责检索与判断，错题负责复盘。课卡中只保留一个可选的“我还没懂什么”，不再强制填写重复能力卡。</div></div>' +
+      credentialBrief(levelIndex) +
+      '<div class="ul-flow-note"><span>i</span><div><strong>新的学习分工：</strong>书库负责输入，训练负责检索与判断，错题负责复盘。课卡中只保留一个可选的"我还没懂什么"，不再强制填写重复能力卡。</div></div>' +
+      doubtHtml +
       '<section class="ul-books">' + books + '</section>' +
       '<footer class="ul-footer-action">' +
         '<p>' + (read === lessons.length ? "本关课卡已读完，可以进入客观题训练。" : "建议按顺序读完课卡；你也可以随时进入训练检查理解。") + '</p>' +
         '<button class="ul-button is-primary" data-ul-action="training">进入本关训练</button>' +
       '</footer>';
+    cumulativeStats();
+  }
+
+  function cumulativeStats() {
+    var allLevels = course.levels.length;
+    if (allLevels <= 6) return;
+    var totalLessons = 0, totalRead = 0, totalWords = 0, totalWrong = 0, passedCount = 0;
+    for (var i = 0; i < allLevels; i++) {
+      totalLessons += curriculumLessons(i).length;
+      totalRead += readCount(i);
+      totalWrong += wrongIds(i).length;
+      if (isAdvancedLevel(i) && state.passed[i]) passedCount++;
+    }
+    Object.keys(state.reflections || {}).forEach(function (key) {
+      totalWords += (state.reflections[key] || "").trim().length;
+    });
+    if (totalRead < 3) return;
+    var el = document.getElementById("ul-cumulative-stats");
+    if (!el) {
+      el = document.createElement("section");
+      el.id = "ul-cumulative-stats";
+      el.className = "ul-cumulative-stats";
+      var main = document.getElementById("ul-content");
+      if (main) main.appendChild(el);
+    }
+    el.innerHTML =
+      '<p>累计 · 已读 <strong>' + totalRead + "/" + totalLessons + '</strong> 张课卡 · 书写 <strong>' + totalWords + '</strong> 字反思' +
+      (passedCount ? ' · 高级已通关 <strong>' + passedCount + "/" + (allLevels - 6) + "</strong>" : "") +
+      '</p>';
+    el.hidden = false;
   }
 
   function lessonCore(lesson) {
+    if (lesson.beginnerCore) return lesson.beginnerCore;
     if (lesson.card && lesson.card[1]) return lesson.card[1];
     var plain = stripHtml(lesson.body || "");
     return plain.length > 220 ? plain.slice(0, 220) + "..." : plain;
@@ -470,21 +561,46 @@
       renderLibrary();
       return;
     }
+    var canResumeQuestion = Boolean(lessonReturnToQuestion && session && session.levelIndex === levelIndex && currentQuestion());
     openOverlay("lesson", "课程书库");
     var done = lessonIsRead(levelIndex, lessonIndex);
     var noteKey = lessonProgressKey(levelIndex, lessonIndex);
     var legacyIndex = legacyLessonIndex(levelIndex, lessonIndex);
     var legacyNoteKey = legacyIndex === null ? "" : levelIndex + ":" + legacyIndex;
     var noteValue = state.notes[noteKey] || (legacyNoteKey ? state.notes[legacyNoteKey] : "") || "";
+    var reflectionKey = lessonProgressKey(levelIndex, lessonIndex);
+    var savedReflection = reflectionValue(levelIndex, lessonIndex);
+    var reflectionDone = reflectionIsComplete(levelIndex, lessonIndex);
+    var reflectionPrompt = lesson.reflectionPrompt || ("请用自己的话总结《" + lessonName(lesson, lessonIndex) + "》，并举一个自己的例子。");
+    var reflectionChecks = Array.isArray(lesson.reflectionChecks) ? lesson.reflectionChecks : ["说明核心概念", "指出一个误区", "包含自己的例子"];
+    var reflectionCheckHtml = reflectionChecks.map(function (item) {
+      return '<span>' + esc(item) + '</span>';
+    }).join("");
+    var readingContent = lesson.beginnerBody
+      ? '<section class="ul-reading-path">' +
+          '<div class="ul-reading-path-head"><span>默认阅读模式</span><strong>先理解，再补充术语</strong><small>先完成新手导读；需要完整知识时再展开教材。</small></div>' +
+          '<article class="ul-beginner-body">' + glossaryHtml(lesson.beginnerBody) + '</article>' +
+          '<details class="ul-full-lesson"><summary><span>展开完整教材</span><small>查看术语、工程细节、边界和更多案例</small></summary><article class="ul-lesson-body">' + glossaryHtml(lesson.body || "") + '</article></details>' +
+        '</section>'
+      : '<article class="ul-lesson-body">' + glossaryHtml(lesson.body || "") + '</article>';
     content.innerHTML =
       '<div class="ul-lesson-shell">' +
-        '<button class="ul-button ul-back" data-ul-action="library">返回本关书库</button>' +
+        '<button class="ul-button ul-back" data-ul-action="' + (canResumeQuestion ? "resume-question" : "library") + '">' + (canResumeQuestion ? "返回本轮训练" : "返回本关书库") + '</button>' +
         '<header class="ul-lesson-head">' +
           '<div class="ul-book-meta"><span>LEVEL ' + String(levelIndex + 1).padStart(2, "0") + ' / 课卡 ' + String(lessonIndex + 1).padStart(2, "0") + '</span><em>' + (done ? "已读" : "待读") + '</em></div>' +
           '<h1 class="ul-lesson-title">' + esc(lessonName(lesson, lessonIndex)) + '</h1>' +
         '</header>' +
         '<div class="ul-core-card"><strong>本卡核心结论</strong>' + esc(lessonCore(lesson)) + '</div>' +
-        '<article class="ul-lesson-body">' + glossaryHtml(lesson.body || "") + '</article>' +
+        readingContent +
+        '<section class="ul-reflection-card' + (reflectionDone ? " is-complete" : "") + '">' +
+          '<header><div><span>WRITTEN CHECK / 理解力测试</span><h2>只写一段自己的话</h2></div><em data-reflection-badge>' + (reflectionDone ? "已完成" : "待完成") + '</em></header>' +
+          '<p class="ul-reflection-prompt">' + esc(reflectionPrompt) + '</p>' +
+          '<div class="ul-reflection-checks">' + reflectionCheckHtml + '</div>' +
+          '<label for="ul-reflection">我的理解表述</label>' +
+          '<small>建议 30–120 字。至少 20 字会记为“已完成”；字数只代表形成记录，不代表内容一定正确。</small>' +
+          '<textarea id="ul-reflection" data-reflection-key="' + esc(reflectionKey) + '" data-level-index="' + levelIndex + '" data-lesson-index="' + lessonIndex + '" placeholder="不要抄原文。先关掉上面的完整教材，再用自己的话说明。">' + esc(savedReflection) + '</textarea>' +
+          '<footer><span data-reflection-count>' + savedReflection.trim().length + ' 字 · ' + (reflectionDone ? "已形成记录" : "至少还需 " + Math.max(0, 20 - savedReflection.trim().length) + " 字") + '</span><div class="ul-button-row"><button class="ul-button" data-ul-action="save-reflection">保存表达</button><button class="ul-button is-cyan" data-ul-action="copy-reflection">复制给 Codex 审核</button></div></footer>' +
+        '</section>' +
         '<section class="ul-question-note">' +
           '<label for="ul-note">我还没懂什么？（可选，不是作业）</label>' +
           '<small>只记录真实疑问，之后可以随学习快照交给 Codex。已经理解就留空。</small>' +
@@ -505,6 +621,10 @@
     var levelIndex = state.activeLevel;
     var level = course.levels[levelIndex];
     var wasRead = lessonIsRead(levelIndex, lessonIndex);
+    if (!wasRead && !reflectionIsComplete(levelIndex, lessonIndex)) {
+      notify("先写一段自己的理解再标记已读，至少 20 字");
+      return;
+    }
     state.deepRead[lessonProgressKey(levelIndex, lessonIndex)] = true;
     var legacyIndex = legacyLessonIndex(levelIndex, lessonIndex);
     if (legacyIndex !== null) state.readFallback[levelIndex + ":" + legacyIndex] = true;
@@ -530,22 +650,27 @@
     var total = bank(levelIndex).length;
     var best = Number(state.best[levelIndex]) || 0;
     var wrong = wrongIds(levelIndex).length;
-    var size = levelIndex === 0 ? 12 : 10;
+    var size = sessionSize(levelIndex);
+    var threshold = passThreshold(levelIndex);
+    var streak = Number(state.mockStreak[levelIndex]) || 0;
+    var streakTarget = requiredMockStreak(levelIndex);
     content.innerHTML =
-      pageHead("WORKSHOP / PRACTICE + REVIEW", levelName(levelIndex), "每次随机抽题，一次只判断一个概念；作答后立即解释，结束后自动审核并生成错题。", '<span class="ul-chip">题库 <strong>' + total + '</strong></span><span class="ul-chip">最高 <strong>' + best + ' 分</strong></span>') +
+      pageHead("WORKSHOP / PRACTICE + REVIEW", levelName(levelIndex), "每次随机抽题，一次只判断一个概念；作答后立即解释，结束后自动审核并生成错题。", '<span class="ul-chip">题库 <strong>' + total + '</strong></span><span class="ul-chip">最高 <strong>' + best + ' 分</strong></span>' + (isAdvancedLevel(levelIndex) ? '<span class="ul-chip">连胜 <strong>' + Math.min(streak, streakTarget) + '/' + streakTarget + '</strong></span>' : "")) +
       levelTabs() +
+      credentialBrief(levelIndex) +
       '<div class="ul-training-grid">' +
         '<section class="ul-mission-card">' +
           '<h3>本关训练任务</h3>' +
-          '<p>本轮抽取 ' + Math.min(size, total) + ' 题，包含判断题和选择题。达到 80 分即通过；系统按标准答案精确审核，不需要再进入独立审核室。</p>' +
+          '<p>本轮抽取 ' + Math.min(size, total) + ' 题，包含判断题和选择题。' + (isAdvancedLevel(levelIndex) ? '每轮至少 85 分，连续 3 轮达线才完成正式考试前的模考门槛；一轮未达线会重新计数。' : '达到 80 分即通过。') + '系统按标准答案精确审核，不需要再进入独立审核室。</p>' +
           '<div class="ul-stat-row">' +
             '<div class="ul-stat"><strong>' + read + "/" + lessons.length + '</strong>课卡已读</div>' +
             '<div class="ul-stat"><strong>' + total + '</strong>题库总量</div>' +
             '<div class="ul-stat"><strong>' + wrong + '</strong>当前错题</div>' +
+            (isAdvancedLevel(levelIndex) ? '<div class="ul-stat"><strong>' + Math.min(streak, streakTarget) + '/' + streakTarget + '</strong>连续达线</div>' : "") +
           '</div>' +
           (read < lessons.length ? '<div class="ul-flow-note"><span>!</span><div>还有课卡未读。可以先训练诊断，也可以返回书库完成输入。</div></div>' : "") +
           '<div class="ul-button-row">' +
-            '<button class="ul-button is-primary" data-ul-action="start" data-mode="normal">开始随机训练</button>' +
+            '<button class="ul-button is-primary" data-ul-action="start" data-mode="normal">' + (isAdvancedLevel(levelIndex) ? "开始一轮模考" : "开始随机训练") + '</button>' +
             '<button class="ul-button" data-ul-action="start" data-mode="wrong"' + (wrong ? "" : " disabled") + '>只练错题</button>' +
             '<button class="ul-button" data-ul-action="library">返回书库</button>' +
           '</div>' +
@@ -576,7 +701,7 @@
     var last = Array.isArray(state.lastSession[levelIndex]) ? state.lastSession[levelIndex] : [];
     var fresh = source.filter(function (item) { return last.indexOf(item.id) === -1; });
     var ordered = shuffle(fresh).concat(shuffle(source.filter(function (item) { return fresh.indexOf(item) === -1; })));
-    var count = mode === "wrong" ? source.length : Math.min(levelIndex === 0 ? 12 : 10, source.length);
+    var count = mode === "wrong" ? source.length : Math.min(sessionSize(levelIndex), source.length);
     var selected = ordered.slice(0, count);
     state.lastSession[levelIndex] = selected.map(function (item) { return item.id; });
     saveState();
@@ -609,6 +734,7 @@
     var progress = Math.round((number / total) * 100);
     var sourceLesson = questionLessonNumber(session.levelIndex, item.id);
     var sourceLabel = sourceLesson ? "课卡 " + String(sourceLesson).padStart(2, "0") : "本关综合";
+    var guide = (QUESTION_GUIDES[session.levelIndex] || {})[item.id] || null;
     var letters = ["A", "B", "C", "D", "E"];
     var answers = item.options.map(function (option, index) {
       var classes = "ul-answer";
@@ -621,10 +747,16 @@
     var feedback = "";
     if (session.revealed) {
       var correct = session.chosen === item.answer;
+      var lessonLink = "";
+      if (!correct && sourceLesson) {
+        lessonLink = '<div class="ul-source-hint" style="margin-top:8px"><a class="ul-question-link" data-ul-action="goto-lesson" data-lesson="' + (sourceLesson - 1) + '">📖 回课卡 ' + String(sourceLesson).padStart(2, "0") + ' 重读</a></div>';
+      }
       feedback = '<div class="ul-feedback ' + (correct ? "is-correct" : "is-wrong") + '">' +
         '<strong>' + (correct ? "判断正确" : "判断错误，正确答案是 " + esc(item.options[item.answer])) + '</strong>' +
         esc(item.explain) +
+        (guide && guide.plain ? '<div class="ul-guide-explain"><b>换句话说</b><p>' + esc(guide.plain) + '</p>' + (guide.trap ? '<small>容易误解：' + esc(guide.trap) + '</small>' : "") + '</div>' : "") +
         '<small class="ul-source-hint">知识来源：' + esc(sourceLabel) + '</small>' +
+        lessonLink +
       '</div>' +
       '<div class="ul-button-row" style="margin-top:16px"><button class="ul-button is-primary" data-ul-action="next-question">' + (number === total ? "查看审核结果" : "下一题") + '</button></div>';
     }
@@ -634,6 +766,7 @@
         '<div class="ul-progress-track"><span style="width:' + progress + '%"></span></div>' +
         '<section class="ul-question-card">' +
           '<span class="ul-question-type">' + (item.type === "judge" ? "判断题" : "单项选择题") + " / " + esc(sourceLabel) + " / " + esc(item.tag) + '</span>' +
+          (guide && guide.terms ? '<div class="ul-reading-hint"><strong>读题翻译</strong><span>' + esc(guide.terms) + '</span></div>' : "") +
           '<h2>' + esc(item.q) + '</h2>' +
           '<div class="ul-answers">' + answers + '</div>' +
           feedback +
@@ -680,27 +813,48 @@
     var total = session.answers.length;
     var score = total ? Math.round((correct / total) * 100) : 0;
     var fullTraining = session.mode === "normal";
-    var passed = fullTraining && score >= 80;
     var levelIndex = session.levelIndex;
+    var threshold = passThreshold(levelIndex);
+    var passed = fullTraining && score >= threshold;
+    var qualified = false;
     if (fullTraining) {
       state.best[levelIndex] = Math.max(Number(state.best[levelIndex]) || 0, score);
-      state.passed[levelIndex] = Boolean(state.passed[levelIndex] || passed);
+      if (isAdvancedLevel(levelIndex)) {
+        state.mockStreak[levelIndex] = passed ? (Number(state.mockStreak[levelIndex]) || 0) + 1 : 0;
+        qualified = state.mockStreak[levelIndex] >= requiredMockStreak(levelIndex);
+        state.passed[levelIndex] = Boolean(state.passed[levelIndex] || qualified);
+      } else {
+        qualified = passed;
+        state.passed[levelIndex] = Boolean(state.passed[levelIndex] || passed);
+      }
     }
     state.lastResult[levelIndex] = {
       mode: session.mode,
       score: score,
       total: total,
       correct: correct,
+      threshold: threshold,
+      streak: Number(state.mockStreak[levelIndex]) || 0,
+      qualified: Boolean(state.passed[levelIndex]),
       at: Date.now(),
       wrong: session.answers.filter(function (answer) { return !answer.correct; }).map(function (answer) { return answer.id; })
     };
-    if (fullTraining && passed && !state.rewarded[levelIndex]) {
+    if (fullTraining && state.passed[levelIndex] && !state.rewarded[levelIndex]) {
       state.rewarded[levelIndex] = true;
       if (typeof window.addXP === "function") window.addXP(25, "本关训练通过");
+    }
+    if (fullTraining && state.passed[levelIndex] && isAdvancedLevel(levelIndex)) {
+      var legacy = getLegacyLevelState(levelIndex);
+      if (legacy) {
+        if (Array.isArray(legacy.ex)) legacy.ex.forEach(function (item) { item.p = true; });
+        legacy.quiz = true;
+      }
     }
     if (typeof window.save === "function") window.save();
     saveState();
     refreshHomeSoon();
+    lessonReturnToQuestion = false;
+    session = null;
     renderResult(levelIndex);
   }
 
@@ -712,7 +866,11 @@
     }
     openOverlay("result", "训练审核结果");
     var fullTraining = result.mode !== "wrong";
-    var passed = fullTraining ? result.score >= 80 : wrongIds(levelIndex).length === 0;
+    var threshold = Number(result.threshold) || passThreshold(levelIndex);
+    var passed = fullTraining ? result.score >= threshold : wrongIds(levelIndex).length === 0;
+    var advanced = isAdvancedLevel(levelIndex);
+    var qualified = Boolean(result.qualified || state.passed[levelIndex]);
+    var streak = Number(result.streak) || 0;
     var tags = {};
     (result.wrong || []).forEach(function (id) {
       var item = questionById(levelIndex, id);
@@ -726,12 +884,12 @@
         '<p class="ul-kicker">AUTOMATIC REVIEW / 客观题审核</p>' +
         '<div class="ul-result-score">' +
           '<div class="ul-score-orb">' + result.score + '</div>' +
-          '<div><h2>' + (fullTraining ? (passed ? "本轮训练通过" : "本轮需要复训") : (passed ? "本轮错题已清零" : "仍有错题需要复训")) + '</h2>' +
-          '<p>答对 ' + result.correct + " / " + result.total + " 题。" + (fullTraining ? "系统已经根据标准答案完成整组审核，错误题目已自动进入错题档案。" : "错题复训只负责修正错误，不会被记录为整关成绩或奖励 XP。") + '</p></div>' +
+          '<div><h2>' + (fullTraining ? (advanced ? (passed ? (qualified ? "三次模考门槛已完成" : "本轮达线，继续保持") : "本轮未达 85 分") : (passed ? "本轮训练通过" : "本轮需要复训")) : (passed ? "本轮错题已清零" : "仍有错题需要复训")) + '</h2>' +
+          '<p>答对 ' + result.correct + " / " + result.total + " 题。" + (fullTraining ? (advanced ? "本轮门槛为 " + threshold + " 分，当前连续达线 " + Math.min(streak, 3) + "/3。错误题目已自动进入错题档案。" : "系统已经根据标准答案完成整组审核，错误题目已自动进入错题档案。") : "错题复训只负责修正错误，不会被记录为整关成绩或奖励 XP。") + '</p></div>' +
         '</div>' +
         '<h3>本轮薄弱概念</h3>' +
         '<div class="ul-tag-list">' + tagHtml + '</div>' +
-        '<div class="ul-flow-note"><span>i</span><div>' + (fullTraining ? (passed ? "客观训练已经形成可靠证据。若解释仍不清楚，再把错题发给 Codex 深度复盘。" : "先只练本轮错题，不要立刻重做整套题。错题清零后再进行新的随机训练。") : (passed ? "错题已清零。现在完成一组完整随机训练，才能形成本关成绩。" : "继续针对仍未掌握的错题复训。")) + '</div></div>' +
+        '<div class="ul-flow-note"><span>i</span><div>' + (fullTraining ? (advanced ? (qualified ? "模考稳定性门槛已完成；正式报名仍以证书当期官方规则为准，实操能力还要看本关作品证据。" : (passed ? "不要立刻背答案重考。先隔时复述薄弱概念，再完成下一轮模考。" : "连续记录已归零。先只练错题，理解后再开始新的完整模考。")) : (passed ? "客观训练已经形成可靠证据。若解释仍不清楚，再把错题发给 Codex 深度复盘。" : "先只练本轮错题，不要立刻重做整套题。错题清零后再进行新的随机训练。")) : (passed ? "错题已清零。现在完成一组完整随机训练，才能形成本关成绩。" : "继续针对仍未掌握的错题复训。")) + '</div></div>' +
         '<div class="ul-button-row">' +
           '<button class="ul-button is-primary" data-ul-action="start" data-mode="wrong"' + (wrongIds(levelIndex).length ? "" : " disabled") + '>只练错题</button>' +
           '<button class="ul-button" data-ul-action="start" data-mode="normal">' + (fullTraining ? "再抽一组" : "开始完整训练") + '</button>' +
@@ -745,6 +903,14 @@
     openOverlay("wrong", "错题档案");
     var levelIndex = state.activeLevel;
     var ids = wrongIds(levelIndex);
+    var tagCounts = {};
+    ids.map(function (id) { return questionById(levelIndex, id); }).filter(Boolean).forEach(function (item) {
+      tagCounts[item.tag] = (tagCounts[item.tag] || 0) + 1;
+    });
+    var tagWarning = "";
+    Object.keys(tagCounts).forEach(function (tag) {
+      if (tagCounts[tag] > 1) tagWarning += '<span class="ul-tag is-warn">' + esc(tag) + " x" + tagCounts[tag] + " · 建议重读对应课卡</span>";
+    });
     var cards = ids.map(function (id) {
       var item = questionById(levelIndex, id);
       if (!item) return "";
@@ -761,9 +927,28 @@
     content.innerHTML =
       pageHead("ERROR ARCHIVE / RETRIEVAL", levelName(levelIndex), "错题不是惩罚，而是下一轮最小训练集。答对后会自动从档案中移除。", '<span class="ul-chip">待消除 <strong>' + ids.length + '</strong></span>') +
       levelTabs() +
+      (tagWarning ? '<div class="ul-tag-list" style="margin:0 14px 14px">' + tagWarning + '</div>' : "") +
       (ids.length
         ? '<div class="ul-wrong-list">' + cards + '</div><footer class="ul-footer-action"><p>先读解释，再用“只练错题”验证是否真正修正。</p><div class="ul-button-row"><button class="ul-button is-primary" data-ul-action="start" data-mode="wrong">只练错题</button><button class="ul-button" data-ul-action="copy-review">复制错题给 Codex</button></div></footer>'
         : '<div class="ul-empty"><h3>当前没有错题</h3><p>开始一次随机训练，系统会把错误判断自动收集到这里。</p><button class="ul-button is-primary" data-ul-action="training">开始训练</button></div>');
+  }
+
+  function renderDoubts() {
+    var levelIndex = state.activeLevel;
+    var lessons = curriculumLessons(levelIndex);
+    var entries = lessons.map(function (lesson, index) {
+      var key = lessonProgressKey(levelIndex, index);
+      return { note: (state.notes[key] || "").trim(), title: lesson.t || lesson.title || ("课卡 " + (index + 1)), index: index };
+    }).filter(function (entry) { return entry.note; });
+    openOverlay("library", "课程书库");
+    content.innerHTML =
+      pageHead("DOUBTS / 未解疑问", levelName(levelIndex), "这些是你读过课卡后留下的真实疑问，按课卡排列。复制或收起后不会消失，直到你手动清空。", '<span class="ul-chip">疑问 <strong>' + entries.length + '</strong></span><span class="ul-chip">课卡 <strong>' + lessons.length + '</strong></span>') +
+      (entries.length
+        ? '<div class="ul-doubt-list">' + entries.map(function (entry) {
+            return '<article class="ul-doubt-card"><h3>' + esc(entry.title) + ' <button class="ul-button" data-ul-action="goto-lesson" data-lesson="' + entry.index + '">打开课卡</button></h3><p>' + esc(entry.note) + '</p></article>';
+          }).join("") + '</div>'
+        : '<div class="ul-empty"><h3>本关没有未解疑问</h3><p>每张课卡底部的"我还没懂什么"是留给真实困惑的，不是作业。</p></div>') +
+      '<footer class="ul-footer-action"><button class="ul-button" data-ul-action="library">返回书库</button></footer>';
   }
 
   function reviewPacket() {
@@ -820,7 +1005,97 @@
     notify(textarea.value.trim() ? "疑问已保存" : "该课卡没有待解决疑问");
   }
 
+  function updateReflectionUi(textarea) {
+    var value = textarea.value.trim();
+    var card = textarea.closest(".ul-reflection-card");
+    if (!card) return;
+    var complete = value.length >= 20;
+    card.classList.toggle("is-complete", complete);
+    var badge = card.querySelector("[data-reflection-badge]");
+    var counter = card.querySelector("[data-reflection-count]");
+    if (badge) badge.textContent = complete ? "已完成" : "待完成";
+    if (counter) counter.textContent = value.length + " 字 · " + (complete ? "已形成记录" : "至少还需 " + Math.max(0, 20 - value.length) + " 字");
+  }
+
+  function saveCurrentReflection() {
+    var textarea = overlay.querySelector("textarea[data-reflection-key]");
+    if (!textarea) return;
+    var value = textarea.value.trim();
+    state.reflections[textarea.dataset.reflectionKey] = value;
+    var complete = value.length >= 20;
+    if (complete && !state.reflectionRewarded[textarea.dataset.reflectionKey]) {
+      state.reflectionRewarded[textarea.dataset.reflectionKey] = true;
+      if (typeof window.addXP === "function") window.addXP(4, "完成理解表达");
+      if (typeof window.save === "function") window.save();
+      if (typeof window.renderMe === "function") window.renderMe();
+    }
+    saveState();
+    updateReflectionUi(textarea);
+    refreshHomeSoon();
+    notify(complete ? "理解表达已保存" : "内容已保存；写满 20 字后记为完成");
+  }
+
+  function copyPlainText(text, successMessage) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(function () {
+        notify(successMessage);
+      }).catch(function () {
+        fallbackCopyPlainText(text, successMessage);
+      });
+      return;
+    }
+    fallbackCopyPlainText(text, successMessage);
+  }
+
+  function fallbackCopyPlainText(text, successMessage) {
+    var textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand("copy");
+      notify(successMessage);
+    } catch (error) {
+      notify("复制失败，请手动选择理解表达");
+    }
+    textarea.remove();
+  }
+
+  function copyCurrentReflection() {
+    var textarea = overlay.querySelector("textarea[data-reflection-key]");
+    if (!textarea) return;
+    var levelIndex = Number(textarea.dataset.levelIndex);
+    var lessonIndex = Number(textarea.dataset.lessonIndex);
+    var lesson = curriculumLessons(levelIndex)[lessonIndex];
+    if (!lesson) return;
+    var answer = textarea.value.trim();
+    if (!answer) {
+      notify("请先写下你的理解，再复制给 Codex");
+      return;
+    }
+    state.reflections[textarea.dataset.reflectionKey] = answer;
+    saveState();
+    var checks = Array.isArray(lesson.reflectionChecks) ? lesson.reflectionChecks : [];
+    var packet = "请作为严格但鼓励的 AI 从业者教练，审核我的课卡理解表达。\n\n" +
+      "【关卡】" + levelName(levelIndex) + "\n" +
+      "【课卡】" + lessonName(lesson, lessonIndex) + "\n" +
+      "【表达题】" + (lesson.reflectionPrompt || "") + "\n" +
+      "【检查要点】" + checks.join("；") + "\n\n" +
+      "【我的回答】\n" + answer + "\n\n" +
+      "请只审核这一张课卡，按概念准确性、逻辑关系、边界意识和案例有效性反馈；先指出最关键的一处问题，再给出一版不超过 120 字的修正版。";
+    copyPlainText(packet, "理解表达已复制，可以粘贴给 Codex 审核");
+  }
+
   function handleOverlayInput(event) {
+    var reflection = event.target.closest("textarea[data-reflection-key]");
+    if (reflection) {
+      state.reflections[reflection.dataset.reflectionKey] = reflection.value;
+      saveState();
+      updateReflectionUi(reflection);
+      return;
+    }
     var textarea = event.target.closest("textarea[data-note-key]");
     if (!textarea) return;
     state.notes[textarea.dataset.noteKey] = textarea.value;
@@ -832,7 +1107,7 @@
     if (!button || button.disabled) return;
     var action = button.dataset.ulAction;
     if (action === "close") closeOverlay();
-    if (action === "library") renderLibrary();
+    if (action === "library") { lessonReturnToQuestion = false; renderLibrary(); }
     if (action === "training") renderTrainingHome();
     if (action === "wrong") renderWrongArchive();
     if (action === "level") {
@@ -844,14 +1119,22 @@
       else renderLibrary();
     }
     if (action === "lesson") renderLesson(Number(button.dataset.lesson));
+    if (action === "goto-lesson") {
+      lessonReturnToQuestion = Boolean(activeView === "question" && session && session.levelIndex === state.activeLevel);
+      renderLesson(Number(button.dataset.lesson));
+    }
+    if (action === "resume-question") { lessonReturnToQuestion = false; renderQuestion(); }
     if (action === "lesson-prev") renderLesson(Number(button.dataset.lesson) - 1);
     if (action === "lesson-next") renderLesson(Number(button.dataset.lesson) + 1);
     if (action === "mark-read") markLessonRead(Number(button.dataset.lesson));
     if (action === "save-note") saveCurrentNote();
+    if (action === "save-reflection") saveCurrentReflection();
+    if (action === "copy-reflection") copyCurrentReflection();
     if (action === "start") startSession(button.dataset.mode || "normal");
     if (action === "answer") recordAnswer(Number(button.dataset.answer));
     if (action === "next-question") nextQuestion();
     if (action === "copy-review") copyReview();
+    if (action === "view-doubts") renderDoubts();
   }
 
   function notify(message) {
@@ -869,11 +1152,26 @@
     }, 2600);
   }
 
+  function homeLevelIndex() {
+    var label = document.getElementById("pg-level-label");
+    var match = String(label ? label.textContent : "").match(/第\s*(\d+)\s*关/);
+    var index = match ? Number(match[1]) - 1 : state.activeLevel;
+    return Math.max(0, Math.min(course.levels.length - 1, index));
+  }
+
+  function syncActiveLevelToHome() {
+    var levelIndex = homeLevelIndex();
+    if (state.activeLevel === levelIndex) return;
+    state.activeLevel = levelIndex;
+    saveState();
+  }
+
   function interceptLegacyActions(event) {
     var unified = event.target.closest("[data-ul-launch]");
     if (unified) {
       event.preventDefault();
       event.stopImmediatePropagation();
+      syncActiveLevelToHome();
       if (unified.dataset.ulLaunch === "library") renderLibrary();
       else if (unified.dataset.ulLaunch === "wrong") renderWrongArchive();
       else renderTrainingHome();
@@ -885,6 +1183,7 @@
     if (action !== "library" && action !== "workshop" && action !== "codex" && action !== "evidence") return;
     event.preventDefault();
     event.stopImmediatePropagation();
+    syncActiveLevelToHome();
     if (action === "library") renderLibrary();
     else if (action === "codex") renderWrongArchive();
     else renderTrainingHome();
@@ -903,24 +1202,25 @@
       if (button.textContent.trim() !== "进入本关训练") button.textContent = "进入本关训练";
     });
     var mentor = document.getElementById("pg-mentor");
-    if (mentor && mentor.textContent !== "学习顺序：书库读懂概念，然后训练判断，错题清零后进入 72h 复测。") {
-      mentor.textContent = "学习顺序：书库读懂概念，然后训练判断，错题清零后进入 72h 复测。";
+    if (mentor && mentor.textContent !== "学习顺序：书库读懂概念，然后训练判断，错题清零后进行间隔复训。") {
+      mentor.textContent = "学习顺序：书库读懂概念，然后训练判断，错题清零后进行间隔复训。";
     }
     var gates = document.getElementById("pg-gates");
     if (!gates) return;
-    var levelIndex = state.activeLevel;
+    var levelIndex = homeLevelIndex();
     var lessons = curriculumLessons(levelIndex);
     var read = readCount(levelIndex);
     var best = Number(state.best[levelIndex]) || 0;
     var wrong = wrongIds(levelIndex).length;
     var signature = [levelIndex, read, lessons.length, best, wrong].join("-");
     var flow = document.getElementById("pg-mode-row");
-    var currentStep = read < lessons.length ? 0 : (best < 80 ? 1 : (wrong > 0 ? 2 : 3));
+    var threshold = passThreshold(levelIndex);
+    var currentStep = read < lessons.length ? 0 : (best < threshold ? 1 : (wrong > 0 ? 2 : 3));
     var nextLabel = [
       "下一步：在书库读完本关课卡",
       "下一步：完成一组随机训练",
       "下一步：清零当前错题",
-      "下一步：进入 72h 复测"
+      "下一步：间隔后重新模考"
     ][currentStep];
     if (flow && (flow.dataset.ulSignature !== signature || !flow.querySelector(".ul-main-flow"))) {
       flow.dataset.ulSignature = signature;
@@ -930,9 +1230,9 @@
           '<div class="ul-main-flow-head"><span>本关学习路径</span><strong>' + nextLabel + '</strong></div>' +
           '<div class="ul-main-flow-track">' +
             '<span class="' + (read === lessons.length ? "is-done" : (currentStep === 0 ? "is-current" : "")) + '">1 书库学习</span>' +
-            '<span class="' + (best >= 80 ? "is-done" : (currentStep === 1 ? "is-current" : "")) + '">2 训练 + 审核</span>' +
-            '<span class="' + (best >= 80 && wrong === 0 ? "is-done" : (currentStep === 2 ? "is-current" : "")) + '">3 错题复盘</span>' +
-            '<span class="' + (currentStep === 3 ? "is-current" : "") + '">4 72h 复测</span>' +
+            '<span class="' + (best >= threshold ? "is-done" : (currentStep === 1 ? "is-current" : "")) + '">2 训练 + 审核</span>' +
+            '<span class="' + (best >= threshold && wrong === 0 ? "is-done" : (currentStep === 2 ? "is-current" : "")) + '">3 错题复盘</span>' +
+            '<span class="' + (currentStep === 3 ? "is-current" : "") + '">4 间隔复训</span>' +
           '</div>' +
         '</div>';
     }
@@ -949,19 +1249,20 @@
         primary.dataset.action = "codex";
         primary.textContent = "清理错题 " + wrong;
       } else {
-        primary.dataset.action = "retest";
-        primary.textContent = "进入 72h 复测";
+        primary.dataset.action = "workshop";
+        primary.textContent = "间隔复训";
       }
       primary.setAttribute("aria-label", primary.textContent);
     }
     if (gates.dataset.ulSignature === signature && gates.querySelector(".ul-home-flow")) return;
     gates.dataset.ulSignature = signature;
+    var bestLabel = best ? best + "/" + threshold : "未开始";
     gates.innerHTML =
       '<div class="ul-home-flow">' +
         '<button class="ul-home-step' + (read === lessons.length ? " is-done" : "") + '" data-ul-launch="library"><span>STEP 01</span><strong>课卡 ' + read + "/" + lessons.length + '</strong></button>' +
-        '<button class="ul-home-step' + (best >= 80 ? " is-done" : "") + '" data-ul-launch="training"><span>STEP 02</span><strong>训练 ' + (best ? best + " 分" : "未开始") + '</strong></button>' +
-        '<button class="ul-home-step' + (!wrong && best >= 80 ? " is-done" : "") + '" data-ul-launch="wrong"><span>STEP 03</span><strong>错题 ' + wrong + ' 道</strong></button>' +
-        '<button class="ul-home-step" data-action="retest"><span>STEP 04</span><strong>72h 复测</strong></button>' +
+        '<button class="ul-home-step' + (best >= passThreshold(levelIndex) ? " is-done" : "") + '" data-ul-launch="training"><span>STEP 02</span><strong>训练 ' + bestLabel + '</strong></button>' +
+        '<button class="ul-home-step' + (!wrong && best >= passThreshold(levelIndex) ? " is-done" : "") + '" data-ul-launch="wrong"><span>STEP 03</span><strong>错题 ' + wrong + ' 道</strong></button>' +
+        '<button class="ul-home-step" data-ul-launch="training"><span>STEP 04</span><strong>间隔复训</strong></button>' +
       '</div>';
   }
 
