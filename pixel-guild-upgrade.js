@@ -292,7 +292,7 @@
 
     merged.questions = Array.isArray(saved.questions) ? saved.questions : [];
     merged.activeLevel = Math.min(LEVELS.length, Math.max(1, Number(merged.activeLevel) || 1));
-    merged.activeStation = Math.min(4, Math.max(0, Number(merged.activeStation) || 0));
+    merged.activeStation = Math.min(5, Math.max(0, Number(merged.activeStation) || 0));
     if (!MODES[merged.dailyMode]) merged.dailyMode = "standard";
     return merged;
   }
@@ -347,7 +347,9 @@
         <button class="pg-station pg-station-codex" data-station="2" data-action="codex">Codex 审核室</button>
         <button class="pg-station pg-station-retest" data-station="3" data-action="retest">72h 复测塔</button>
         <button class="pg-station pg-station-project" data-station="4" data-action="artifact">项目作品陈列门</button>
-        <section class="pg-quest" aria-labelledby="pg-mission-title">
+        <button class="pg-station pg-station-notes" data-station="5" data-action="key-notes">重点笔记</button>
+        <section class="pg-quest" aria-label="GOGOGO 最新进度">
+          <strong class="pg-board-title" aria-hidden="true">GOGOGO</strong>
           <p class="pg-eyebrow">主线任务 · <span id="pg-level-label"></span></p>
           <h2 id="pg-mission-title"></h2>
           <p class="pg-quest-sub" id="pg-mission-promise"></p>
@@ -355,9 +357,18 @@
           <div class="pg-gate-grid" id="pg-gates"></div>
           <div class="pg-quest-footer">
             <span class="pg-artifact-line" id="pg-artifact-line"></span>
-            <button class="pg-primary" data-action="evidence">开始实战</button>
+            <button class="pg-primary" data-home-progress data-action="library" aria-label="继续书库 0/8">继续书库 0/8</button>
           </div>
         </section>
+        <svg class="pg-foreground-actors" viewBox="0 0 1536 1024" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+          <defs>
+            <clipPath id="pg-foreground-actor-clip" clipPathUnits="userSpaceOnUse">
+              <path d="M625 538 L651 547 L668 572 L665 601 L682 620 L692 650 L678 672 L670 708 L683 775 L656 781 L643 716 L632 714 L626 781 L598 780 L608 706 L603 676 L585 657 L596 621 L605 598 L603 568 Z"></path>
+              <path d="M454 597 L480 604 L496 622 L505 642 L527 650 L516 674 L499 665 L501 707 L520 748 L493 756 L480 713 L468 712 L457 756 L430 750 L445 705 L440 670 L424 652 L434 624 Z"></path>
+            </clipPath>
+          </defs>
+          <image href="assets/pixel-guild-hall.png" width="1536" height="1024" preserveAspectRatio="none" clip-path="url(#pg-foreground-actor-clip)"></image>
+        </svg>
         <div class="pg-mentor" id="pg-mentor">经验值只记录行动；四道证据门才证明能力。</div>
         <div class="pg-controls" aria-hidden="true">
           <span class="pg-key">A</span><span class="pg-key">D</span><span>移动</span>
@@ -369,6 +380,7 @@
           <button data-station="2" data-action="codex">审核室</button>
           <button data-station="3" data-action="retest">复测塔</button>
           <button data-station="4" data-action="artifact">作品门</button>
+          <button data-station="5" data-action="key-notes">笔记</button>
         </nav>
       </div>
     </main>
@@ -470,7 +482,8 @@
     document.getElementById("pg-mission-title").textContent = level.mission;
     document.getElementById("pg-mission-promise").textContent = level.promise;
     document.getElementById("pg-artifact-line").textContent = `本关产物：${level.artifact} · 未解决问题：${state.questions.length}`;
-    document.getElementById("pg-evidence-count").textContent = `${gateCount}/4`;
+    const evidenceCount = document.getElementById("pg-evidence-count");
+    if (evidenceCount) evidenceCount.textContent = `${gateCount}/4`;
     document.getElementById("pg-streak").textContent = `${state.streak} 天`;
     document.getElementById("pg-question-count").textContent = String(state.questions.length);
 
@@ -491,7 +504,7 @@
     document.querySelectorAll("[data-station]").forEach((button) => {
       button.classList.toggle("is-active", Number(button.dataset.station) === state.activeStation);
     });
-    const cameraPositions = ["55px", "25px", "0px", "-30px", "-55px"];
+    const cameraPositions = ["55px", "25px", "0px", "-30px", "-55px", "-55px"];
     scene.style.setProperty("--camera-x", cameraPositions[state.activeStation]);
   }
 
@@ -525,6 +538,11 @@
       codex: () => openDrawer("Codex 审核室", renderCodex()),
       retest: () => openDrawer("72h 复测塔", renderEvidence("retest")),
       artifact: () => openDrawer("项目作品陈列门", renderArtifact()),
+      "key-notes": () => {
+        const learning = window.GOGOGO_UNIFIED_LEARNING;
+        if (learning && typeof learning.openKeyNotes === "function") learning.openKeyNotes();
+        else openLegacy();
+      },
       evidence: () => openDrawer("四道能力证据门", renderEvidence()),
       questions: () => openDrawer("问题队列", renderQuestions()),
       daily: () => openDrawer("今日路线与关卡", renderDaily()),
@@ -577,13 +595,13 @@
   }
 
   function moveStation(direction) {
-    state.activeStation = (state.activeStation + direction + 5) % 5;
+    state.activeStation = (state.activeStation + direction + 6) % 6;
     saveState();
     renderWorld();
   }
 
   function activateStation() {
-    const actions = ["library", "workshop", "codex", "retest", "artifact"];
+    const actions = ["library", "workshop", "codex", "retest", "artifact", "key-notes"];
     const button = app.querySelector(`[data-action="${actions[state.activeStation]}"]`);
     if (button) button.click();
   }
@@ -1344,8 +1362,8 @@
       step.classList.toggle("is-locked", stepIndex > next.stage);
     });
 
-    const primary = document.querySelector(".pg-primary");
-    if (primary) {
+    const primary = document.querySelector("[data-home-progress]");
+    if (primary && !window.GOGOGO_UNIFIED_LEARNING) {
       if (primary.textContent !== next.button) primary.textContent = next.button;
       primary.dataset.action = next.action;
       primary.dataset.flowNext = "true";

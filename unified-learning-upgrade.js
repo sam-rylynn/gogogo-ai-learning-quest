@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  var VERSION = "20260804-reviewfix3";
+  var VERSION = "20260804-questcard1";
   var STORE_KEY = "gogogo_unified_learning_v1";
   var course = window.GAME_DATA;
   if (!course || !Array.isArray(course.levels)) return;
@@ -144,6 +144,7 @@
     reflections: {},
     reflectionRewarded: {},
     notes: {},
+    keyNoteReviewed: {},
     best: {},
     passed: {},
     mockStreak: {},
@@ -171,7 +172,7 @@
       });
     }
     var next = Object.assign({}, defaults, raw);
-    ["readFallback", "deepRead", "reflections", "reflectionRewarded", "notes", "best", "passed", "mockStreak", "wrong", "lastSession", "lastResult", "rewarded"].forEach(function (key) {
+    ["readFallback", "deepRead", "reflections", "reflectionRewarded", "notes", "keyNoteReviewed", "best", "passed", "mockStreak", "wrong", "lastSession", "lastResult", "rewarded"].forEach(function (key) {
       if (!next[key] || typeof next[key] !== "object") next[key] = {};
     });
     next.version = VERSION;
@@ -406,6 +407,7 @@
           '<div class="ul-brand"><small>GOGO GO / LEARNING QUEST</small><strong id="ul-brand-title">统一学习舱</strong></div>' +
           '<nav class="ul-nav" aria-label="学习流程">' +
             '<button data-ul-action="library">课程书库</button>' +
+            '<button data-ul-action="key-notes">重点笔记</button>' +
             '<button data-ul-action="training">本关训练</button>' +
             '<button data-ul-action="wrong">错题档案</button>' +
           '</nav>' +
@@ -431,6 +433,8 @@
     overlay.setAttribute("aria-hidden", "false");
     document.body.classList.add("ul-locked");
     content.scrollTop = 0;
+    var learningWindow = overlay.querySelector(".ul-window");
+    if (learningWindow) learningWindow.scrollTop = 0;
     var closeButton = overlay.querySelector('[data-ul-action="close"]');
     if (closeButton) closeButton.focus();
   }
@@ -552,6 +556,78 @@
     return plain.length > 220 ? plain.slice(0, 220) + "..." : plain;
   }
 
+  function keyNoteSignature(levelIndex) {
+    var source = curriculumLessons(levelIndex).map(function (lesson, index) {
+      return String(lesson.id || index) + "|" + lessonName(lesson, index) + "|" + lessonCore(lesson);
+    }).join("\n");
+    var hash = 2166136261;
+    for (var index = 0; index < source.length; index += 1) {
+      hash ^= source.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return source.length + "-" + (hash >>> 0).toString(36);
+  }
+
+  function keyNoteIsReviewed(levelIndex) {
+    var record = state.keyNoteReviewed[levelIndex];
+    return Boolean(record && record.signature === keyNoteSignature(levelIndex));
+  }
+
+  function lessonKeyChecks(lesson) {
+    var checks = Array.isArray(lesson.reflectionChecks) ? lesson.reflectionChecks.filter(Boolean).slice(0, 3) : [];
+    return checks.length ? checks : ["能用自己的话解释核心概念", "能说出一个适用场景", "能指出一个失败边界"];
+  }
+
+  function keyNotePlainText(levelIndex) {
+    var lessons = curriculumLessons(levelIndex);
+    return "# 第 " + (levelIndex + 1) + " 关重点笔记：" + levelName(levelIndex) + "\n\n" + lessons.map(function (lesson, index) {
+      return "## 课卡 " + String(index + 1).padStart(2, "0") + "：" + lessonName(lesson, index) + "\n" +
+        "- 核心结论：" + lessonCore(lesson) + "\n" +
+        "- 训练前自检：" + lessonKeyChecks(lesson).join("；");
+    }).join("\n\n");
+  }
+
+  function renderKeyNotes() {
+    openOverlay("key-notes", "本关重点笔记");
+    var levelIndex = state.activeLevel;
+    var lessons = curriculumLessons(levelIndex);
+    var reviewed = keyNoteIsReviewed(levelIndex);
+    var cards = lessons.map(function (lesson, index) {
+      var checks = lessonKeyChecks(lesson).map(function (check) {
+        return '<li>' + esc(check) + '</li>';
+      }).join("");
+      var read = lessonIsRead(levelIndex, index);
+      var reflected = reflectionIsComplete(levelIndex, index);
+      return '<article class="ul-keynote-card">' +
+        '<header><span>课卡 ' + String(index + 1).padStart(2, "0") + '</span><div class="ul-keynote-status"><em class="' + (read ? "is-done" : "") + '">' + (read ? "已读" : "待读") + '</em><em class="' + (reflected ? "is-done" : "") + '">' + (reflected ? "已表达" : "待表达") + '</em></div></header>' +
+        '<h3>' + esc(lessonName(lesson, index)) + '</h3>' +
+        '<div class="ul-keynote-core"><b>重点</b><p>' + esc(lessonCore(lesson)) + '</p></div>' +
+        '<div class="ul-keynote-check"><b>训练前确认自己能做到</b><ul>' + checks + '</ul></div>' +
+      '</article>';
+    }).join("");
+    content.innerHTML =
+      pageHead("KEY NOTES / PRE-TRAINING REVIEW", levelName(levelIndex), "这是本关课卡的训练前压缩笔记。先快速复习重点，再进入判断与选择训练。", '<span class="ul-chip">重点 <strong>' + lessons.length + '</strong></span><span class="ul-chip ' + (reviewed ? "is-complete" : "") + '"><strong>' + (reviewed ? "已复习" : "待复习") + '</strong></span>') +
+      levelTabs() +
+      credentialBrief(levelIndex) +
+      '<section class="ul-keynote-intro ' + (reviewed ? "is-reviewed" : "") + '">' +
+        '<span>REVIEW CHECKPOINT</span><div><h3>' + (reviewed ? "本关重点笔记已复习" : "训练前先完成一次重点复习") + '</h3><p>不要逐字背诵。你只需要确认：能解释核心概念、能识别适用场景、能指出失败边界。</p></div><em>' + (reviewed ? "READY" : "REVIEW") + '</em>' +
+      '</section>' +
+      '<section class="ul-keynote-grid">' + cards + '</section>' +
+      '<footer class="ul-footer-action ul-keynote-actions"><p>笔记由当前课卡自动生成；课程更新后会自动要求重新复习。</p><div class="ul-button-row"><button class="ul-button" data-ul-action="copy-key-notes">复制本关重点笔记</button><button class="ul-button is-primary" data-ul-action="review-key-notes">' + (reviewed ? "再次确认并进入训练" : "已复习，进入本关训练") + '</button></div></footer>';
+  }
+
+  function markKeyNotesReviewed() {
+    var levelIndex = state.activeLevel;
+    state.keyNoteReviewed[levelIndex] = {
+      signature: keyNoteSignature(levelIndex),
+      reviewedAt: Date.now()
+    };
+    saveState();
+    refreshHomeSoon();
+    notify("本关重点笔记已记录为已复习");
+    renderTrainingHome();
+  }
+
   function renderLesson(lessonIndex) {
     var levelIndex = state.activeLevel;
     var level = course.levels[levelIndex];
@@ -654,10 +730,12 @@
     var threshold = passThreshold(levelIndex);
     var streak = Number(state.mockStreak[levelIndex]) || 0;
     var streakTarget = requiredMockStreak(levelIndex);
+    var keyNotesReady = keyNoteIsReviewed(levelIndex);
     content.innerHTML =
       pageHead("WORKSHOP / PRACTICE + REVIEW", levelName(levelIndex), "每次随机抽题，一次只判断一个概念；作答后立即解释，结束后自动审核并生成错题。", '<span class="ul-chip">题库 <strong>' + total + '</strong></span><span class="ul-chip">最高 <strong>' + best + ' 分</strong></span>' + (isAdvancedLevel(levelIndex) ? '<span class="ul-chip">连胜 <strong>' + Math.min(streak, streakTarget) + '/' + streakTarget + '</strong></span>' : "")) +
       levelTabs() +
       credentialBrief(levelIndex) +
+      '<section class="ul-training-note-gate ' + (keyNotesReady ? "is-ready" : "") + '"><div><span>PRE-TRAINING NOTE</span><strong>' + (keyNotesReady ? "本关重点笔记已复习" : "训练前先复习本关重点笔记") + '</strong><p>' + (keyNotesReady ? "你可以直接训练，也可以随时返回笔记快速回忆。" : "重点笔记已经把每张课卡压缩成核心结论与自检问题，完成后才开始本关训练。") + '</p></div><button class="ul-button ' + (keyNotesReady ? "" : "is-cyan") + '" data-ul-action="key-notes">' + (keyNotesReady ? "再次复习" : "打开重点笔记") + '</button></section>' +
       '<div class="ul-training-grid">' +
         '<section class="ul-mission-card">' +
           '<h3>本关训练任务</h3>' +
@@ -670,7 +748,7 @@
           '</div>' +
           (read < lessons.length ? '<div class="ul-flow-note"><span>!</span><div>还有课卡未读。可以先训练诊断，也可以返回书库完成输入。</div></div>' : "") +
           '<div class="ul-button-row">' +
-            '<button class="ul-button is-primary" data-ul-action="start" data-mode="normal">' + (isAdvancedLevel(levelIndex) ? "开始一轮模考" : "开始随机训练") + '</button>' +
+            '<button class="ul-button is-primary" data-ul-action="start" data-mode="normal"' + (keyNotesReady ? "" : " disabled") + '>' + (isAdvancedLevel(levelIndex) ? "开始一轮模考" : "开始随机训练") + '</button>' +
             '<button class="ul-button" data-ul-action="start" data-mode="wrong"' + (wrong ? "" : " disabled") + '>只练错题</button>' +
             '<button class="ul-button" data-ul-action="library">返回书库</button>' +
           '</div>' +
@@ -691,6 +769,11 @@
 
   function startSession(mode) {
     var levelIndex = state.activeLevel;
+    if (!keyNoteIsReviewed(levelIndex)) {
+      notify("请先复习本关重点笔记");
+      renderKeyNotes();
+      return;
+    }
     var source = mode === "wrong"
       ? wrongIds(levelIndex).map(function (id) { return questionById(levelIndex, id); }).filter(Boolean)
       : bank(levelIndex).slice();
@@ -1108,13 +1191,15 @@
     var action = button.dataset.ulAction;
     if (action === "close") closeOverlay();
     if (action === "library") { lessonReturnToQuestion = false; renderLibrary(); }
+    if (action === "key-notes") renderKeyNotes();
     if (action === "training") renderTrainingHome();
     if (action === "wrong") renderWrongArchive();
     if (action === "level") {
       state.activeLevel = Number(button.dataset.level) || 0;
       saveState();
       refreshHomeSoon();
-      if (activeView === "wrong") renderWrongArchive();
+      if (activeView === "key-notes") renderKeyNotes();
+      else if (activeView === "wrong") renderWrongArchive();
       else if (activeView === "training" || activeView === "question" || activeView === "result") renderTrainingHome();
       else renderLibrary();
     }
@@ -1134,6 +1219,8 @@
     if (action === "answer") recordAnswer(Number(button.dataset.answer));
     if (action === "next-question") nextQuestion();
     if (action === "copy-review") copyReview();
+    if (action === "copy-key-notes") copyPlainText(keyNotePlainText(state.activeLevel), "本关重点笔记已复制");
+    if (action === "review-key-notes") markKeyNotesReviewed();
     if (action === "view-doubts") renderDoubts();
   }
 
@@ -1173,6 +1260,7 @@
       event.stopImmediatePropagation();
       syncActiveLevelToHome();
       if (unified.dataset.ulLaunch === "library") renderLibrary();
+      else if (unified.dataset.ulLaunch === "key-notes") renderKeyNotes();
       else if (unified.dataset.ulLaunch === "wrong") renderWrongArchive();
       else renderTrainingHome();
       return;
@@ -1202,8 +1290,8 @@
       if (button.textContent.trim() !== "进入本关训练") button.textContent = "进入本关训练";
     });
     var mentor = document.getElementById("pg-mentor");
-    if (mentor && mentor.textContent !== "学习顺序：书库读懂概念，然后训练判断，错题清零后进行间隔复训。") {
-      mentor.textContent = "学习顺序：书库读懂概念，然后训练判断，错题清零后进行间隔复训。";
+    if (mentor && mentor.textContent !== "学习顺序：书库读懂概念，重点笔记压缩复习，然后训练、错题与间隔复训。") {
+      mentor.textContent = "学习顺序：书库读懂概念，重点笔记压缩复习，然后训练、错题与间隔复训。";
     }
     var gates = document.getElementById("pg-gates");
     if (!gates) return;
@@ -1212,57 +1300,55 @@
     var read = readCount(levelIndex);
     var best = Number(state.best[levelIndex]) || 0;
     var wrong = wrongIds(levelIndex).length;
-    var signature = [levelIndex, read, lessons.length, best, wrong].join("-");
+    var keyNotesReady = keyNoteIsReviewed(levelIndex);
+    var signature = [levelIndex, read, lessons.length, keyNotesReady ? 1 : 0, best, wrong].join("-");
     var flow = document.getElementById("pg-mode-row");
     var threshold = passThreshold(levelIndex);
-    var currentStep = read < lessons.length ? 0 : (best < threshold ? 1 : (wrong > 0 ? 2 : 3));
-    var nextLabel = [
-      "下一步：在书库读完本关课卡",
-      "下一步：完成一组随机训练",
-      "下一步：清零当前错题",
-      "下一步：间隔后重新模考"
-    ][currentStep];
-    if (flow && (flow.dataset.ulSignature !== signature || !flow.querySelector(".ul-main-flow"))) {
+    var currentStep = read < lessons.length ? 0 : (!keyNotesReady ? 1 : (best < threshold ? 2 : (wrong > 0 ? 3 : 4)));
+    var stepName = ["书库学习", "重点笔记", "训练 + 审核", "错题复盘", "间隔复训"][currentStep];
+    var nextLevelIndex = levelIndex + 1;
+    var nextLevelPreview = nextLevelIndex < course.levels.length
+      ? "LEVEL " + String(nextLevelIndex + 1).padStart(2, "0") + " · " + levelName(nextLevelIndex)
+      : "全路径终局 · 高级证书作品集";
+    var eyebrow = document.querySelector(".pg-eyebrow");
+    if (eyebrow && eyebrow.firstChild) eyebrow.firstChild.nodeValue = "当前关卡 · ";
+    if (flow && (flow.dataset.ulSignature !== signature || !flow.querySelector(".ul-current-quest"))) {
       flow.dataset.ulSignature = signature;
-      flow.setAttribute("aria-label", "本关四步学习流程");
+      flow.setAttribute("aria-label", "当前学习步骤");
       flow.innerHTML =
-        '<div class="ul-main-flow">' +
-          '<div class="ul-main-flow-head"><span>本关学习路径</span><strong>' + nextLabel + '</strong></div>' +
-          '<div class="ul-main-flow-track">' +
-            '<span class="' + (read === lessons.length ? "is-done" : (currentStep === 0 ? "is-current" : "")) + '">1 书库学习</span>' +
-            '<span class="' + (best >= threshold ? "is-done" : (currentStep === 1 ? "is-current" : "")) + '">2 训练 + 审核</span>' +
-            '<span class="' + (best >= threshold && wrong === 0 ? "is-done" : (currentStep === 2 ? "is-current" : "")) + '">3 错题复盘</span>' +
-            '<span class="' + (currentStep === 3 ? "is-current" : "") + '">4 间隔复训</span>' +
-          '</div>' +
+        '<div class="ul-current-quest">' +
+          '<span>CURRENT STEP · ' + String(currentStep + 1).padStart(2, "0") + '</span>' +
+          '<strong>' + stepName + '</strong>' +
         '</div>';
     }
-    gates.setAttribute("aria-label", "本关四步学习进度");
-    var primary = document.querySelector(".pg-quest-footer .pg-primary");
-    if (primary) {
-      if (currentStep === 0) {
-        primary.dataset.action = "library";
-        primary.textContent = "继续书库 " + read + "/" + lessons.length;
-      } else if (currentStep === 1) {
-        primary.dataset.action = "workshop";
-        primary.textContent = "开始本关训练";
-      } else if (currentStep === 2) {
-        primary.dataset.action = "codex";
-        primary.textContent = "清理错题 " + wrong;
-      } else {
-        primary.dataset.action = "workshop";
-        primary.textContent = "间隔复训";
-      }
-      primary.setAttribute("aria-label", primary.textContent);
+    gates.setAttribute("aria-label", "下一关预告");
+    var nextAction = "workshop";
+    var nextLabel = "间隔复训";
+    if (currentStep === 0) {
+      nextAction = "library";
+      nextLabel = "继续书库 " + read + "/" + lessons.length;
+    } else if (currentStep === 1) {
+      nextAction = "key-notes";
+      nextLabel = "复习重点笔记";
+    } else if (currentStep === 2) {
+      nextAction = "workshop";
+      nextLabel = "开始本关训练";
+    } else if (currentStep === 3) {
+      nextAction = "codex";
+      nextLabel = "清理错题 " + wrong;
     }
-    if (gates.dataset.ulSignature === signature && gates.querySelector(".ul-home-flow")) return;
+    var primary = document.querySelector("[data-home-progress]");
+    if (primary) {
+      if (primary.dataset.action !== nextAction) primary.dataset.action = nextAction;
+      if (primary.textContent !== nextLabel) primary.textContent = nextLabel;
+      if (primary.getAttribute("aria-label") !== nextLabel) primary.setAttribute("aria-label", nextLabel);
+    }
+    if (gates.dataset.ulSignature === signature && gates.querySelector(".ul-next-level-preview")) return;
     gates.dataset.ulSignature = signature;
-    var bestLabel = best ? best + "/" + threshold : "未开始";
     gates.innerHTML =
-      '<div class="ul-home-flow">' +
-        '<button class="ul-home-step' + (read === lessons.length ? " is-done" : "") + '" data-ul-launch="library"><span>STEP 01</span><strong>课卡 ' + read + "/" + lessons.length + '</strong></button>' +
-        '<button class="ul-home-step' + (best >= passThreshold(levelIndex) ? " is-done" : "") + '" data-ul-launch="training"><span>STEP 02</span><strong>训练 ' + bestLabel + '</strong></button>' +
-        '<button class="ul-home-step' + (!wrong && best >= passThreshold(levelIndex) ? " is-done" : "") + '" data-ul-launch="wrong"><span>STEP 03</span><strong>错题 ' + wrong + ' 道</strong></button>' +
-        '<button class="ul-home-step" data-ul-launch="training"><span>STEP 04</span><strong>间隔复训</strong></button>' +
+      '<div class="ul-next-level-preview">' +
+        '<span>NEXT LEVEL / 下一关预告</span>' +
+        '<strong>' + esc(nextLevelPreview) + '</strong>' +
       '</div>';
   }
 
@@ -1288,6 +1374,7 @@
     window.GOGOGO_UNIFIED_LEARNING = {
       version: VERSION,
       openLibrary: renderLibrary,
+      openKeyNotes: function () { syncActiveLevelToHome(); renderKeyNotes(); },
       openTraining: renderTrainingHome,
       openWrongArchive: renderWrongArchive
     };
