@@ -347,7 +347,7 @@
         <button class="pg-station pg-station-codex" data-station="2" data-action="codex">Codex 审核室</button>
         <button class="pg-station pg-station-retest" data-station="3" data-action="retest">72h 复测塔</button>
         <button class="pg-station pg-station-project" data-station="4" data-action="artifact">项目作品陈列门</button>
-        <button class="pg-station pg-station-notes" data-station="5" data-action="key-notes">重点笔记</button>
+        <button class="pg-station pg-station-notes" data-station="5" data-action="key-notes">我的复盘</button>
         <section class="pg-quest" aria-label="GOGOGO 最新进度">
           <strong class="pg-board-title" aria-hidden="true">GOGOGO</strong>
           <p class="pg-eyebrow">主线任务 · <span id="pg-level-label"></span></p>
@@ -380,7 +380,7 @@
           <button data-station="2" data-action="codex">审核室</button>
           <button data-station="3" data-action="retest">复测塔</button>
           <button data-station="4" data-action="artifact">作品门</button>
-          <button data-station="5" data-action="key-notes">笔记</button>
+          <button data-station="5" data-action="key-notes">复盘</button>
         </nav>
       </div>
     </main>

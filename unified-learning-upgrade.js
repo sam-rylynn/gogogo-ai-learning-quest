@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  var VERSION = "20260804-questcard1";
+  var VERSION = "20260812-review3";
   var STORE_KEY = "gogogo_unified_learning_v1";
   var course = window.GAME_DATA;
   if (!course || !Array.isArray(course.levels)) return;
@@ -143,6 +143,7 @@
     deepRead: {},
     reflections: {},
     reflectionRewarded: {},
+    reflectionReviews: {},
     notes: {},
     keyNoteReviewed: {},
     best: {},
@@ -153,6 +154,10 @@
     lastResult: {},
     rewarded: {}
   };
+
+  function isPlainRecord(value) {
+    return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+  }
 
   function loadState() {
     var raw = {};
@@ -172,8 +177,8 @@
       });
     }
     var next = Object.assign({}, defaults, raw);
-    ["readFallback", "deepRead", "reflections", "reflectionRewarded", "notes", "keyNoteReviewed", "best", "passed", "mockStreak", "wrong", "lastSession", "lastResult", "rewarded"].forEach(function (key) {
-      if (!next[key] || typeof next[key] !== "object") next[key] = {};
+    ["readFallback", "deepRead", "reflections", "reflectionRewarded", "reflectionReviews", "notes", "keyNoteReviewed", "best", "passed", "mockStreak", "wrong", "lastSession", "lastResult", "rewarded"].forEach(function (key) {
+      if (!isPlainRecord(next[key])) next[key] = {};
     });
     next.version = VERSION;
     next.activeLevel = Math.max(0, Math.min(course.levels.length - 1, Number(next.activeLevel) || 0));
@@ -187,6 +192,8 @@
   var content = null;
   var brandTitle = null;
   var activeView = "library";
+  var reviewFilter = "pending";
+  var overlayReturnFocus = null;
   var toastTimer = null;
   var homeRefreshQueued = false;
 
@@ -319,6 +326,14 @@
     return Number.isInteger(lesson.legacyIndex) ? lesson.legacyIndex : null;
   }
 
+  function lessonNoteValue(levelIndex, lessonIndex) {
+    var canonicalKey = lessonProgressKey(levelIndex, lessonIndex);
+    if (Object.prototype.hasOwnProperty.call(state.notes, canonicalKey)) return String(state.notes[canonicalKey] || "");
+    var legacyIndex = legacyLessonIndex(levelIndex, lessonIndex);
+    var legacyKey = legacyIndex === null ? "" : levelIndex + ":" + legacyIndex;
+    return String((legacyKey ? state.notes[legacyKey] : "") || "");
+  }
+
   function lessonIsRead(levelIndex, lessonIndex) {
     if (state.deepRead[lessonProgressKey(levelIndex, lessonIndex)]) return true;
     var legacyIndex = legacyLessonIndex(levelIndex, lessonIndex);
@@ -407,7 +422,7 @@
           '<div class="ul-brand"><small>GOGO GO / LEARNING QUEST</small><strong id="ul-brand-title">统一学习舱</strong></div>' +
           '<nav class="ul-nav" aria-label="学习流程">' +
             '<button data-ul-action="library">课程书库</button>' +
-            '<button data-ul-action="key-notes">重点笔记</button>' +
+            '<button data-ul-action="key-notes">我的复盘</button>' +
             '<button data-ul-action="training">本关训练</button>' +
             '<button data-ul-action="wrong">错题档案</button>' +
           '</nav>' +
@@ -424,19 +439,27 @@
 
   function openOverlay(view, title) {
     ensureOverlay();
+    var firstOpen = overlay.hidden;
+    var viewChanged = activeView !== view;
+    if (firstOpen && document.activeElement instanceof HTMLElement) overlayReturnFocus = document.activeElement;
     activeView = view;
     brandTitle.textContent = title || "统一学习舱";
     overlay.querySelectorAll(".ul-nav button").forEach(function (button) {
-      button.classList.toggle("is-active", button.dataset.ulAction === view || (view === "lesson" && button.dataset.ulAction === "library") || (view === "question" && button.dataset.ulAction === "training") || (view === "result" && button.dataset.ulAction === "training"));
+      var current = button.dataset.ulAction === view || (view === "lesson" && button.dataset.ulAction === "library") || (view === "question" && button.dataset.ulAction === "training") || (view === "result" && button.dataset.ulAction === "training");
+      button.classList.toggle("is-active", current);
+      if (current) button.setAttribute("aria-current", "page");
+      else button.removeAttribute("aria-current");
     });
     overlay.hidden = false;
     overlay.setAttribute("aria-hidden", "false");
     document.body.classList.add("ul-locked");
-    content.scrollTop = 0;
     var learningWindow = overlay.querySelector(".ul-window");
-    if (learningWindow) learningWindow.scrollTop = 0;
-    var closeButton = overlay.querySelector('[data-ul-action="close"]');
-    if (closeButton) closeButton.focus();
+    if (firstOpen || viewChanged) {
+      content.scrollTop = 0;
+      if (learningWindow) learningWindow.scrollTop = 0;
+      var closeButton = overlay.querySelector('[data-ul-action="close"]');
+      if (closeButton) closeButton.focus();
+    }
   }
 
   function closeOverlay() {
@@ -444,6 +467,25 @@
     overlay.hidden = true;
     overlay.setAttribute("aria-hidden", "true");
     document.body.classList.remove("ul-locked");
+    if (overlayReturnFocus && document.contains(overlayReturnFocus)) overlayReturnFocus.focus();
+    overlayReturnFocus = null;
+  }
+
+  function trapOverlayFocus(event) {
+    if (!overlay || overlay.hidden || event.key !== "Tab") return;
+    var focusable = Array.prototype.slice.call(overlay.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), details > summary, [tabindex]:not([tabindex="-1"])')).filter(function (node) {
+      return node.getClientRects().length > 0;
+    });
+    if (!focusable.length) return;
+    var first = focusable[0];
+    var last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 
   function levelTabs() {
@@ -451,7 +493,7 @@
       var current = index === state.activeLevel;
       var read = readCount(index);
       var total = curriculumLessons(index).length;
-      return '<button class="ul-level-tab' + (current ? " is-active" : "") + '" data-ul-action="level" data-level="' + index + '">' +
+      return '<button class="ul-level-tab' + (current ? " is-active" : "") + '" data-ul-action="level" data-level="' + index + '" aria-pressed="' + (current ? "true" : "false") + '"' + (current ? ' aria-current="true"' : "") + '>' +
         '<span>LEVEL ' + String(index + 1).padStart(2, "0") + " / " + read + "/" + total + '</span>' +
         '<strong>' + esc(levelName(index)) + '</strong>' +
       '</button>';
@@ -501,8 +543,7 @@
         '</span>' +
       '</button>';
     }).join("");
-    var noteKeys = lessons.map(function (lesson, index) { return lessonProgressKey(levelIndex, index); });
-    var noteEntries = noteKeys.filter(function (key) { return (state.notes[key] || "").trim(); });
+    var noteEntries = lessons.filter(function (lesson, index) { return lessonNoteValue(levelIndex, index).trim(); });
     var doubtHtml = noteEntries.length
       ? '<div class="ul-flow-note" style="margin-top:14px"><span>?</span><div><strong>本关有 ' + noteEntries.length + ' 个未解疑问</strong><button class="ul-button is-cyan" style="margin-top:8px" data-ul-action="view-doubts">查看全部疑问</button></div></div>'
       : "";
@@ -556,76 +597,406 @@
     return plain.length > 220 ? plain.slice(0, 220) + "..." : plain;
   }
 
-  function keyNoteSignature(levelIndex) {
-    var source = curriculumLessons(levelIndex).map(function (lesson, index) {
-      return String(lesson.id || index) + "|" + lessonName(lesson, index) + "|" + lessonCore(lesson);
-    }).join("\n");
+  function textSignature(value) {
+    var text = String(value || "").trim();
     var hash = 2166136261;
-    for (var index = 0; index < source.length; index += 1) {
-      hash ^= source.charCodeAt(index);
+    for (var index = 0; index < text.length; index += 1) {
+      hash ^= text.charCodeAt(index);
       hash = Math.imul(hash, 16777619);
     }
-    return source.length + "-" + (hash >>> 0).toString(36);
+    return text.length + "-" + (hash >>> 0).toString(36);
   }
 
-  function keyNoteIsReviewed(levelIndex) {
-    var record = state.keyNoteReviewed[levelIndex];
-    return Boolean(record && record.signature === keyNoteSignature(levelIndex));
+  function reflectionReviewCourseSignature(levelIndex, lessonIndex) {
+    var lesson = curriculumLessons(levelIndex)[lessonIndex] || {};
+    var checks = Array.isArray(lesson.reflectionChecks) ? lesson.reflectionChecks : [];
+    return textSignature([
+      lesson.id || lessonIndex,
+      lessonName(lesson, lessonIndex),
+      lesson.reflectionPrompt || "",
+      lessonCore(lesson),
+      checks.join("|")
+    ].join("\n"));
   }
 
-  function lessonKeyChecks(lesson) {
-    var checks = Array.isArray(lesson.reflectionChecks) ? lesson.reflectionChecks.filter(Boolean).slice(0, 3) : [];
-    return checks.length ? checks : ["能用自己的话解释核心概念", "能说出一个适用场景", "能指出一个失败边界"];
+  function reviewHistorySnapshot(record) {
+    if (!isPlainRecord(record)) return null;
+    return {
+      status: record.status || "pending",
+      criticalIssue: String(record.criticalIssue || ""),
+      prompt: String(record.prompt || ""),
+      answerSignature: String(record.answerSignature || ""),
+      courseSignature: String(record.courseSignature || ""),
+      doubtSignature: String(record.doubtSignature || ""),
+      answer: String(record.answer || ""),
+      copiedAt: Number(record.copiedAt) || 0,
+      reviewedAt: Number(record.reviewedAt) || 0,
+      confirmedAt: Number(record.confirmedAt) || 0
+    };
   }
 
-  function keyNotePlainText(levelIndex) {
-    var lessons = curriculumLessons(levelIndex);
-    return "# 第 " + (levelIndex + 1) + " 关重点笔记：" + levelName(levelIndex) + "\n\n" + lessons.map(function (lesson, index) {
-      return "## 课卡 " + String(index + 1).padStart(2, "0") + "：" + lessonName(lesson, index) + "\n" +
-        "- 核心结论：" + lessonCore(lesson) + "\n" +
-        "- 训练前自检：" + lessonKeyChecks(lesson).join("；");
-    }).join("\n\n");
+  function reflectionReviewMeta(levelIndex, lessonIndex) {
+    var key = lessonProgressKey(levelIndex, lessonIndex);
+    var answer = reflectionValue(levelIndex, lessonIndex).trim();
+    var rawRecord = state.reflectionReviews[key];
+    var record = isPlainRecord(rawRecord) ? rawRecord : null;
+    if (answer.length < 20) {
+      return { key: key, answer: answer, record: record, status: "missing", stale: Boolean(record) };
+    }
+    var answerMatches = Boolean(record && record.answerSignature === textSignature(answer) && String(record.answer || "").trim() === answer);
+    var courseMatches = Boolean(record && record.courseSignature === reflectionReviewCourseSignature(levelIndex, lessonIndex));
+    var doubtMatches = Boolean(record && record.doubtSignature === textSignature(lessonNoteValue(levelIndex, lessonIndex)));
+    if (!record || !answerMatches || !courseMatches || !doubtMatches) {
+      return { key: key, answer: answer, record: record, status: "pending", stale: Boolean(record) };
+    }
+    var status = ["pending", "confirmed", "needs-revision", "insufficient"].indexOf(record.status) >= 0
+      ? record.status
+      : "pending";
+    return { key: key, answer: answer, record: record, status: status, stale: false };
   }
 
-  function renderKeyNotes() {
-    openOverlay("key-notes", "本关重点笔记");
+  function reviewStatusLabel(meta) {
+    if (meta.status === "confirmed") return "已确认";
+    if (meta.status === "needs-revision") return "需修改";
+    if (meta.status === "insufficient") return "信息不足";
+    if (meta.status === "missing") return "未表达";
+    return meta.stale ? "已修改 · 待复核" : "待审核";
+  }
+
+  function reviewStatusClass(meta) {
+    if (meta.status === "confirmed") return "is-confirmed";
+    if (meta.status === "needs-revision" || meta.status === "insufficient") return "is-revision";
+    if (meta.status === "missing") return "is-missing";
+    return "is-pending";
+  }
+
+  function reviewPriority(meta) {
+    if (meta.status === "needs-revision") return 0;
+    if (meta.status === "insufficient") return 1;
+    if (meta.status === "pending") return 2;
+    if (meta.status === "missing") return 3;
+    return 4;
+  }
+
+  function reviewReceiptEditor(levelIndex, lessonIndex) {
+    return '<details class="ul-review-receipt">' +
+      '<summary>粘贴 Codex 审核回执</summary>' +
+      '<p>请粘贴三行回执。页面只负责保存，不会假装自动完成语义审核。</p>' +
+      '<pre>状态：通过 / 需修正 / 信息不足\n关键问题：最重要的一处\n追问或提示：只给一个</pre>' +
+      '<label>Codex 回执<textarea data-review-receipt maxlength="1200" placeholder="状态：需修正\n关键问题：……\n追问或提示：……"></textarea></label>' +
+      '<button class="ul-button is-cyan" data-ul-action="save-review-receipt" data-level="' + levelIndex + '" data-lesson="' + lessonIndex + '">保存审核回执</button>' +
+    '</details>';
+  }
+
+  function reviewCardHtml(entry) {
+    var meta = entry.meta;
+    var lessonNumber = String(entry.index + 1).padStart(2, "0");
+    var feedback = "";
+    var feedbackRecord = meta.record;
+    var feedbackIsPrevious = meta.stale;
+    if (feedbackRecord && !feedbackRecord.criticalIssue && !feedbackRecord.prompt && Array.isArray(feedbackRecord.history) && feedbackRecord.history.length) {
+      feedbackRecord = feedbackRecord.history[feedbackRecord.history.length - 1];
+      feedbackIsPrevious = true;
+    }
+    if (feedbackRecord && (feedbackRecord.criticalIssue || feedbackRecord.prompt)) {
+      feedback = '<section class="ul-review-feedback' + (feedbackIsPrevious ? " is-stale" : "") + '">' +
+        '<b>' + (feedbackIsPrevious ? "上一版 Codex 反馈" : "Codex 关键反馈") + '</b>' +
+        (feedbackRecord.criticalIssue ? '<p><strong>关键问题：</strong>' + esc(feedbackRecord.criticalIssue) + '</p>' : "") +
+        (feedbackRecord.prompt ? '<p><strong>追问或提示：</strong>' + esc(feedbackRecord.prompt) + '</p>' : "") +
+        (feedbackIsPrevious ? '<small>这条反馈只属于上一版表达；当前版本需要重新送审。</small>' : "") +
+      '</section>';
+    }
+    var actions = '<button class="ul-button" data-ul-action="goto-lesson" data-lesson="' + entry.index + '">' + (meta.status === "missing" ? "去完成表达" : "打开课卡") + '</button>';
+    if (meta.status !== "missing") {
+      actions += '<button class="ul-button is-cyan" data-ul-action="copy-review-packet" data-level="' + entry.levelIndex + '" data-lesson="' + entry.index + '">' + (meta.status === "confirmed" ? "重新复制审核包" : "复制给 Codex 审核") + '</button>';
+    }
+    return '<article class="ul-review-card ' + reviewStatusClass(meta) + '" data-review-key="' + esc(meta.key) + '" tabindex="-1">' +
+      '<header><span>课卡 ' + lessonNumber + '</span><em>' + reviewStatusLabel(meta) + '</em></header>' +
+      '<h3>' + esc(lessonName(entry.lesson, entry.index)) + '</h3>' +
+      (meta.status === "missing"
+        ? '<div class="ul-review-empty-answer"><b>还没有自己的理解</b><p>先回到课卡，用自己的话完成一段表达；这里不会复制教材摘要充当你的笔记。</p></div>'
+        : '<div class="ul-review-answer"><b>' + (meta.status === "confirmed" ? "经确认的我的理解" : "我的理解") + '</b><p>' + esc(meta.answer) + '</p></div>') +
+      (entry.doubt ? '<div class="ul-review-doubt"><b>真实疑问</b><p>' + esc(entry.doubt) + '</p></div>' : "") +
+      feedback +
+      '<div class="ul-button-row">' + actions + '</div>' +
+      (meta.status === "missing" ? "" : reviewReceiptEditor(entry.levelIndex, entry.index)) +
+    '</article>';
+  }
+
+  function reviewSignalsHtml(levelIndex) {
+    var wrongCount = wrongIds(levelIndex).length;
+    var wrongItems = wrongIds(levelIndex).map(function (id) { return questionById(levelIndex, id); }).filter(Boolean).slice(0, 3);
+    var allDoubts = curriculumLessons(levelIndex).map(function (lesson, index) {
+      var note = lessonNoteValue(levelIndex, index).trim();
+      return { note: note, index: index, lesson: lesson };
+    }).filter(function (entry) { return entry.note; });
+    var doubts = allDoubts.slice(0, 3);
+    if (!wrongItems.length && !doubts.length) return "";
+    var wrongHtml = wrongItems.length
+      ? '<section class="ul-review-signal"><header><span>训练暴露</span><strong>' + wrongCount + ' 道错题</strong></header>' + wrongItems.map(function (item) {
+          return '<div><em>' + esc(item.tag) + '</em><p>' + esc(item.q) + '</p></div>';
+        }).join("") + '<button class="ul-button" data-ul-action="wrong">去错题档案验证修正</button></section>'
+      : "";
+    var doubtHtml = doubts.length
+      ? '<section class="ul-review-signal"><header><span>阅读留下</span><strong>' + allDoubts.length + ' 个真实疑问</strong></header>' + doubts.map(function (entry) {
+          return '<div><em>课卡 ' + String(entry.index + 1).padStart(2, "0") + '</em><p>' + esc(entry.note) + '</p></div>';
+        }).join("") + '<button class="ul-button" data-ul-action="view-doubts">查看全部疑问</button></section>'
+      : "";
+    return '<section class="ul-review-signals" aria-label="当前薄弱信号">' + wrongHtml + doubtHtml + '</section>';
+  }
+
+  function reviewTrainingEvidenceHtml(levelIndex) {
+    var result = isPlainRecord(state.lastResult[levelIndex]) ? state.lastResult[levelIndex] : null;
+    if (!result || !Number(result.total)) return "";
+    var mode = result.mode === "wrong" ? "错题复训" : "完整训练";
+    var when = Number(result.at) ? new Date(Number(result.at)).toLocaleDateString("zh-CN") : "最近一次";
+    return '<section class="ul-review-training-evidence"><span>最近训练证据</span><strong>' + esc(mode) + ' · ' + (Number(result.score) || 0) + ' 分</strong><small>' + esc(when) + ' · ' + (Number(result.correct) || 0) + '/' + (Number(result.total) || 0) + ' 正确</small><button class="ul-button" data-ul-action="training">再次验证</button></section>';
+  }
+
+  function reviewControlToken(node) {
+    if (!node || !node.closest) return null;
+    var control = node.closest("[data-ul-action]");
+    if (!control || !overlay.contains(control)) return null;
+    return {
+      action: control.dataset.ulAction || "",
+      filter: control.dataset.filter || "",
+      level: control.dataset.level || "",
+      lesson: control.dataset.lesson || ""
+    };
+  }
+
+  function captureReviewRenderState() {
+    if (!overlay || overlay.hidden || activeView !== "key-notes") return null;
+    var learningWindow = overlay.querySelector(".ul-window");
+    var tabs = content.querySelector(".ul-level-tabs");
+    return {
+      scrollTop: learningWindow ? learningWindow.scrollTop : 0,
+      tabsScrollLeft: tabs ? tabs.scrollLeft : 0,
+      focus: reviewControlToken(document.activeElement)
+    };
+  }
+
+  function reviewControlFromToken(token) {
+    if (!token) return null;
+    if (token.reviewKey) {
+      return Array.prototype.slice.call(content.querySelectorAll("[data-review-key]")).filter(function (card) {
+        return card.dataset.reviewKey === token.reviewKey;
+      })[0] || null;
+    }
+    if (!token.action) return null;
+    var controls = Array.prototype.slice.call(overlay.querySelectorAll('[data-ul-action="' + token.action + '"]'));
+    return controls.filter(function (control) {
+      return (!token.filter || control.dataset.filter === token.filter) &&
+        (!token.level || control.dataset.level === token.level) &&
+        (!token.lesson || control.dataset.lesson === token.lesson);
+    })[0] || null;
+  }
+
+  function restoreReviewRenderState(renderState, preferredFocus) {
+    if (!renderState) return;
+    var tabs = content.querySelector(".ul-level-tabs");
+    var target = reviewControlFromToken(preferredFocus || renderState.focus);
+    if (target) {
+      try { target.focus({ preventScroll: true }); } catch (error) { target.focus(); }
+    }
+    if (tabs) {
+      if (target && target.dataset.ulAction === "level") {
+        tabs.scrollLeft = Math.max(0, target.offsetLeft - (tabs.clientWidth - target.offsetWidth) / 2);
+      } else {
+        tabs.scrollLeft = renderState.tabsScrollLeft;
+      }
+    }
+    var learningWindow = overlay.querySelector(".ul-window");
+    if (learningWindow) learningWindow.scrollTop = renderState.scrollTop;
+  }
+
+  function renderKeyNotes(preferredFocus) {
+    var renderState = captureReviewRenderState();
+    openOverlay("key-notes", "我的复盘");
     var levelIndex = state.activeLevel;
     var lessons = curriculumLessons(levelIndex);
-    var reviewed = keyNoteIsReviewed(levelIndex);
-    var cards = lessons.map(function (lesson, index) {
-      var checks = lessonKeyChecks(lesson).map(function (check) {
-        return '<li>' + esc(check) + '</li>';
-      }).join("");
-      var read = lessonIsRead(levelIndex, index);
-      var reflected = reflectionIsComplete(levelIndex, index);
-      return '<article class="ul-keynote-card">' +
-        '<header><span>课卡 ' + String(index + 1).padStart(2, "0") + '</span><div class="ul-keynote-status"><em class="' + (read ? "is-done" : "") + '">' + (read ? "已读" : "待读") + '</em><em class="' + (reflected ? "is-done" : "") + '">' + (reflected ? "已表达" : "待表达") + '</em></div></header>' +
-        '<h3>' + esc(lessonName(lesson, index)) + '</h3>' +
-        '<div class="ul-keynote-core"><b>重点</b><p>' + esc(lessonCore(lesson)) + '</p></div>' +
-        '<div class="ul-keynote-check"><b>训练前确认自己能做到</b><ul>' + checks + '</ul></div>' +
-      '</article>';
-    }).join("");
+    var entries = lessons.map(function (lesson, index) {
+      return {
+        levelIndex: levelIndex,
+        lesson: lesson,
+        index: index,
+        doubt: lessonNoteValue(levelIndex, index).trim(),
+        meta: reflectionReviewMeta(levelIndex, index)
+      };
+    }).sort(function (a, b) { return reviewPriority(a.meta) - reviewPriority(b.meta); });
+    var counts = { confirmed: 0, pending: 0, revision: 0 };
+    entries.forEach(function (entry) {
+      if (entry.meta.status === "confirmed") counts.confirmed += 1;
+      else if (entry.meta.status === "needs-revision" || entry.meta.status === "insufficient") counts.revision += 1;
+      else if (entry.meta.status !== "missing") counts.pending += 1;
+    });
+    var visible = entries.filter(function (entry) {
+      return reviewFilter === "confirmed" ? entry.meta.status === "confirmed" : entry.meta.status !== "confirmed" && entry.meta.status !== "missing";
+    });
+    if (reviewFilter === "pending") visible = visible.slice(0, 3);
+    var first = visible[0];
+    var primaryAction = "";
+    if (first) {
+      if (first.meta.status === "pending") {
+        primaryAction = '<button class="ul-button is-primary" data-ul-action="copy-review-packet" data-level="' + levelIndex + '" data-lesson="' + first.index + '">复制课卡 ' + String(first.index + 1).padStart(2, "0") + ' 审核包</button>';
+      } else {
+        primaryAction = '<button class="ul-button is-primary" data-ul-action="goto-lesson" data-lesson="' + first.index + '">' + (first.meta.status === "missing" ? "去完成" : "去修改") + '课卡 ' + String(first.index + 1).padStart(2, "0") + '</button>';
+      }
+    }
+    var cards = visible.length
+      ? visible.map(reviewCardHtml).join("")
+      : '<div class="ul-empty"><h3>' + (reviewFilter === "confirmed" ? "还没有经确认的理解" : "还没有需要处理的个人表达") + '</h3><p>' + (reviewFilter === "confirmed" ? "完成课卡表达并把 Codex 回执粘贴回来后，会形成你的理解档案。" : "这里不会把未写的课卡变成任务。可以直接训练；真实表达、疑问和错误出现后再回来复盘。") + '</p></div>';
     content.innerHTML =
-      pageHead("KEY NOTES / PRE-TRAINING REVIEW", levelName(levelIndex), "这是本关课卡的训练前压缩笔记。先快速复习重点，再进入判断与选择训练。", '<span class="ul-chip">重点 <strong>' + lessons.length + '</strong></span><span class="ul-chip ' + (reviewed ? "is-complete" : "") + '"><strong>' + (reviewed ? "已复习" : "待复习") + '</strong></span>') +
+      pageHead("MY REVIEW / PERSONAL EVIDENCE", levelName(levelIndex), "这里只保留你的表达、真实疑问、训练错误和 Codex 反馈；课程原文仍在书库。", '<span class="ul-chip">待处理 <strong>' + (counts.pending + counts.revision) + '</strong></span><span class="ul-chip is-complete">已确认 <strong>' + counts.confirmed + '</strong></span>') +
       levelTabs() +
-      credentialBrief(levelIndex) +
-      '<section class="ul-keynote-intro ' + (reviewed ? "is-reviewed" : "") + '">' +
-        '<span>REVIEW CHECKPOINT</span><div><h3>' + (reviewed ? "本关重点笔记已复习" : "训练前先完成一次重点复习") + '</h3><p>不要逐字背诵。你只需要确认：能解释核心概念、能识别适用场景、能指出失败边界。</p></div><em>' + (reviewed ? "READY" : "REVIEW") + '</em>' +
+      '<section class="ul-review-dashboard" aria-label="本关复盘统计">' +
+        '<div><span>待 Codex 审核</span><strong>' + counts.pending + '</strong></div>' +
+        '<div class="is-warn"><span>需要修改</span><strong>' + counts.revision + '</strong></div>' +
+        '<div class="is-good"><span>已确认理解</span><strong>' + counts.confirmed + '</strong></div>' +
+        '<div><span>当前错题</span><strong>' + wrongIds(levelIndex).length + '</strong></div>' +
       '</section>' +
-      '<section class="ul-keynote-grid">' + cards + '</section>' +
-      '<footer class="ul-footer-action ul-keynote-actions"><p>笔记由当前课卡自动生成；课程更新后会自动要求重新复习。</p><div class="ul-button-row"><button class="ul-button" data-ul-action="copy-key-notes">复制本关重点笔记</button><button class="ul-button is-primary" data-ul-action="review-key-notes">' + (reviewed ? "再次确认并进入训练" : "已复习，进入本关训练") + '</button></div></footer>';
+      '<section class="ul-review-handoff"><span>CODEX HANDOFF</span><p><strong>网页不会自动读取 Codex 对话。</strong>先复制审核包，粘贴到 Codex，再把三行关键反馈带回这里保存。</p></section>' +
+      reviewTrainingEvidenceHtml(levelIndex) +
+      reviewSignalsHtml(levelIndex) +
+      '<section class="ul-review-toolbar"><div role="group" aria-label="复盘筛选"><button class="ul-review-filter' + (reviewFilter === "pending" ? " is-active" : "") + '" data-ul-action="review-filter" data-filter="pending" aria-pressed="' + (reviewFilter === "pending" ? "true" : "false") + '">待处理</button><button class="ul-review-filter' + (reviewFilter === "confirmed" ? " is-active" : "") + '" data-ul-action="review-filter" data-filter="confirmed" aria-pressed="' + (reviewFilter === "confirmed" ? "true" : "false") + '">已确认</button></div>' + primaryAction + '</section>' +
+      '<section class="ul-review-list" aria-label="个人理解审核记录">' + cards + '</section>' +
+      '<footer class="ul-footer-action ul-review-footer"><p>待处理页只显示优先级最高的 3 项。复盘不会阻塞训练；训练负责继续发现问题。</p><button class="ul-button" data-ul-action="training">进入本关训练</button></footer>';
+    restoreReviewRenderState(renderState, preferredFocus);
   }
 
-  function markKeyNotesReviewed() {
-    var levelIndex = state.activeLevel;
-    state.keyNoteReviewed[levelIndex] = {
-      signature: keyNoteSignature(levelIndex),
-      reviewedAt: Date.now()
+  function reflectionReviewPacket(levelIndex, lessonIndex) {
+    var lesson = curriculumLessons(levelIndex)[lessonIndex];
+    if (!lesson) return "";
+    var answer = reflectionValue(levelIndex, lessonIndex).trim();
+    var checks = Array.isArray(lesson.reflectionChecks) ? lesson.reflectionChecks : [];
+    var doubt = lessonNoteValue(levelIndex, lessonIndex).trim();
+    return "请作为严格但鼓励的 AI 从业者教练，只审核这一张课卡的理解表达。不要替我写最终答案，也不要给虚假的精确分数。\n\n" +
+      "【关卡】" + levelName(levelIndex) + "\n" +
+      "【课卡】" + lessonName(lesson, lessonIndex) + "\n" +
+      "【表达题】" + (lesson.reflectionPrompt || "") + "\n" +
+      "【课程核对要点】" + lessonCore(lesson) + "\n" +
+      "【检查要点】" + checks.join("；") + "\n" +
+      (doubt ? "【我仍然没懂】" + doubt + "\n" : "") +
+      "\n【我的回答】\n" + answer + "\n\n" +
+      "请只返回下面三行：\n" +
+      "状态：通过 / 需修正 / 信息不足\n" +
+      "关键问题：只指出最重要的一处；通过则写无\n" +
+      "追问或提示：只给一个，让我自己修改或迁移应用";
+  }
+
+  function copyReflectionReviewPacket(levelIndex, lessonIndex) {
+    var answer = reflectionValue(levelIndex, lessonIndex).trim();
+    if (answer.length < 20) {
+      notify("请先在课卡中写下至少 20 字自己的理解");
+      return;
+    }
+    copyPlainText(reflectionReviewPacket(levelIndex, lessonIndex), "审核包已复制；在 Codex 审核后把三行回执粘贴回来", function () {
+      var key = lessonProgressKey(levelIndex, lessonIndex);
+      var existing = isPlainRecord(state.reflectionReviews[key]) ? state.reflectionReviews[key] : null;
+      var currentAnswerSignature = textSignature(answer);
+      var currentCourseSignature = reflectionReviewCourseSignature(levelIndex, lessonIndex);
+      var currentDoubtSignature = textSignature(lessonNoteValue(levelIndex, lessonIndex));
+      var sameSource = Boolean(existing && existing.answerSignature === currentAnswerSignature && String(existing.answer || "").trim() === answer && existing.courseSignature === currentCourseSignature && existing.doubtSignature === currentDoubtSignature);
+      var now = Date.now();
+      if (sameSource) {
+        existing.copiedAt = now;
+        existing.updatedAt = now;
+      } else {
+        var history = existing && Array.isArray(existing.history) ? existing.history.slice(-4) : [];
+        var snapshot = reviewHistorySnapshot(existing);
+        if (snapshot) history.push(snapshot);
+        state.reflectionReviews[key] = {
+          schema: 1,
+          status: "pending",
+          criticalIssue: "",
+          prompt: "",
+          answerSignature: currentAnswerSignature,
+          courseSignature: currentCourseSignature,
+          doubtSignature: currentDoubtSignature,
+          answer: answer,
+          copiedAt: now,
+          updatedAt: now,
+          reviewedAt: 0,
+          confirmedAt: 0,
+          history: history.slice(-5)
+        };
+      }
+      saveState();
+      refreshHomeSoon();
+    });
+  }
+
+  function parseReviewReceipt(text) {
+    var lines = String(text || "").split(/\r?\n/).map(function (line) {
+      return line.trim().replace(/^[>#*\-\s]+/, "").replace(/\*\*/g, "");
+    }).filter(Boolean);
+    function field(label) {
+      for (var index = 0; index < lines.length; index += 1) {
+        if (lines[index].indexOf(label) !== 0) continue;
+        return lines[index].slice(label.length).replace(/^\s*[:：]\s*/, "").trim();
+      }
+      return "";
+    }
+    var rawStatus = field("状态").replace(/[\s。.!！]/g, "");
+    var status = rawStatus === "需修正" ? "needs-revision" : (rawStatus === "信息不足" ? "insufficient" : (rawStatus === "通过" ? "confirmed" : ""));
+    if (!status) return null;
+    return {
+      status: status,
+      criticalIssue: field("关键问题"),
+      prompt: field("追问或提示")
+    };
+  }
+
+  function saveReflectionReviewReceipt(button) {
+    var levelIndex = Number(button.dataset.level);
+    var lessonIndex = Number(button.dataset.lesson);
+    var card = button.closest(".ul-review-card");
+    var textarea = card && card.querySelector("textarea[data-review-receipt]");
+    var answer = reflectionValue(levelIndex, lessonIndex).trim();
+    if (!textarea || answer.length < 20) {
+      notify("当前课卡还没有可审核的理解表达");
+      return;
+    }
+    var parsed = parseReviewReceipt(textarea.value);
+    if (!parsed) {
+      notify("未识别回执；请保留“状态：通过 / 需修正 / 信息不足”这一行");
+      return;
+    }
+    if (!parsed.criticalIssue || !parsed.prompt) {
+      notify("回执还缺“关键问题”或“追问或提示”");
+      return;
+    }
+    var key = lessonProgressKey(levelIndex, lessonIndex);
+    var existing = isPlainRecord(state.reflectionReviews[key]) ? state.reflectionReviews[key] : null;
+    var answerSignature = textSignature(answer);
+    var courseSignature = reflectionReviewCourseSignature(levelIndex, lessonIndex);
+    var doubtSignature = textSignature(lessonNoteValue(levelIndex, lessonIndex));
+    var sourceIsCurrent = Boolean(existing && existing.answerSignature === answerSignature && String(existing.answer || "").trim() === answer && existing.courseSignature === courseSignature && existing.doubtSignature === doubtSignature);
+    if (!sourceIsCurrent || !Number(existing.copiedAt)) {
+      notify("请先复制当前版本的审核包，再保存 Codex 回执");
+      return;
+    }
+    var now = Date.now();
+    state.reflectionReviews[key] = {
+      schema: 1,
+      status: parsed.status,
+      criticalIssue: parsed.criticalIssue,
+      prompt: parsed.prompt,
+      answerSignature: answerSignature,
+      courseSignature: courseSignature,
+      doubtSignature: doubtSignature,
+      answer: answer,
+      copiedAt: Number(existing.copiedAt),
+      updatedAt: now,
+      reviewedAt: now,
+      confirmedAt: parsed.status === "confirmed" ? now : 0,
+      history: Array.isArray(existing.history) ? existing.history.slice(-5) : []
     };
     saveState();
     refreshHomeSoon();
-    notify("本关重点笔记已记录为已复习");
-    renderTrainingHome();
+    reviewFilter = parsed.status === "confirmed" ? "confirmed" : "pending";
+    notify(parsed.status === "confirmed" ? "这版理解已记录为 Codex 确认" : "Codex 反馈已保存，下一步按关键问题修改");
+    renderKeyNotes({ reviewKey: key });
   }
 
   function renderLesson(lessonIndex) {
@@ -641,9 +1012,7 @@
     openOverlay("lesson", "课程书库");
     var done = lessonIsRead(levelIndex, lessonIndex);
     var noteKey = lessonProgressKey(levelIndex, lessonIndex);
-    var legacyIndex = legacyLessonIndex(levelIndex, lessonIndex);
-    var legacyNoteKey = legacyIndex === null ? "" : levelIndex + ":" + legacyIndex;
-    var noteValue = state.notes[noteKey] || (legacyNoteKey ? state.notes[legacyNoteKey] : "") || "";
+    var noteValue = lessonNoteValue(levelIndex, lessonIndex);
     var reflectionKey = lessonProgressKey(levelIndex, lessonIndex);
     var savedReflection = reflectionValue(levelIndex, lessonIndex);
     var reflectionDone = reflectionIsComplete(levelIndex, lessonIndex);
@@ -730,12 +1099,19 @@
     var threshold = passThreshold(levelIndex);
     var streak = Number(state.mockStreak[levelIndex]) || 0;
     var streakTarget = requiredMockStreak(levelIndex);
-    var keyNotesReady = keyNoteIsReviewed(levelIndex);
+    var reviewCounts = { pending: 0, revision: 0, confirmed: 0 };
+    lessons.forEach(function (lesson, index) {
+      var meta = reflectionReviewMeta(levelIndex, index);
+      if (meta.status === "confirmed") reviewCounts.confirmed += 1;
+      else if (meta.status === "needs-revision" || meta.status === "insufficient") reviewCounts.revision += 1;
+      else if (meta.status === "pending") reviewCounts.pending += 1;
+    });
+    var reviewNeedsAttention = reviewCounts.pending + reviewCounts.revision;
     content.innerHTML =
       pageHead("WORKSHOP / PRACTICE + REVIEW", levelName(levelIndex), "每次随机抽题，一次只判断一个概念；作答后立即解释，结束后自动审核并生成错题。", '<span class="ul-chip">题库 <strong>' + total + '</strong></span><span class="ul-chip">最高 <strong>' + best + ' 分</strong></span>' + (isAdvancedLevel(levelIndex) ? '<span class="ul-chip">连胜 <strong>' + Math.min(streak, streakTarget) + '/' + streakTarget + '</strong></span>' : "")) +
       levelTabs() +
       credentialBrief(levelIndex) +
-      '<section class="ul-training-note-gate ' + (keyNotesReady ? "is-ready" : "") + '"><div><span>PRE-TRAINING NOTE</span><strong>' + (keyNotesReady ? "本关重点笔记已复习" : "训练前先复习本关重点笔记") + '</strong><p>' + (keyNotesReady ? "你可以直接训练，也可以随时返回笔记快速回忆。" : "重点笔记已经把每张课卡压缩成核心结论与自检问题，完成后才开始本关训练。") + '</p></div><button class="ul-button ' + (keyNotesReady ? "" : "is-cyan") + '" data-ul-action="key-notes">' + (keyNotesReady ? "再次复习" : "打开重点笔记") + '</button></section>' +
+      '<section class="ul-training-note-gate ' + (reviewNeedsAttention ? "" : "is-ready") + '"><div><span>MY REVIEW / OPTIONAL</span><strong>' + (reviewNeedsAttention ? "有 " + reviewNeedsAttention + " 条理解待审核或修改" : "当前没有待处理理解") + '</strong><p>复盘不再是训练门槛。你可以先训练诊断，再回到“我的复盘”处理真实理解、疑问和错题。</p></div><button class="ul-button ' + (reviewNeedsAttention ? "is-cyan" : "") + '" data-ul-action="key-notes">打开我的复盘</button></section>' +
       '<div class="ul-training-grid">' +
         '<section class="ul-mission-card">' +
           '<h3>本关训练任务</h3>' +
@@ -748,7 +1124,7 @@
           '</div>' +
           (read < lessons.length ? '<div class="ul-flow-note"><span>!</span><div>还有课卡未读。可以先训练诊断，也可以返回书库完成输入。</div></div>' : "") +
           '<div class="ul-button-row">' +
-            '<button class="ul-button is-primary" data-ul-action="start" data-mode="normal"' + (keyNotesReady ? "" : " disabled") + '>' + (isAdvancedLevel(levelIndex) ? "开始一轮模考" : "开始随机训练") + '</button>' +
+            '<button class="ul-button is-primary" data-ul-action="start" data-mode="normal">' + (isAdvancedLevel(levelIndex) ? "开始一轮模考" : "开始随机训练") + '</button>' +
             '<button class="ul-button" data-ul-action="start" data-mode="wrong"' + (wrong ? "" : " disabled") + '>只练错题</button>' +
             '<button class="ul-button" data-ul-action="library">返回书库</button>' +
           '</div>' +
@@ -769,11 +1145,6 @@
 
   function startSession(mode) {
     var levelIndex = state.activeLevel;
-    if (!keyNoteIsReviewed(levelIndex)) {
-      notify("请先复习本关重点笔记");
-      renderKeyNotes();
-      return;
-    }
     var source = mode === "wrong"
       ? wrongIds(levelIndex).map(function (id) { return questionById(levelIndex, id); }).filter(Boolean)
       : bank(levelIndex).slice();
@@ -1020,8 +1391,7 @@
     var levelIndex = state.activeLevel;
     var lessons = curriculumLessons(levelIndex);
     var entries = lessons.map(function (lesson, index) {
-      var key = lessonProgressKey(levelIndex, index);
-      return { note: (state.notes[key] || "").trim(), title: lesson.t || lesson.title || ("课卡 " + (index + 1)), index: index };
+      return { note: lessonNoteValue(levelIndex, index).trim(), title: lesson.t || lesson.title || ("课卡 " + (index + 1)), index: index };
     }).filter(function (entry) { return entry.note; });
     openOverlay("library", "课程书库");
     content.innerHTML =
@@ -1118,19 +1488,20 @@
     notify(complete ? "理解表达已保存" : "内容已保存；写满 20 字后记为完成");
   }
 
-  function copyPlainText(text, successMessage) {
+  function copyPlainText(text, successMessage, onSuccess) {
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(text).then(function () {
+        if (typeof onSuccess === "function") onSuccess();
         notify(successMessage);
       }).catch(function () {
-        fallbackCopyPlainText(text, successMessage);
+        fallbackCopyPlainText(text, successMessage, onSuccess);
       });
       return;
     }
-    fallbackCopyPlainText(text, successMessage);
+    fallbackCopyPlainText(text, successMessage, onSuccess);
   }
 
-  function fallbackCopyPlainText(text, successMessage) {
+  function fallbackCopyPlainText(text, successMessage, onSuccess) {
     var textarea = document.createElement("textarea");
     textarea.value = text;
     textarea.style.position = "fixed";
@@ -1138,7 +1509,8 @@
     document.body.appendChild(textarea);
     textarea.select();
     try {
-      document.execCommand("copy");
+      if (!document.execCommand("copy")) throw new Error("copy command rejected");
+      if (typeof onSuccess === "function") onSuccess();
       notify(successMessage);
     } catch (error) {
       notify("复制失败，请手动选择理解表达");
@@ -1151,8 +1523,6 @@
     if (!textarea) return;
     var levelIndex = Number(textarea.dataset.levelIndex);
     var lessonIndex = Number(textarea.dataset.lessonIndex);
-    var lesson = curriculumLessons(levelIndex)[lessonIndex];
-    if (!lesson) return;
     var answer = textarea.value.trim();
     if (!answer) {
       notify("请先写下你的理解，再复制给 Codex");
@@ -1160,15 +1530,7 @@
     }
     state.reflections[textarea.dataset.reflectionKey] = answer;
     saveState();
-    var checks = Array.isArray(lesson.reflectionChecks) ? lesson.reflectionChecks : [];
-    var packet = "请作为严格但鼓励的 AI 从业者教练，审核我的课卡理解表达。\n\n" +
-      "【关卡】" + levelName(levelIndex) + "\n" +
-      "【课卡】" + lessonName(lesson, lessonIndex) + "\n" +
-      "【表达题】" + (lesson.reflectionPrompt || "") + "\n" +
-      "【检查要点】" + checks.join("；") + "\n\n" +
-      "【我的回答】\n" + answer + "\n\n" +
-      "请只审核这一张课卡，按概念准确性、逻辑关系、边界意识和案例有效性反馈；先指出最关键的一处问题，再给出一版不超过 120 字的修正版。";
-    copyPlainText(packet, "理解表达已复制，可以粘贴给 Codex 审核");
+    copyReflectionReviewPacket(levelIndex, lessonIndex);
   }
 
   function handleOverlayInput(event) {
@@ -1177,12 +1539,14 @@
       state.reflections[reflection.dataset.reflectionKey] = reflection.value;
       saveState();
       updateReflectionUi(reflection);
+      refreshHomeSoon();
       return;
     }
     var textarea = event.target.closest("textarea[data-note-key]");
     if (!textarea) return;
     state.notes[textarea.dataset.noteKey] = textarea.value;
     saveState();
+    refreshHomeSoon();
   }
 
   function handleOverlayClick(event) {
@@ -1198,7 +1562,7 @@
       state.activeLevel = Number(button.dataset.level) || 0;
       saveState();
       refreshHomeSoon();
-      if (activeView === "key-notes") renderKeyNotes();
+      if (activeView === "key-notes") renderKeyNotes({ action: "level", level: String(state.activeLevel) });
       else if (activeView === "wrong") renderWrongArchive();
       else if (activeView === "training" || activeView === "question" || activeView === "result") renderTrainingHome();
       else renderLibrary();
@@ -1219,8 +1583,12 @@
     if (action === "answer") recordAnswer(Number(button.dataset.answer));
     if (action === "next-question") nextQuestion();
     if (action === "copy-review") copyReview();
-    if (action === "copy-key-notes") copyPlainText(keyNotePlainText(state.activeLevel), "本关重点笔记已复制");
-    if (action === "review-key-notes") markKeyNotesReviewed();
+    if (action === "review-filter") {
+      reviewFilter = button.dataset.filter === "confirmed" ? "confirmed" : "pending";
+      renderKeyNotes({ action: "review-filter", filter: reviewFilter });
+    }
+    if (action === "copy-review-packet") copyReflectionReviewPacket(Number(button.dataset.level), Number(button.dataset.lesson));
+    if (action === "save-review-receipt") saveReflectionReviewReceipt(button);
     if (action === "view-doubts") renderDoubts();
   }
 
@@ -1229,6 +1597,9 @@
     if (!node) {
       node = document.createElement("div");
       node.className = "ul-toast";
+      node.setAttribute("role", "status");
+      node.setAttribute("aria-live", "polite");
+      node.setAttribute("aria-atomic", "true");
       document.body.appendChild(node);
     }
     node.textContent = message;
@@ -1289,9 +1660,13 @@
     document.querySelectorAll('[data-action="evidence"]').forEach(function (button) {
       if (button.textContent.trim() !== "进入本关训练") button.textContent = "进入本关训练";
     });
+    document.querySelectorAll('[data-action="key-notes"]').forEach(function (button) {
+      var text = button.classList.contains("pg-station") ? "我的复盘" : "复盘";
+      if (button.textContent.trim() !== text) button.textContent = text;
+    });
     var mentor = document.getElementById("pg-mentor");
-    if (mentor && mentor.textContent !== "学习顺序：书库读懂概念，重点笔记压缩复习，然后训练、错题与间隔复训。") {
-      mentor.textContent = "学习顺序：书库读懂概念，重点笔记压缩复习，然后训练、错题与间隔复训。";
+    if (mentor && mentor.textContent !== "学习顺序：书库输入并写自己的话，训练诊断，复盘处理真实理解与错误，72h 再验证。") {
+      mentor.textContent = "学习顺序：书库输入并写自己的话，训练诊断，复盘处理真实理解与错误，72h 再验证。";
     }
     var gates = document.getElementById("pg-gates");
     if (!gates) return;
@@ -1300,12 +1675,16 @@
     var read = readCount(levelIndex);
     var best = Number(state.best[levelIndex]) || 0;
     var wrong = wrongIds(levelIndex).length;
-    var keyNotesReady = keyNoteIsReviewed(levelIndex);
-    var signature = [levelIndex, read, lessons.length, keyNotesReady ? 1 : 0, best, wrong].join("-");
+    var hasTrainingResult = isPlainRecord(state.lastResult[levelIndex]) && Number(state.lastResult[levelIndex].total) > 0;
+    var reviewAttention = lessons.reduce(function (sum, lesson, index) {
+      var status = reflectionReviewMeta(levelIndex, index).status;
+      return sum + (status === "pending" || status === "needs-revision" || status === "insufficient" ? 1 : 0);
+    }, 0);
+    var signature = [levelIndex, read, lessons.length, reviewAttention, hasTrainingResult ? 1 : 0, best, wrong].join("-");
     var flow = document.getElementById("pg-mode-row");
     var threshold = passThreshold(levelIndex);
-    var currentStep = read < lessons.length ? 0 : (!keyNotesReady ? 1 : (best < threshold ? 2 : (wrong > 0 ? 3 : 4)));
-    var stepName = ["书库学习", "重点笔记", "训练 + 审核", "错题复盘", "间隔复训"][currentStep];
+    var currentStep = read < lessons.length ? 0 : (!hasTrainingResult ? 1 : (wrong > 0 ? 2 : (reviewAttention > 0 ? 3 : (best < threshold ? 1 : 4))));
+    var stepName = ["书库学习", "训练诊断", "错题复盘", "我的复盘", "间隔复训"][currentStep];
     var nextLevelIndex = levelIndex + 1;
     var nextLevelPreview = nextLevelIndex < course.levels.length
       ? "LEVEL " + String(nextLevelIndex + 1).padStart(2, "0") + " · " + levelName(nextLevelIndex)
@@ -1328,14 +1707,14 @@
       nextAction = "library";
       nextLabel = "继续书库 " + read + "/" + lessons.length;
     } else if (currentStep === 1) {
-      nextAction = "key-notes";
-      nextLabel = "复习重点笔记";
-    } else if (currentStep === 2) {
       nextAction = "workshop";
       nextLabel = "开始本关训练";
-    } else if (currentStep === 3) {
+    } else if (currentStep === 2) {
       nextAction = "codex";
       nextLabel = "清理错题 " + wrong;
+    } else if (currentStep === 3) {
+      nextAction = "key-notes";
+      nextLabel = "处理复盘 " + reviewAttention;
     }
     var primary = document.querySelector("[data-home-progress]");
     if (primary) {
@@ -1365,7 +1744,12 @@
     ensureOverlay();
     document.addEventListener("click", interceptLegacyActions, true);
     document.addEventListener("keydown", function (event) {
-      if (event.key === "Escape" && overlay && !overlay.hidden) closeOverlay();
+      if (event.key === "Escape" && overlay && !overlay.hidden) {
+        event.preventDefault();
+        closeOverlay();
+        return;
+      }
+      trapOverlayFocus(event);
     });
     refreshHome();
     var root = document.getElementById("pg-app") || document.body;
@@ -1375,6 +1759,7 @@
       version: VERSION,
       openLibrary: renderLibrary,
       openKeyNotes: function () { syncActiveLevelToHome(); renderKeyNotes(); },
+      openReview: function () { syncActiveLevelToHome(); renderKeyNotes(); },
       openTraining: renderTrainingHome,
       openWrongArchive: renderWrongArchive
     };
