@@ -1,0 +1,41 @@
+# Git 外产物
+
+## Git 可见的未跟踪产品产物
+
+推广文案/2026-08-13-AI证书内测推文-修订版.md
+
+该文件没有进入 66feaf6，也没有进入 GitHub Pages 构建；它会进入完整源码归档和 workspace-untracked-and-ignored-20260814.tar.gz。
+
+## Git 忽略但需保留的项目资料
+
+AI从业者系统学习路线.md
+AI学习笔记_截至2026-07-22.md
+AI学习索引.md
+coach-review.html
+design-qa.md
+qa-desktop-1440x1024.png
+qa-desktop-final-1440x1024.png
+qa-desktop-final2-1440x1024.png
+qa-desktop-fixed-1440x1024.png
+qa-mobile-390x844-settled.png
+qa-mobile-390x844.png
+qa-mobile-drawer.png
+qa-mobile-final-390x844.png
+qa-mobile-final2-390x844.png
+qa-mobile-fixed-390x844.png
+qa-tablet-1024x768.png
+qa-typography-desktop-1440x1024.png
+qa-typography-desktop-final-1440x1024.png
+qa-typography-match-1664x888.png
+qa-typography-mobile-final-390x844.png
+thumbnail.png
+学习中枢.html
+零基础AI精读路线.md
+
+## 明确排除
+
+- .DS_Store：系统元数据。
+- .git/：由 Git bundle 取代。
+- handoff/：防止旧包与新包递归嵌套。
+- 浏览器 localStorage、cookie、会话和凭据。
+- 临时服务器与临时下载文件。

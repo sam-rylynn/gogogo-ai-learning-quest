@@ -1,0 +1,10 @@
+af0c6e3 Expand advanced certificate learning flow
+92faa56 Expand course depth for levels 1-4
+33130a7 fix: synchronize home learning status
+26162c1 fix: align unified learning flow
+c069eb4 feat: unify course library and training flow
+2dfed1c add interactive AI glossary cards
+5327131 tailor capability cards by lesson
+dc7177e fix legacy course text contrast
+351a3bf clarify linear learning flow
+d11a225 publish pixel AI learning quest

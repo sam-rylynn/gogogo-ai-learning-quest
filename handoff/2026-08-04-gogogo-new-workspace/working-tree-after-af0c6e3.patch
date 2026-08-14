@@ -1,0 +1,893 @@
+diff --git "a/AI\344\273\216\344\270\232\350\200\205\351\227\257\345\205\263\344\271\213\350\267\257.html" "b/AI\344\273\216\344\270\232\350\200\205\351\227\257\345\205\263\344\271\213\350\267\257.html"
+index c67097d2108805abce6c9b18ccd657ddebab3e1a..01366383fca6f06440237a91e38dbb2a113f40e5 100644
+--- "a/AI\344\273\216\344\270\232\350\200\205\351\227\257\345\205\263\344\271\213\350\267\257.html"
++++ "b/AI\344\273\216\344\270\232\350\200\205\351\227\257\345\205\263\344\271\213\350\267\257.html"
+@@ -1735,14 +1735,14 @@ document.getElementById("codexCheckin").onclick=function(){
+   toast("学习快照已复制，粘贴到当前 Codex 对话即可");
+ };
+ </script>
+-  <link rel="stylesheet" href="unified-learning-upgrade.css?v=20260804-reviewfix1" data-unified-learning>
++  <link rel="stylesheet" href="unified-learning-upgrade.css?v=20260804-foreground1" data-unified-learning>
+   <script src="curriculum-depth-upgrade.js?v=20260728-depth1" data-curriculum-depth></script>
+   <script src="curriculum-detail-expansion.js?v=20260728-depth2" data-curriculum-detail></script>
+   <script src="curriculum-beginner-reading.js?v=20260728-beginner1" data-curriculum-beginner></script>
+   <script src="advanced-certificate-expansion.js?v=20260804-reviewfix1" data-curriculum-advanced></script>
+   <script src="curriculum-reflection-prompts.js?v=20260804-reviewfix1" data-curriculum-reflections></script>
+-  <script src="pixel-guild-upgrade.js?v=20260804-reviewfix1" data-pixel-upgrade></script>
++  <script src="pixel-guild-upgrade.js?v=20260804-foreground1" data-pixel-upgrade></script>
+   <script src="glossary-cards.js?v=20260727-1" data-glossary-cards></script>
+-  <script src="unified-learning-upgrade.js?v=20260804-reviewfix3" data-unified-learning></script>
++  <script src="unified-learning-upgrade.js?v=20260804-questcard1" data-unified-learning></script>
+ </body>
+ </html>
+diff --git a/pixel-guild-upgrade.css b/pixel-guild-upgrade.css
+index ce2418cd6ce77ff17cbae5161d310d46ec13b39c..5246df325258eb2b0c90b4f480e1862105024df9 100644
+--- a/pixel-guild-upgrade.css
++++ b/pixel-guild-upgrade.css
+@@ -219,6 +219,19 @@ body.pg-active {
+   box-shadow: inset 0 0 0 2px rgba(230, 164, 58, 0.2);
+ }
+ 
++.pg-foreground-actors {
++  position: absolute;
++  inset: 0;
++  z-index: 5;
++  width: 100%;
++  height: 100%;
++  overflow: visible;
++  pointer-events: none;
++  image-rendering: pixelated;
++  transform: translateX(var(--camera-x));
++  transition: transform 500ms steps(8, end);
++}
++
+ .pg-station {
+   position: absolute;
+   z-index: 6;
+@@ -267,6 +280,7 @@ body.pg-active {
+ .pg-station-codex { left: 26.5%; top: 2.8%; }
+ .pg-station-retest { left: 59.4%; top: 2.8%; }
+ .pg-station-project { right: 7.5%; top: 2.8%; }
++.pg-station-notes { right: 7.5%; top: 43.5%; }
+ 
+ .pg-quest {
+   position: absolute;
+diff --git a/pixel-guild-upgrade.js b/pixel-guild-upgrade.js
+index ef5b6131eb7f8b99ec14f98c9c4fb915ac9d06f0..b9358889fd29d36d166d664ef7c6cc584963ba46 100644
+--- a/pixel-guild-upgrade.js
++++ b/pixel-guild-upgrade.js
+@@ -292,7 +292,7 @@
+ 
+     merged.questions = Array.isArray(saved.questions) ? saved.questions : [];
+     merged.activeLevel = Math.min(LEVELS.length, Math.max(1, Number(merged.activeLevel) || 1));
+-    merged.activeStation = Math.min(4, Math.max(0, Number(merged.activeStation) || 0));
++    merged.activeStation = Math.min(5, Math.max(0, Number(merged.activeStation) || 0));
+     if (!MODES[merged.dailyMode]) merged.dailyMode = "standard";
+     return merged;
+   }
+@@ -347,6 +347,7 @@
+         <button class="pg-station pg-station-codex" data-station="2" data-action="codex">Codex 审核室</button>
+         <button class="pg-station pg-station-retest" data-station="3" data-action="retest">72h 复测塔</button>
+         <button class="pg-station pg-station-project" data-station="4" data-action="artifact">项目作品陈列门</button>
++        <button class="pg-station pg-station-notes" data-station="5" data-action="key-notes">重点笔记</button>
+         <section class="pg-quest" aria-labelledby="pg-mission-title">
+           <p class="pg-eyebrow">主线任务 · <span id="pg-level-label"></span></p>
+           <h2 id="pg-mission-title"></h2>
+@@ -358,6 +359,15 @@
+             <button class="pg-primary" data-action="evidence">开始实战</button>
+           </div>
+         </section>
++        <svg class="pg-foreground-actors" viewBox="0 0 1536 1024" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
++          <defs>
++            <clipPath id="pg-foreground-actor-clip" clipPathUnits="userSpaceOnUse">
++              <path d="M625 538 L651 547 L668 572 L665 601 L682 620 L692 650 L678 672 L670 708 L683 775 L656 781 L643 716 L632 714 L626 781 L598 780 L608 706 L603 676 L585 657 L596 621 L605 598 L603 568 Z"></path>
++              <path d="M454 597 L480 604 L496 622 L505 642 L527 650 L516 674 L499 665 L501 707 L520 748 L493 756 L480 713 L468 712 L457 756 L430 750 L445 705 L440 670 L424 652 L434 624 Z"></path>
++            </clipPath>
++          </defs>
++          <image href="assets/pixel-guild-hall.png" width="1536" height="1024" preserveAspectRatio="none" clip-path="url(#pg-foreground-actor-clip)"></image>
++        </svg>
+         <div class="pg-mentor" id="pg-mentor">经验值只记录行动；四道证据门才证明能力。</div>
+         <div class="pg-controls" aria-hidden="true">
+           <span class="pg-key">A</span><span class="pg-key">D</span><span>移动</span>
+@@ -369,6 +379,7 @@
+           <button data-station="2" data-action="codex">审核室</button>
+           <button data-station="3" data-action="retest">复测塔</button>
+           <button data-station="4" data-action="artifact">作品门</button>
++          <button data-station="5" data-action="key-notes">笔记</button>
+         </nav>
+       </div>
+     </main>
+@@ -491,7 +502,7 @@
+     document.querySelectorAll("[data-station]").forEach((button) => {
+       button.classList.toggle("is-active", Number(button.dataset.station) === state.activeStation);
+     });
+-    const cameraPositions = ["55px", "25px", "0px", "-30px", "-55px"];
++    const cameraPositions = ["55px", "25px", "0px", "-30px", "-55px", "-55px"];
+     scene.style.setProperty("--camera-x", cameraPositions[state.activeStation]);
+   }
+ 
+@@ -525,6 +536,11 @@
+       codex: () => openDrawer("Codex 审核室", renderCodex()),
+       retest: () => openDrawer("72h 复测塔", renderEvidence("retest")),
+       artifact: () => openDrawer("项目作品陈列门", renderArtifact()),
++      "key-notes": () => {
++        const learning = window.GOGOGO_UNIFIED_LEARNING;
++        if (learning && typeof learning.openKeyNotes === "function") learning.openKeyNotes();
++        else openLegacy();
++      },
+       evidence: () => openDrawer("四道能力证据门", renderEvidence()),
+       questions: () => openDrawer("问题队列", renderQuestions()),
+       daily: () => openDrawer("今日路线与关卡", renderDaily()),
+@@ -577,13 +593,13 @@
+   }
+ 
+   function moveStation(direction) {
+-    state.activeStation = (state.activeStation + direction + 5) % 5;
++    state.activeStation = (state.activeStation + direction + 6) % 6;
+     saveState();
+     renderWorld();
+   }
+ 
+   function activateStation() {
+-    const actions = ["library", "workshop", "codex", "retest", "artifact"];
++    const actions = ["library", "workshop", "codex", "retest", "artifact", "key-notes"];
+     const button = app.querySelector(`[data-action="${actions[state.activeStation]}"]`);
+     if (button) button.click();
+   }
+diff --git a/unified-learning-upgrade.css b/unified-learning-upgrade.css
+index e3c391d98b753e362829eb9f55f6f39824adfc13..1e2493c5bb708ffb4fdecde724ba3bf62bbc7605 100644
+--- a/unified-learning-upgrade.css
++++ b/unified-learning-upgrade.css
+@@ -1866,6 +1866,138 @@ body.ul-locked {
+   }
+ }
+ 
++/* Home quest card v3: only current level, current step, next level and action. */
++.pg-flow-v2 .pg-quest {
++  left: 38%;
++  top: 35%;
++  z-index: 4;
++  width: min(290px, 26vw);
++  min-width: 280px;
++  height: auto;
++  min-height: 0;
++  justify-content: flex-start;
++  padding: 14px 14px 12px;
++  border: 4px solid #3d2415;
++  outline: 3px solid #a76f31;
++  background: linear-gradient(180deg, #e5c88f 0%, #d8b477 100%);
++  box-shadow: inset 0 0 0 3px #f2dca8, 7px 7px 0 rgba(4, 10, 16, .72);
++}
++
++.pg-flow-v2 .pg-quest .pg-eyebrow {
++  margin: 0;
++  color: #7a4b24;
++  font-size: 9px;
++  line-height: 12px;
++}
++
++.pg-flow-v2 .pg-quest > h2 {
++  margin: 3px 0 6px;
++  color: #2d1b12;
++  font-size: 16px;
++  line-height: 19px;
++  text-shadow: 1px 1px 0 rgba(255, 236, 190, .85);
++}
++
++.pg-flow-v2 .pg-quest-sub,
++.pg-flow-v2 .pg-artifact-line {
++  display: none;
++}
++
++.pg-flow-v2 #pg-mode-row.pg-flow-panel {
++  margin: 0 0 5px;
++  padding: 0;
++}
++
++#pg-mode-row .ul-current-quest {
++  display: flex;
++  justify-content: space-between;
++  gap: 8px;
++  align-items: center;
++  padding: 6px 7px;
++  border: 2px solid #422819;
++  color: #ffe8ad;
++  background: #173044;
++  box-shadow: inset 0 0 0 1px #6c8797;
++}
++
++#pg-mode-row .ul-current-quest span {
++  color: #e7b95e;
++  font-size: 8px;
++  line-height: 10px;
++  letter-spacing: .05em;
++}
++
++#pg-mode-row .ul-current-quest strong {
++  color: #fff0bd;
++  font-size: 10px;
++  line-height: 12px;
++  font-weight: 400;
++}
++
++#pg-gates.pg-gate-grid {
++  display: block;
++  margin: 0 0 7px;
++}
++
++#pg-gates .ul-next-level-preview {
++  display: grid;
++  grid-template-columns: auto minmax(0, 1fr);
++  gap: 6px;
++  align-items: center;
++  padding: 4px 5px;
++  border-top: 1px solid rgba(102, 61, 29, .52);
++  border-bottom: 1px solid rgba(102, 61, 29, .52);
++  color: #59381f;
++  text-align: left;
++}
++
++#pg-gates .ul-next-level-preview span {
++  color: #8b5728;
++  font-size: 7px;
++  line-height: 9px;
++  letter-spacing: .04em;
++}
++
++#pg-gates .ul-next-level-preview strong {
++  min-width: 0;
++  overflow: hidden;
++  color: #432817;
++  font-size: 9px;
++  line-height: 12px;
++  font-weight: 400;
++  text-overflow: ellipsis;
++  white-space: nowrap;
++}
++
++.pg-flow-v2 .pg-quest-footer {
++  margin-top: 0;
++}
++
++.pg-flow-v2 .pg-quest-footer .pg-primary:not(:disabled) {
++  min-width: 136px;
++  padding: 5px 9px;
++  font-size: 10px;
++  line-height: 13px;
++}
++
++@media (max-width: 840px) {
++  .pg-flow-v2 .pg-quest {
++    left: 4vw;
++    right: 4vw;
++    top: auto;
++    bottom: 66px;
++    width: auto;
++    min-width: 0;
++    padding: 14px 15px 12px;
++    transform: none;
++  }
++
++  #pg-gates .ul-next-level-preview {
++    grid-template-columns: 1fr;
++    gap: 2px;
++  }
++}
++
+ @media (max-width: 520px) {
+   .ul-brand small {
+     display: none;
+@@ -2065,3 +2197,319 @@ body.ul-locked {
+ .adv-term-line small {
+   color: #5a7088;
+ }
++
++/* Compact the home quest board: one readable flow, no duplicated dark panels. */
++.pg-flow-v2 .pg-quest {
++  top: 35%;
++  width: 28%;
++  min-width: 400px;
++  height: auto;
++  min-height: 214px;
++  padding: 38px 34px 27px;
++  background-size: 104% 108%;
++}
++
++.pg-flow-v2 #pg-mode-row.pg-flow-panel {
++  gap: 0;
++  margin: 2px 0 5px;
++  padding: 0 4px 4px;
++  border: 0;
++  background: transparent;
++  box-shadow: none;
++}
++
++#pg-mode-row .ul-main-flow {
++  gap: 0;
++}
++
++#pg-mode-row .ul-main-flow-head {
++  min-height: 22px;
++  padding: 0 2px;
++  color: #69442b;
++  font-size: 9px;
++  line-height: 12px;
++}
++
++#pg-mode-row .ul-main-flow-head strong {
++  max-width: 72%;
++  color: #8d321f;
++  font-size: 10px;
++  line-height: 13px;
++  text-align: right;
++}
++
++#pg-mode-row .ul-main-flow-track {
++  display: none;
++}
++
++#pg-gates.pg-gate-grid {
++  gap: 4px;
++  margin-bottom: 5px;
++}
++
++#pg-gates .ul-home-flow {
++  gap: 4px;
++}
++
++#pg-gates .ul-home-step {
++  min-height: 40px;
++  padding: 4px 3px;
++  border: 1px solid #79583c;
++  color: #49301f;
++  background: rgba(232, 207, 163, .82);
++  box-shadow: inset 0 0 0 1px rgba(255, 240, 200, .5);
++  font-family: var(--pg-pixel-font);
++  font-weight: 400;
++  line-height: 1.1;
++}
++
++#pg-gates .ul-home-step span {
++  margin-bottom: 2px;
++  color: #855329;
++  font-size: 8px;
++  line-height: 10px;
++}
++
++#pg-gates .ul-home-step strong {
++  color: inherit;
++  font-size: 10px;
++  line-height: 13px;
++  font-weight: 400;
++}
++
++#pg-gates .ul-home-step.is-done {
++  border-color: #18352a;
++  color: #fff0c1;
++  background: #315443;
++  box-shadow: inset 0 0 0 1px #75b88f;
++}
++
++#pg-gates .ul-home-step.is-done span {
++  color: #8de5b3;
++}
++
++.pg-flow-v2 .pg-quest-footer {
++  gap: 4px;
++}
++
++.pg-flow-v2 .pg-artifact-line {
++  font-size: 8px;
++  line-height: 11px;
++}
++
++.pg-flow-v2 .pg-quest-footer .pg-primary:not(:disabled) {
++  min-width: 132px;
++  padding: 6px 13px;
++  color: #fff3d9 !important;
++  -webkit-text-fill-color: #fff3d9;
++  font-size: 13px;
++  line-height: 16px;
++  text-shadow: 2px 2px 0 #3a100b;
++}
++
++@media (max-height: 760px) and (min-width: 841px) {
++  .pg-flow-v2 .pg-quest {
++    top: 32%;
++    min-height: 196px;
++    padding: 30px 32px 23px;
++  }
++
++  .pg-flow-v2 .pg-quest > h2 {
++    margin: 2px 0 4px;
++    font-size: 18px;
++    line-height: 21px;
++  }
++}
++
++@media (max-width: 840px) {
++  .pg-flow-v2 .pg-quest {
++    min-height: 218px;
++    padding: 34px 30px 26px;
++  }
++
++  #pg-gates .ul-home-flow {
++    grid-template-columns: repeat(2, minmax(0, 1fr));
++  }
++}
++
++/* The complete learning window scrolls; titles and tabs must not stay locked. */
++.ul-window {
++  grid-template-rows: auto auto;
++  overflow-x: hidden;
++  overflow-y: auto;
++  overscroll-behavior: contain;
++  scrollbar-color: var(--ul-gold) #07111d;
++}
++
++.ul-topbar {
++  position: static;
++}
++
++.ul-content {
++  min-height: auto;
++  overflow: visible;
++}
++
++/* Per-level key notes: generated from the current curriculum before training. */
++.ul-keynote-intro,
++.ul-training-note-gate {
++  display: grid;
++  grid-template-columns: auto minmax(0, 1fr) auto;
++  gap: 14px;
++  align-items: center;
++  margin: 0 0 20px;
++  padding: 16px 18px;
++  border: 2px solid #8a642d;
++  background: linear-gradient(135deg, #1c2a3d, #132237);
++  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .24);
++}
++
++.ul-keynote-intro > span,
++.ul-training-note-gate span {
++  color: var(--ul-gold);
++  font-size: 10px;
++  letter-spacing: .1em;
++}
++
++.ul-keynote-intro h3,
++.ul-training-note-gate strong {
++  display: block;
++  margin: 3px 0 0;
++  color: var(--ul-ink);
++  font-size: 18px;
++}
++
++.ul-keynote-intro p,
++.ul-training-note-gate p {
++  margin: 6px 0 0;
++  color: var(--ul-muted);
++  line-height: 1.65;
++}
++
++.ul-keynote-intro > em {
++  padding: 8px 10px;
++  border: 2px solid var(--ul-gold);
++  color: var(--ul-gold);
++  font-style: normal;
++}
++
++.ul-keynote-intro.is-reviewed,
++.ul-training-note-gate.is-ready {
++  border-color: var(--ul-green);
++}
++
++.ul-keynote-intro.is-reviewed > em {
++  border-color: var(--ul-green);
++  color: var(--ul-green);
++}
++
++.ul-keynote-grid {
++  display: grid;
++  grid-template-columns: repeat(2, minmax(0, 1fr));
++  gap: 14px;
++}
++
++.ul-keynote-card {
++  min-width: 0;
++  padding: 18px;
++  border: 2px solid #35526f;
++  background: #102036;
++  box-shadow: inset 0 -5px 0 rgba(0, 0, 0, .22);
++}
++
++.ul-keynote-card > header {
++  display: flex;
++  justify-content: space-between;
++  gap: 10px;
++  align-items: center;
++  color: var(--ul-cyan);
++  font-size: 11px;
++}
++
++.ul-keynote-card h3 {
++  margin: 12px 0;
++  color: var(--ul-ink);
++  font-size: 18px;
++  line-height: 1.45;
++}
++
++.ul-keynote-status {
++  display: flex;
++  gap: 5px;
++}
++
++.ul-keynote-status em {
++  padding: 3px 5px;
++  border: 1px solid #425974;
++  color: var(--ul-muted);
++  font-style: normal;
++  font-size: 9px;
++}
++
++.ul-keynote-status em.is-done {
++  border-color: var(--ul-green);
++  color: var(--ul-green);
++}
++
++.ul-keynote-core {
++  padding: 12px;
++  border-left: 4px solid var(--ul-gold);
++  background: #182b42;
++}
++
++.ul-keynote-core b,
++.ul-keynote-check b {
++  color: var(--ul-gold);
++  font-size: 11px;
++}
++
++.ul-keynote-core p {
++  margin: 7px 0 0;
++  color: var(--ul-ink);
++  line-height: 1.75;
++}
++
++.ul-keynote-check {
++  margin-top: 13px;
++}
++
++.ul-keynote-check ul {
++  margin: 8px 0 0;
++  padding-left: 20px;
++  color: var(--ul-muted);
++  line-height: 1.7;
++}
++
++.ul-keynote-actions {
++  margin-top: 20px;
++}
++
++#pg-gates .ul-home-flow {
++  grid-template-columns: repeat(5, minmax(0, 1fr));
++}
++
++#pg-gates .ul-home-step.is-current {
++  border-color: var(--ul-gold);
++  color: #5c351a;
++  background: #f1cf86;
++  box-shadow: inset 0 0 0 1px #fff0ba;
++}
++
++@media (max-width: 840px) {
++  .ul-keynote-intro,
++  .ul-training-note-gate {
++    grid-template-columns: 1fr;
++  }
++
++  .ul-keynote-intro > em {
++    width: max-content;
++  }
++
++  .ul-keynote-grid {
++    grid-template-columns: 1fr;
++  }
++
++  #pg-gates .ul-home-flow {
++    grid-template-columns: repeat(2, minmax(0, 1fr));
++  }
++}
+diff --git a/unified-learning-upgrade.js b/unified-learning-upgrade.js
+index ab5fcfbff57d851485fff3d3f4011f0ec7560435..3b260e7d0b01aef2db1249b19f07c0ec0af4c459 100644
+--- a/unified-learning-upgrade.js
++++ b/unified-learning-upgrade.js
+@@ -1,7 +1,7 @@
+ (function () {
+   "use strict";
+ 
+-  var VERSION = "20260804-reviewfix3";
++  var VERSION = "20260804-questcard1";
+   var STORE_KEY = "gogogo_unified_learning_v1";
+   var course = window.GAME_DATA;
+   if (!course || !Array.isArray(course.levels)) return;
+@@ -144,6 +144,7 @@
+     reflections: {},
+     reflectionRewarded: {},
+     notes: {},
++    keyNoteReviewed: {},
+     best: {},
+     passed: {},
+     mockStreak: {},
+@@ -171,7 +172,7 @@
+       });
+     }
+     var next = Object.assign({}, defaults, raw);
+-    ["readFallback", "deepRead", "reflections", "reflectionRewarded", "notes", "best", "passed", "mockStreak", "wrong", "lastSession", "lastResult", "rewarded"].forEach(function (key) {
++    ["readFallback", "deepRead", "reflections", "reflectionRewarded", "notes", "keyNoteReviewed", "best", "passed", "mockStreak", "wrong", "lastSession", "lastResult", "rewarded"].forEach(function (key) {
+       if (!next[key] || typeof next[key] !== "object") next[key] = {};
+     });
+     next.version = VERSION;
+@@ -406,6 +407,7 @@
+           '<div class="ul-brand"><small>GOGO GO / LEARNING QUEST</small><strong id="ul-brand-title">统一学习舱</strong></div>' +
+           '<nav class="ul-nav" aria-label="学习流程">' +
+             '<button data-ul-action="library">课程书库</button>' +
++            '<button data-ul-action="key-notes">重点笔记</button>' +
+             '<button data-ul-action="training">本关训练</button>' +
+             '<button data-ul-action="wrong">错题档案</button>' +
+           '</nav>' +
+@@ -431,6 +433,8 @@
+     overlay.setAttribute("aria-hidden", "false");
+     document.body.classList.add("ul-locked");
+     content.scrollTop = 0;
++    var learningWindow = overlay.querySelector(".ul-window");
++    if (learningWindow) learningWindow.scrollTop = 0;
+     var closeButton = overlay.querySelector('[data-ul-action="close"]');
+     if (closeButton) closeButton.focus();
+   }
+@@ -552,6 +556,78 @@
+     return plain.length > 220 ? plain.slice(0, 220) + "..." : plain;
+   }
+ 
++  function keyNoteSignature(levelIndex) {
++    var source = curriculumLessons(levelIndex).map(function (lesson, index) {
++      return String(lesson.id || index) + "|" + lessonName(lesson, index) + "|" + lessonCore(lesson);
++    }).join("\n");
++    var hash = 2166136261;
++    for (var index = 0; index < source.length; index += 1) {
++      hash ^= source.charCodeAt(index);
++      hash = Math.imul(hash, 16777619);
++    }
++    return source.length + "-" + (hash >>> 0).toString(36);
++  }
++
++  function keyNoteIsReviewed(levelIndex) {
++    var record = state.keyNoteReviewed[levelIndex];
++    return Boolean(record && record.signature === keyNoteSignature(levelIndex));
++  }
++
++  function lessonKeyChecks(lesson) {
++    var checks = Array.isArray(lesson.reflectionChecks) ? lesson.reflectionChecks.filter(Boolean).slice(0, 3) : [];
++    return checks.length ? checks : ["能用自己的话解释核心概念", "能说出一个适用场景", "能指出一个失败边界"];
++  }
++
++  function keyNotePlainText(levelIndex) {
++    var lessons = curriculumLessons(levelIndex);
++    return "# 第 " + (levelIndex + 1) + " 关重点笔记：" + levelName(levelIndex) + "\n\n" + lessons.map(function (lesson, index) {
++      return "## 课卡 " + String(index + 1).padStart(2, "0") + "：" + lessonName(lesson, index) + "\n" +
++        "- 核心结论：" + lessonCore(lesson) + "\n" +
++        "- 训练前自检：" + lessonKeyChecks(lesson).join("；");
++    }).join("\n\n");
++  }
++
++  function renderKeyNotes() {
++    openOverlay("key-notes", "本关重点笔记");
++    var levelIndex = state.activeLevel;
++    var lessons = curriculumLessons(levelIndex);
++    var reviewed = keyNoteIsReviewed(levelIndex);
++    var cards = lessons.map(function (lesson, index) {
++      var checks = lessonKeyChecks(lesson).map(function (check) {
++        return '<li>' + esc(check) + '</li>';
++      }).join("");
++      var read = lessonIsRead(levelIndex, index);
++      var reflected = reflectionIsComplete(levelIndex, index);
++      return '<article class="ul-keynote-card">' +
++        '<header><span>课卡 ' + String(index + 1).padStart(2, "0") + '</span><div class="ul-keynote-status"><em class="' + (read ? "is-done" : "") + '">' + (read ? "已读" : "待读") + '</em><em class="' + (reflected ? "is-done" : "") + '">' + (reflected ? "已表达" : "待表达") + '</em></div></header>' +
++        '<h3>' + esc(lessonName(lesson, index)) + '</h3>' +
++        '<div class="ul-keynote-core"><b>重点</b><p>' + esc(lessonCore(lesson)) + '</p></div>' +
++        '<div class="ul-keynote-check"><b>训练前确认自己能做到</b><ul>' + checks + '</ul></div>' +
++      '</article>';
++    }).join("");
++    content.innerHTML =
++      pageHead("KEY NOTES / PRE-TRAINING REVIEW", levelName(levelIndex), "这是本关课卡的训练前压缩笔记。先快速复习重点，再进入判断与选择训练。", '<span class="ul-chip">重点 <strong>' + lessons.length + '</strong></span><span class="ul-chip ' + (reviewed ? "is-complete" : "") + '"><strong>' + (reviewed ? "已复习" : "待复习") + '</strong></span>') +
++      levelTabs() +
++      credentialBrief(levelIndex) +
++      '<section class="ul-keynote-intro ' + (reviewed ? "is-reviewed" : "") + '">' +
++        '<span>REVIEW CHECKPOINT</span><div><h3>' + (reviewed ? "本关重点笔记已复习" : "训练前先完成一次重点复习") + '</h3><p>不要逐字背诵。你只需要确认：能解释核心概念、能识别适用场景、能指出失败边界。</p></div><em>' + (reviewed ? "READY" : "REVIEW") + '</em>' +
++      '</section>' +
++      '<section class="ul-keynote-grid">' + cards + '</section>' +
++      '<footer class="ul-footer-action ul-keynote-actions"><p>笔记由当前课卡自动生成；课程更新后会自动要求重新复习。</p><div class="ul-button-row"><button class="ul-button" data-ul-action="copy-key-notes">复制本关重点笔记</button><button class="ul-button is-primary" data-ul-action="review-key-notes">' + (reviewed ? "再次确认并进入训练" : "已复习，进入本关训练") + '</button></div></footer>';
++  }
++
++  function markKeyNotesReviewed() {
++    var levelIndex = state.activeLevel;
++    state.keyNoteReviewed[levelIndex] = {
++      signature: keyNoteSignature(levelIndex),
++      reviewedAt: Date.now()
++    };
++    saveState();
++    refreshHomeSoon();
++    notify("本关重点笔记已记录为已复习");
++    renderTrainingHome();
++  }
++
+   function renderLesson(lessonIndex) {
+     var levelIndex = state.activeLevel;
+     var level = course.levels[levelIndex];
+@@ -654,10 +730,12 @@
+     var threshold = passThreshold(levelIndex);
+     var streak = Number(state.mockStreak[levelIndex]) || 0;
+     var streakTarget = requiredMockStreak(levelIndex);
++    var keyNotesReady = keyNoteIsReviewed(levelIndex);
+     content.innerHTML =
+       pageHead("WORKSHOP / PRACTICE + REVIEW", levelName(levelIndex), "每次随机抽题，一次只判断一个概念；作答后立即解释，结束后自动审核并生成错题。", '<span class="ul-chip">题库 <strong>' + total + '</strong></span><span class="ul-chip">最高 <strong>' + best + ' 分</strong></span>' + (isAdvancedLevel(levelIndex) ? '<span class="ul-chip">连胜 <strong>' + Math.min(streak, streakTarget) + '/' + streakTarget + '</strong></span>' : "")) +
+       levelTabs() +
+       credentialBrief(levelIndex) +
++      '<section class="ul-training-note-gate ' + (keyNotesReady ? "is-ready" : "") + '"><div><span>PRE-TRAINING NOTE</span><strong>' + (keyNotesReady ? "本关重点笔记已复习" : "训练前先复习本关重点笔记") + '</strong><p>' + (keyNotesReady ? "你可以直接训练，也可以随时返回笔记快速回忆。" : "重点笔记已经把每张课卡压缩成核心结论与自检问题，完成后才开始本关训练。") + '</p></div><button class="ul-button ' + (keyNotesReady ? "" : "is-cyan") + '" data-ul-action="key-notes">' + (keyNotesReady ? "再次复习" : "打开重点笔记") + '</button></section>' +
+       '<div class="ul-training-grid">' +
+         '<section class="ul-mission-card">' +
+           '<h3>本关训练任务</h3>' +
+@@ -670,7 +748,7 @@
+           '</div>' +
+           (read < lessons.length ? '<div class="ul-flow-note"><span>!</span><div>还有课卡未读。可以先训练诊断，也可以返回书库完成输入。</div></div>' : "") +
+           '<div class="ul-button-row">' +
+-            '<button class="ul-button is-primary" data-ul-action="start" data-mode="normal">' + (isAdvancedLevel(levelIndex) ? "开始一轮模考" : "开始随机训练") + '</button>' +
++            '<button class="ul-button is-primary" data-ul-action="start" data-mode="normal"' + (keyNotesReady ? "" : " disabled") + '>' + (isAdvancedLevel(levelIndex) ? "开始一轮模考" : "开始随机训练") + '</button>' +
+             '<button class="ul-button" data-ul-action="start" data-mode="wrong"' + (wrong ? "" : " disabled") + '>只练错题</button>' +
+             '<button class="ul-button" data-ul-action="library">返回书库</button>' +
+           '</div>' +
+@@ -691,6 +769,11 @@
+ 
+   function startSession(mode) {
+     var levelIndex = state.activeLevel;
++    if (!keyNoteIsReviewed(levelIndex)) {
++      notify("请先复习本关重点笔记");
++      renderKeyNotes();
++      return;
++    }
+     var source = mode === "wrong"
+       ? wrongIds(levelIndex).map(function (id) { return questionById(levelIndex, id); }).filter(Boolean)
+       : bank(levelIndex).slice();
+@@ -1108,13 +1191,15 @@
+     var action = button.dataset.ulAction;
+     if (action === "close") closeOverlay();
+     if (action === "library") { lessonReturnToQuestion = false; renderLibrary(); }
++    if (action === "key-notes") renderKeyNotes();
+     if (action === "training") renderTrainingHome();
+     if (action === "wrong") renderWrongArchive();
+     if (action === "level") {
+       state.activeLevel = Number(button.dataset.level) || 0;
+       saveState();
+       refreshHomeSoon();
+-      if (activeView === "wrong") renderWrongArchive();
++      if (activeView === "key-notes") renderKeyNotes();
++      else if (activeView === "wrong") renderWrongArchive();
+       else if (activeView === "training" || activeView === "question" || activeView === "result") renderTrainingHome();
+       else renderLibrary();
+     }
+@@ -1134,6 +1219,8 @@
+     if (action === "answer") recordAnswer(Number(button.dataset.answer));
+     if (action === "next-question") nextQuestion();
+     if (action === "copy-review") copyReview();
++    if (action === "copy-key-notes") copyPlainText(keyNotePlainText(state.activeLevel), "本关重点笔记已复制");
++    if (action === "review-key-notes") markKeyNotesReviewed();
+     if (action === "view-doubts") renderDoubts();
+   }
+ 
+@@ -1173,6 +1260,7 @@
+       event.stopImmediatePropagation();
+       syncActiveLevelToHome();
+       if (unified.dataset.ulLaunch === "library") renderLibrary();
++      else if (unified.dataset.ulLaunch === "key-notes") renderKeyNotes();
+       else if (unified.dataset.ulLaunch === "wrong") renderWrongArchive();
+       else renderTrainingHome();
+       return;
+@@ -1202,8 +1290,8 @@
+       if (button.textContent.trim() !== "进入本关训练") button.textContent = "进入本关训练";
+     });
+     var mentor = document.getElementById("pg-mentor");
+-    if (mentor && mentor.textContent !== "学习顺序：书库读懂概念，然后训练判断，错题清零后进行间隔复训。") {
+-      mentor.textContent = "学习顺序：书库读懂概念，然后训练判断，错题清零后进行间隔复训。";
++    if (mentor && mentor.textContent !== "学习顺序：书库读懂概念，重点笔记压缩复习，然后训练、错题与间隔复训。") {
++      mentor.textContent = "学习顺序：书库读懂概念，重点笔记压缩复习，然后训练、错题与间隔复训。";
+     }
+     var gates = document.getElementById("pg-gates");
+     if (!gates) return;
+@@ -1212,40 +1300,40 @@
+     var read = readCount(levelIndex);
+     var best = Number(state.best[levelIndex]) || 0;
+     var wrong = wrongIds(levelIndex).length;
+-    var signature = [levelIndex, read, lessons.length, best, wrong].join("-");
++    var keyNotesReady = keyNoteIsReviewed(levelIndex);
++    var signature = [levelIndex, read, lessons.length, keyNotesReady ? 1 : 0, best, wrong].join("-");
+     var flow = document.getElementById("pg-mode-row");
+     var threshold = passThreshold(levelIndex);
+-    var currentStep = read < lessons.length ? 0 : (best < threshold ? 1 : (wrong > 0 ? 2 : 3));
+-    var nextLabel = [
+-      "下一步：在书库读完本关课卡",
+-      "下一步：完成一组随机训练",
+-      "下一步：清零当前错题",
+-      "下一步：间隔后重新模考"
+-    ][currentStep];
+-    if (flow && (flow.dataset.ulSignature !== signature || !flow.querySelector(".ul-main-flow"))) {
++    var currentStep = read < lessons.length ? 0 : (!keyNotesReady ? 1 : (best < threshold ? 2 : (wrong > 0 ? 3 : 4)));
++    var stepName = ["书库学习", "重点笔记", "训练 + 审核", "错题复盘", "间隔复训"][currentStep];
++    var nextLevelIndex = levelIndex + 1;
++    var nextLevelPreview = nextLevelIndex < course.levels.length
++      ? "LEVEL " + String(nextLevelIndex + 1).padStart(2, "0") + " · " + levelName(nextLevelIndex)
++      : "全路径终局 · 高级证书作品集";
++    var eyebrow = document.querySelector(".pg-eyebrow");
++    if (eyebrow && eyebrow.firstChild) eyebrow.firstChild.nodeValue = "当前关卡 · ";
++    if (flow && (flow.dataset.ulSignature !== signature || !flow.querySelector(".ul-current-quest"))) {
+       flow.dataset.ulSignature = signature;
+-      flow.setAttribute("aria-label", "本关四步学习流程");
++      flow.setAttribute("aria-label", "当前学习步骤");
+       flow.innerHTML =
+-        '<div class="ul-main-flow">' +
+-          '<div class="ul-main-flow-head"><span>本关学习路径</span><strong>' + nextLabel + '</strong></div>' +
+-          '<div class="ul-main-flow-track">' +
+-            '<span class="' + (read === lessons.length ? "is-done" : (currentStep === 0 ? "is-current" : "")) + '">1 书库学习</span>' +
+-            '<span class="' + (best >= threshold ? "is-done" : (currentStep === 1 ? "is-current" : "")) + '">2 训练 + 审核</span>' +
+-            '<span class="' + (best >= threshold && wrong === 0 ? "is-done" : (currentStep === 2 ? "is-current" : "")) + '">3 错题复盘</span>' +
+-            '<span class="' + (currentStep === 3 ? "is-current" : "") + '">4 间隔复训</span>' +
+-          '</div>' +
++        '<div class="ul-current-quest">' +
++          '<span>CURRENT STEP · ' + String(currentStep + 1).padStart(2, "0") + '</span>' +
++          '<strong>' + stepName + '</strong>' +
+         '</div>';
+     }
+-    gates.setAttribute("aria-label", "本关四步学习进度");
++    gates.setAttribute("aria-label", "下一关预告");
+     var primary = document.querySelector(".pg-quest-footer .pg-primary");
+     if (primary) {
+       if (currentStep === 0) {
+         primary.dataset.action = "library";
+         primary.textContent = "继续书库 " + read + "/" + lessons.length;
+       } else if (currentStep === 1) {
++        primary.dataset.action = "key-notes";
++        primary.textContent = "复习重点笔记";
++      } else if (currentStep === 2) {
+         primary.dataset.action = "workshop";
+         primary.textContent = "开始本关训练";
+-      } else if (currentStep === 2) {
++      } else if (currentStep === 3) {
+         primary.dataset.action = "codex";
+         primary.textContent = "清理错题 " + wrong;
+       } else {
+@@ -1254,15 +1342,12 @@
+       }
+       primary.setAttribute("aria-label", primary.textContent);
+     }
+-    if (gates.dataset.ulSignature === signature && gates.querySelector(".ul-home-flow")) return;
++    if (gates.dataset.ulSignature === signature && gates.querySelector(".ul-next-level-preview")) return;
+     gates.dataset.ulSignature = signature;
+-    var bestLabel = best ? best + "/" + threshold : "未开始";
+     gates.innerHTML =
+-      '<div class="ul-home-flow">' +
+-        '<button class="ul-home-step' + (read === lessons.length ? " is-done" : "") + '" data-ul-launch="library"><span>STEP 01</span><strong>课卡 ' + read + "/" + lessons.length + '</strong></button>' +
+-        '<button class="ul-home-step' + (best >= passThreshold(levelIndex) ? " is-done" : "") + '" data-ul-launch="training"><span>STEP 02</span><strong>训练 ' + bestLabel + '</strong></button>' +
+-        '<button class="ul-home-step' + (!wrong && best >= passThreshold(levelIndex) ? " is-done" : "") + '" data-ul-launch="wrong"><span>STEP 03</span><strong>错题 ' + wrong + ' 道</strong></button>' +
+-        '<button class="ul-home-step" data-ul-launch="training"><span>STEP 04</span><strong>间隔复训</strong></button>' +
++      '<div class="ul-next-level-preview">' +
++        '<span>NEXT LEVEL / 下一关预告</span>' +
++        '<strong>' + esc(nextLevelPreview) + '</strong>' +
+       '</div>';
+   }
+ 
+@@ -1288,6 +1373,7 @@
+     window.GOGOGO_UNIFIED_LEARNING = {
+       version: VERSION,
+       openLibrary: renderLibrary,
++      openKeyNotes: function () { syncActiveLevelToHome(); renderKeyNotes(); },
+       openTraining: renderTrainingHome,
+       openWrongArchive: renderWrongArchive
+     };
