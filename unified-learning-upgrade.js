@@ -437,7 +437,7 @@
           '</nav>' +
           '<button class="ul-icon-button" data-ul-action="close" aria-label="关闭">X</button>' +
         '</header>' +
-        '<p class="ul-boundary-note">独立训练工具 · 非任何机构官方课程或考试｜学习记录仅保存在当前浏览器的当前网址，不同域名和设备不会自动同步；“导出”只含旧版基础进度，不含复盘、训练成绩和公会证据；网页不会自动读取你的 Codex 对话</p>' +
+        '<p class="ul-boundary-note">独立训练工具 · 非任何机构官方课程或考试｜学习记录仅保存在当前浏览器的当前网址，不同域名和设备不会自动同步；“导出”只含旧版基础进度，不含复盘、训练成绩和公会证据；网页不会自动读取你的 Agent 对话</p>' +
         '<main class="ul-content" id="ul-content"></main>' +
       '</div>';
     document.body.appendChild(overlay);
@@ -696,10 +696,10 @@
 
   function reviewReceiptEditor(levelIndex, lessonIndex) {
     return '<details class="ul-review-receipt">' +
-      '<summary>粘贴 Codex 审核回执</summary>' +
+      '<summary>粘贴 Agent 审核回执</summary>' +
       '<p>请粘贴三行回执。页面只负责保存，不会假装自动完成语义审核。</p>' +
       '<pre>状态：通过 / 需修正 / 信息不足\n关键问题：最重要的一处\n追问或提示：只给一个</pre>' +
-      '<label>Codex 回执<textarea data-review-receipt maxlength="1200" placeholder="状态：需修正\n关键问题：……\n追问或提示：……"></textarea></label>' +
+      '<label>Agent 回执<textarea data-review-receipt maxlength="1200" placeholder="状态：需修正\n关键问题：……\n追问或提示：……"></textarea></label>' +
       '<button class="ul-button is-cyan" data-ul-action="save-review-receipt" data-level="' + levelIndex + '" data-lesson="' + lessonIndex + '">保存审核回执</button>' +
     '</details>';
   }
@@ -716,7 +716,7 @@
     }
     if (feedbackRecord && (feedbackRecord.criticalIssue || feedbackRecord.prompt)) {
       feedback = '<section class="ul-review-feedback' + (feedbackIsPrevious ? " is-stale" : "") + '">' +
-        '<b>' + (feedbackIsPrevious ? "上一版 Codex 反馈" : "Codex 关键反馈") + '</b>' +
+        '<b>' + (feedbackIsPrevious ? "上一版 Agent 反馈" : "Agent 关键反馈") + '</b>' +
         (feedbackRecord.criticalIssue ? '<p><strong>关键问题：</strong>' + esc(feedbackRecord.criticalIssue) + '</p>' : "") +
         (feedbackRecord.prompt ? '<p><strong>追问或提示：</strong>' + esc(feedbackRecord.prompt) + '</p>' : "") +
         (feedbackIsPrevious ? '<small>这条反馈只属于上一版表达；当前版本需要重新送审。</small>' : "") +
@@ -724,7 +724,7 @@
     }
     var actions = '<button class="ul-button" data-ul-action="goto-lesson" data-lesson="' + entry.index + '">' + (meta.status === "missing" ? "去完成表达" : "打开课卡") + '</button>';
     if (meta.status !== "missing") {
-      actions += '<button class="ul-button is-cyan" data-ul-action="copy-review-packet" data-level="' + entry.levelIndex + '" data-lesson="' + entry.index + '">' + (meta.status === "confirmed" ? "重新复制审核包" : "复制给 Codex 审核") + '</button>';
+      actions += '<button class="ul-button is-cyan" data-ul-action="copy-review-packet" data-level="' + entry.levelIndex + '" data-lesson="' + entry.index + '">' + (meta.status === "confirmed" ? "重新复制审核包" : "复制给 Agent 审核") + '</button>';
     }
     return '<article class="ul-review-card ' + reviewStatusClass(meta) + '" data-review-key="' + esc(meta.key) + '" tabindex="-1">' +
       '<header><span>课卡 ' + lessonNumber + '</span><em>' + reviewStatusLabel(meta) + '</em></header>' +
@@ -861,17 +861,17 @@
     }
     var cards = visible.length
       ? visible.map(reviewCardHtml).join("")
-      : '<div class="ul-empty"><h3>' + (reviewFilter === "confirmed" ? "还没有回执通过的理解" : "还没有需要处理的个人表达") + '</h3><p>' + (reviewFilter === "confirmed" ? "完成课卡表达并把 Codex 回执粘贴回来后，会形成你的理解档案。" : "这里不会把未写的课卡变成任务。可以直接训练；真实表达、疑问和错误出现后再回来复盘。") + '</p></div>';
+      : '<div class="ul-empty"><h3>' + (reviewFilter === "confirmed" ? "还没有回执通过的理解" : "还没有需要处理的个人表达") + '</h3><p>' + (reviewFilter === "confirmed" ? "完成课卡表达并把 Agent 回执粘贴回来后，会形成你的理解档案。" : "这里不会把未写的课卡变成任务。可以直接训练；真实表达、疑问和错误出现后再回来复盘。") + '</p></div>';
     content.innerHTML =
-      pageHead("MY REVIEW / PERSONAL EVIDENCE", levelName(levelIndex), "这里只保留你的表达、真实疑问、训练错误和 Codex 反馈；课程原文仍在书库。", '<span class="ul-chip">待处理 <strong>' + (counts.pending + counts.revision) + '</strong></span><span class="ul-chip is-complete">回执通过 <strong>' + counts.confirmed + '</strong></span>') +
+      pageHead("MY REVIEW / PERSONAL EVIDENCE", levelName(levelIndex), "这里只保留你的表达、真实疑问、训练错误和 Agent 反馈；课程原文仍在书库。", '<span class="ul-chip">待处理 <strong>' + (counts.pending + counts.revision) + '</strong></span><span class="ul-chip is-complete">回执通过 <strong>' + counts.confirmed + '</strong></span>') +
       levelTabs() +
       '<section class="ul-review-dashboard" aria-label="本关复盘统计">' +
-        '<div><span>待 Codex 审核</span><strong>' + counts.pending + '</strong></div>' +
+        '<div><span>待 Agent 审核</span><strong>' + counts.pending + '</strong></div>' +
         '<div class="is-warn"><span>需要修改</span><strong>' + counts.revision + '</strong></div>' +
         '<div class="is-good"><span>回执通过</span><strong>' + counts.confirmed + '</strong></div>' +
         '<div><span>当前错题</span><strong>' + wrongIds(levelIndex).length + '</strong></div>' +
       '</section>' +
-      '<section class="ul-review-handoff"><span>CODEX HANDOFF</span><p><strong>网页不会自动读取 Codex 对话。</strong>先复制审核包，粘贴到 Codex，再把三行关键反馈带回这里保存。</p></section>' +
+      '<section class="ul-review-handoff"><span>AGENT HANDOFF</span><p><strong>网页不会自动读取你的 Agent 对话。</strong>先复制审核包，粘贴到你的 Agent，再把三行关键反馈带回这里保存。</p></section>' +
       reviewTrainingEvidenceHtml(levelIndex) +
       reviewSignalsHtml(levelIndex) +
       '<section class="ul-review-toolbar"><div role="group" aria-label="复盘筛选"><button class="ul-review-filter' + (reviewFilter === "pending" ? " is-active" : "") + '" data-ul-action="review-filter" data-filter="pending" aria-pressed="' + (reviewFilter === "pending" ? "true" : "false") + '">待处理</button><button class="ul-review-filter' + (reviewFilter === "confirmed" ? " is-active" : "") + '" data-ul-action="review-filter" data-filter="confirmed" aria-pressed="' + (reviewFilter === "confirmed" ? "true" : "false") + '">回执通过</button></div>' + primaryAction + '</section>' +
@@ -909,7 +909,7 @@
     }
     copyPlainText(reflectionReviewPacket(levelIndex, lessonIndex, answer), options.recordFailed
       ? "审核包已复制；但理解表达未能保存到浏览器，请稍后重试记录"
-      : "审核包已复制；在 Codex 审核后把三行回执粘贴回来", function () {
+      : "审核包已复制；在 Agent 审核后把三行回执粘贴回来", function () {
       var key = lessonProgressKey(levelIndex, lessonIndex);
       var existing = isPlainRecord(state.reflectionReviews[key]) ? state.reflectionReviews[key] : null;
       var currentAnswerSignature = textSignature(answer);
@@ -1007,7 +1007,7 @@
     var doubtSignature = textSignature(lessonNoteValue(levelIndex, lessonIndex));
     var sourceIsCurrent = Boolean(existing && existing.answerSignature === answerSignature && String(existing.answer || "").trim() === answer && existing.courseSignature === courseSignature && existing.doubtSignature === doubtSignature);
     if (!sourceIsCurrent || !Number(existing.copiedAt)) {
-      notify("请先复制当前版本的审核包，再保存 Codex 回执");
+      notify("请先复制当前版本的审核包，再保存 Agent 回执");
       return;
     }
     var now = Date.now();
@@ -1035,7 +1035,7 @@
     }
     refreshHomeSoon();
     reviewFilter = parsed.status === "confirmed" ? "confirmed" : "pending";
-    notify(parsed.status === "confirmed" ? "已保存 Codex 回执：通过（仅代表你粘贴的内容）" : "Codex 反馈已保存，下一步按关键问题修改");
+    notify(parsed.status === "confirmed" ? "已保存 Agent 回执：通过（仅代表你粘贴的内容）" : "Agent 反馈已保存，下一步按关键问题修改");
     renderKeyNotes({ reviewKey: key });
   }
 
@@ -1084,11 +1084,11 @@
           '<label for="ul-reflection">我的理解表述</label>' +
           '<small>建议 30–120 字。至少 20 字会记为“已记录”；字数只代表形成记录，不代表内容一定正确。</small>' +
           '<textarea id="ul-reflection" data-reflection-key="' + esc(reflectionKey) + '" data-level-index="' + levelIndex + '" data-lesson-index="' + lessonIndex + '" placeholder="不要抄原文。先关掉上面的完整教材，再用自己的话说明。">' + esc(savedReflection) + '</textarea>' +
-          '<footer><span data-reflection-count>' + savedReflection.trim().length + ' 字 · ' + (reflectionDone ? "已形成记录" : "至少还需 " + Math.max(0, 20 - savedReflection.trim().length) + " 字") + '</span><div class="ul-button-row"><button class="ul-button" data-ul-action="save-reflection">保存表达</button><button class="ul-button is-cyan" data-ul-action="copy-reflection">复制给 Codex 审核</button></div></footer>' +
+          '<footer><span data-reflection-count>' + savedReflection.trim().length + ' 字 · ' + (reflectionDone ? "已形成记录" : "至少还需 " + Math.max(0, 20 - savedReflection.trim().length) + " 字") + '</span><div class="ul-button-row"><button class="ul-button" data-ul-action="save-reflection">保存表达</button><button class="ul-button is-cyan" data-ul-action="copy-reflection">复制给 Agent 审核</button></div></footer>' +
         '</section>' +
         '<section class="ul-question-note">' +
           '<label for="ul-note">我还没懂什么？（可选，不是作业）</label>' +
-          '<small>只记录真实疑问，之后可以随学习快照交给 Codex。已经理解就留空。</small>' +
+          '<small>只记录真实疑问，之后可以随学习快照交给 Agent。已经理解就留空。</small>' +
           '<textarea id="ul-note" data-note-key="' + esc(noteKey) + '" placeholder="例如：我还分不清 RAG 和工具调用的边界。">' + esc(noteValue) + '</textarea>' +
           '<div class="ul-button-row" style="margin-top:10px"><button class="ul-button" data-ul-action="save-note">保存疑问</button></div>' +
         '</section>' +
@@ -1205,7 +1205,7 @@
             '<div class="ul-flow-item"><span>3</span><div>系统自动判分</div></div>' +
             '<div class="ul-flow-item"><span>4</span><div>错题进入复盘档案</div></div>' +
           '</div>' +
-          '<p>Codex 深度复盘改为可选项，只在你对错题解释仍有疑问时使用。</p>' +
+          '<p>Agent 深度复盘改为可选项，只在你对错题解释仍有疑问时使用。</p>' +
         '</aside>' +
       '</div>' +
       (focusWrong && wrong ? '<div class="ul-footer-action"><p>你从“错题档案”进入，目前有 ' + wrong + ' 道待消除错题。</p><button class="ul-button is-cyan" data-ul-action="wrong">查看错题解释</button></div>' : "");
@@ -1449,12 +1449,12 @@
         '</div>' +
         '<h3>本轮薄弱概念</h3>' +
         '<div class="ul-tag-list">' + tagHtml + '</div>' +
-        (unsaved ? "" : '<div class="ul-flow-note"><span>i</span><div>' + (fullTraining ? (advanced ? (qualified ? "连续三轮达线已完成；若自选报考外部证书，规则以发证方当期通知为准，实操能力还要看本关作品证据。" : (passed ? "不要立刻背答案重考。先隔时复述薄弱概念，再完成下一轮训练。" : "连续记录已归零。先只练错题，理解后再开始新的完整训练。")) : (passed ? "本轮训练已形成记录。若解释仍不清楚，再把错题发给 Codex 深度复盘。" : "先只练本轮错题，不要立刻重做整套题。错题清零后再进行新的随机训练。")) : (passed ? "错题已清零。现在完成一组完整随机训练，才能形成本关成绩。" : "继续针对仍答错的错题复训。")) + '</div></div>') +
+        (unsaved ? "" : '<div class="ul-flow-note"><span>i</span><div>' + (fullTraining ? (advanced ? (qualified ? "连续三轮达线已完成；若自选报考外部证书，规则以发证方当期通知为准，实操能力还要看本关作品证据。" : (passed ? "不要立刻背答案重考。先隔时复述薄弱概念，再完成下一轮训练。" : "连续记录已归零。先只练错题，理解后再开始新的完整训练。")) : (passed ? "本轮训练已形成记录。若解释仍不清楚，再把错题发给 Agent 深度复盘。" : "先只练本轮错题，不要立刻重做整套题。错题清零后再进行新的随机训练。")) : (passed ? "错题已清零。现在完成一组完整随机训练，才能形成本关成绩。" : "继续针对仍答错的错题复训。")) + '</div></div>') +
         '<div class="ul-button-row">' +
           '<button class="ul-button is-primary" data-ul-action="start" data-mode="wrong"' + (wrongIds(levelIndex).length ? "" : " disabled") + '>只练错题</button>' +
           '<button class="ul-button" data-ul-action="start" data-mode="normal">' + (fullTraining ? "再抽一组" : "开始完整训练") + '</button>' +
           '<button class="ul-button" data-ul-action="wrong">查看错题档案</button>' +
-          '<button class="ul-button" data-ul-action="copy-review">复制结果给 Codex</button>' +
+          '<button class="ul-button" data-ul-action="copy-review">复制结果给 Agent</button>' +
         '</div>' +
       '</section>';
   }
@@ -1489,7 +1489,7 @@
       levelTabs() +
       (tagWarning ? '<div class="ul-tag-list" style="margin:0 14px 14px">' + tagWarning + '</div>' : "") +
       (ids.length
-        ? '<div class="ul-wrong-list">' + cards + '</div><footer class="ul-footer-action"><p>先读解释，再用“只练错题”验证是否真正修正。</p><div class="ul-button-row"><button class="ul-button is-primary" data-ul-action="start" data-mode="wrong">只练错题</button><button class="ul-button" data-ul-action="copy-review">复制错题给 Codex</button></div></footer>'
+        ? '<div class="ul-wrong-list">' + cards + '</div><footer class="ul-footer-action"><p>先读解释，再用“只练错题”验证是否真正修正。</p><div class="ul-button-row"><button class="ul-button is-primary" data-ul-action="start" data-mode="wrong">只练错题</button><button class="ul-button" data-ul-action="copy-review">复制错题给 Agent</button></div></footer>'
         : '<div class="ul-empty"><h3>当前没有错题</h3><p>开始一次随机训练，系统会把错误判断自动收集到这里。</p><button class="ul-button is-primary" data-ul-action="training">开始训练</button></div>');
   }
 
@@ -1531,7 +1531,7 @@
     var text = reviewPacket();
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(function () {
-        notify("训练结果已复制，可以粘贴给 Codex");
+        notify("训练结果已复制，可以粘贴给 Agent");
       }).catch(function () {
         fallbackCopy(text);
       });
@@ -1549,7 +1549,7 @@
     textarea.select();
     try {
       document.execCommand("copy");
-      notify("训练结果已复制，可以粘贴给 Codex");
+      notify("训练结果已复制，可以粘贴给 Agent");
     } catch (error) {
       notify("复制失败，请手动选择错题内容");
     }
@@ -1658,7 +1658,7 @@
     var lessonIndex = Number(textarea.dataset.lessonIndex);
     var answer = textarea.value.trim();
     if (!answer) {
-      notify("请先写下你的理解，再复制给 Codex");
+      notify("请先写下你的理解，再复制给 Agent");
       return;
     }
     var key = textarea.dataset.reflectionKey;

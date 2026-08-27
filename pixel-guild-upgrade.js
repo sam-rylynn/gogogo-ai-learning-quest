@@ -4,6 +4,7 @@
   if (document.getElementById("pixel-guild-app")) return;
 
   const STORAGE_KEY = "gogogo_pixel_guild_v1";
+  const ONBOARDING_KEY = "gogogo_pixel_onboarding_20260827_v1";
   const LEGACY_KEYS = ["gogogo_ai_quest_v2", "gogogo_ai_quest_v1"];
   const RETEST_DELAY = 72 * 60 * 60 * 1000;
 
@@ -112,14 +113,14 @@
     project: {
       label: "项目 90 分",
       short: "90 分",
-      steps: ["学习与复述 20 分钟", "实战产物 45 分钟", "Codex 审核与修订 25 分钟"]
+      steps: ["学习与复述 20 分钟", "实战产物 45 分钟", "Agent 审核与修订 25 分钟"]
     }
   };
 
   const GATES = [
     { id: "explain", label: "闭卷解释", number: "01" },
     { id: "transfer", label: "变式任务", number: "02" },
-    { id: "codex", label: "Codex 审核", number: "03" },
+    { id: "codex", label: "Agent 审核", number: "03" },
     { id: "retest", label: "72h 复测", number: "04" }
   ];
 
@@ -322,6 +323,7 @@
   let toastTimer = 0;
   let drawerCloseTimer = 0;
   let drawerOpener = null;
+  let introOpen = false;
   let legacyOpener = null;
   const originalElements = Array.from(document.body.children).filter((element) => {
     return !element.matches("script[data-pixel-upgrade]");
@@ -367,7 +369,7 @@
       <div class="pg-scene" id="pg-scene">
         <button class="pg-station pg-station-library" data-station="0" data-action="library">课程书库</button>
         <button class="pg-station pg-station-workshop" data-station="1" data-action="workshop">训练工坊</button>
-        <button class="pg-station pg-station-codex" data-station="2" data-action="codex">Codex 审核室</button>
+        <button class="pg-station pg-station-codex" data-station="2" data-action="codex">Agent 审核室</button>
         <button class="pg-station pg-station-retest" data-station="3" data-action="retest">72h 复测塔</button>
         <button class="pg-station pg-station-project" data-station="4" data-action="artifact">项目作品陈列门</button>
         <button class="pg-station pg-station-notes" data-station="5" data-action="key-notes">我的复盘</button>
@@ -398,6 +400,7 @@
           <span class="pg-key">E</span><span>互动</span>
         </div>
         <nav class="pg-location-strip" id="pg-location-strip" aria-label="公会地点">
+          <button class="pg-help-nav" data-action="intro">玩法</button>
           <button data-station="0" data-action="library">书库</button>
           <button data-station="1" data-action="workshop">工坊</button>
           <button data-station="2" data-action="codex">审核室</button>
@@ -455,6 +458,25 @@
   drawer.addEventListener("submit", handleSubmit);
   legacyOverlay.addEventListener("click", handleClick);
   document.addEventListener("keydown", handleKeydown);
+  window.requestAnimationFrame(() => {
+    if (shouldShowOnboarding()) openIntro();
+  });
+
+  function shouldShowOnboarding() {
+    try {
+      return localStorage.getItem(ONBOARDING_KEY) !== "seen";
+    } catch (error) {
+      return true;
+    }
+  }
+
+  function markOnboardingSeen() {
+    try {
+      localStorage.setItem(ONBOARDING_KEY, "seen");
+    } catch (error) {
+      // Storage unavailable: showing the short introduction again is safe.
+    }
+  }
 
   function todayKey(date) {
     const year = date.getFullYear();
@@ -565,13 +587,11 @@
     if (!action) return;
 
     const actions = {
-      library: () => {
-        const learning = window.GOGOGO_UNIFIED_LEARNING;
-        if (learning && typeof learning.openLibrary === "function") learning.openLibrary();
-        else showToast("学习模块未就绪，请刷新页面或稍后再试。 ");
-      },
+      intro: openIntro,
+      library: openLibrary,
+      "start-course": startCourse,
       workshop: () => openDrawer("训练工坊", renderWorkshop()),
-      codex: () => openDrawer("Codex 审核室", renderCodex()),
+      codex: () => openDrawer("Agent 审核室", renderAgent()),
       retest: () => openDrawer("72h 复测塔", renderEvidence("retest")),
       artifact: () => {
         const learning = window.GOGOGO_UNIFIED_LEARNING;
@@ -590,7 +610,7 @@
       levels: () => openDrawer("选择关卡", renderDaily()),
       "close-drawer": closeDrawer,
       "close-legacy": closeLegacy,
-      "copy-codex": copyCodexPacket,
+      "copy-codex": copyAgentPacket,
       "copy-questions": copyQuestionPacket,
       "copy-notion": copyNotionTemplate,
       "copy-artifact": copyArtifactPacket,
@@ -601,6 +621,24 @@
     if (actions[action]) actions[action]();
   }
 
+  function openLibrary() {
+    const learning = window.GOGOGO_UNIFIED_LEARNING;
+    if (learning && typeof learning.openLibrary === "function") learning.openLibrary();
+    else showToast("学习模块未就绪，请刷新页面或稍后再试。 ");
+  }
+
+  function openIntro() {
+    introOpen = true;
+    openDrawer("欢迎来到 GOGO GO", renderIntro());
+  }
+
+  function startCourse() {
+    markOnboardingSeen();
+    introOpen = false;
+    closeDrawer();
+    window.setTimeout(openLibrary, 360);
+  }
+
   function handleSubmit(event) {
     event.preventDefault();
     const form = event.target;
@@ -609,7 +647,7 @@
 
     if (type === "explain") saveGateText("explain", String(data.get("answer") || ""), 80);
     if (type === "transfer") saveGateText("transfer", String(data.get("answer") || ""), 100);
-    if (type === "codex") saveCodexReview(data);
+    if (type === "codex") saveAgentReview(data);
     if (type === "retest") saveRetest(String(data.get("answer") || ""));
     if (type === "recall") saveRecall(data);
     if (type === "training-transfer") saveTrainingText("transfer", String(data.get("answer") || ""), 100);
@@ -698,6 +736,10 @@
   }
 
   function closeDrawer() {
+    if (introOpen) {
+      markOnboardingSeen();
+      introOpen = false;
+    }
     window.clearTimeout(drawerCloseTimer);
     drawer.classList.remove("is-open");
     drawer.classList.add("is-closing");
@@ -708,6 +750,38 @@
       if (drawerOpener && document.contains(drawerOpener)) drawerOpener.focus();
       drawerOpener = null;
     }, 330);
+  }
+
+  function renderIntro() {
+    const level = currentLevel();
+    const actionLabel = state.xp > 0 ? `继续第 ${level.id} 关` : "从第 1 关开始";
+    return `
+      <section class="pg-onboarding">
+        <p class="pg-onboarding-kicker">网站简介 · 30 秒看懂</p>
+        <h3>把 AI 知识练成真正能上手的能力</h3>
+        <p class="pg-onboarding-summary">这是一个闯关式学习工具。你会从基础到实战，边学边练，再把真实问题和作业交给你的 Agent 复盘。</p>
+        <ol class="pg-onboarding-steps" aria-label="三步玩法">
+          <li>
+            <span class="pg-onboarding-number" aria-hidden="true">1</span>
+            <div><strong>读课卡</strong><p>进入课程书库，先读一张课卡，再用自己的话写下理解。</p></div>
+          </li>
+          <li>
+            <span class="pg-onboarding-number" aria-hidden="true">2</span>
+            <div><strong>做训练</strong><p>完成随机训练；系统记录成绩，并把错题留给你继续复习。</p></div>
+          </li>
+          <li>
+            <span class="pg-onboarding-number" aria-hidden="true">3</span>
+            <div><strong>找 Agent 复盘</strong><p>复制学习快照到你的 Agent，获得解释、纠错和作业审核。</p></div>
+          </li>
+        </ol>
+        <div class="pg-onboarding-tip"><strong>今天只做一小步：</strong>读 1 张课卡，或者完成 1 轮训练。</div>
+        <div class="pg-onboarding-actions">
+          <button class="pg-primary" type="button" data-action="start-course">${actionLabel}</button>
+          <button class="pg-secondary" type="button" data-action="close-drawer">先看看地图</button>
+        </div>
+        <p class="pg-onboarding-note">学习进度保存在当前浏览器；以后可随时点击底部“玩法”再次查看。</p>
+      </section>
+    `;
   }
 
   function openLegacy() {
@@ -769,7 +843,7 @@
       <div class="pg-progress-route">${route}</div>
       ${gateExplainCard(gates.explain, focusGate === "explain")}
       ${gateTransferCard(gates.transfer, focusGate === "transfer")}
-      ${gateCodexCard(gates.codex, focusGate === "codex")}
+      ${gateAgentCard(gates.codex, focusGate === "codex")}
       ${gateRetestCard(gates.retest, retestReady, focusGate === "retest")}
       <div class="pg-callout is-danger"><strong>本关硬失败：</strong>${escapeHtml(level.hardFail)}</div>
     `;
@@ -805,17 +879,17 @@
       </section>`;
   }
 
-  function gateCodexCard(gate, focused) {
+  function gateAgentCard(gate, focused) {
     const done = gate.status === "recorded";
     return `
       <section class="pg-panel-card${done ? " is-complete" : ""}"${focused ? " data-focused=\"true\"" : ""}>
-        <div class="pg-card-heading"><h3>03 Codex 审核</h3><span class="pg-status${done ? " is-complete" : ""}">${done ? `已记录 ${gate.score} 分` : "待录入反馈"}</span></div>
-        <p>先复制审核包到当前 Codex 对话。Codex 负责判断内容质量，HTML 只保存评分和反馈，不假装能自动审核。</p>
-        <div class="pg-form-actions"><button class="pg-secondary" type="button" data-action="copy-codex">复制审核包给 Codex</button></div>
+        <div class="pg-card-heading"><h3>03 Agent 审核</h3><span class="pg-status${done ? " is-complete" : ""}">${done ? `已记录 ${gate.score} 分` : "待录入反馈"}</span></div>
+        <p>先复制审核包到你的 Agent。Agent 负责判断内容质量，HTML 只保存评分和反馈，不假装能自动审核。</p>
+        <div class="pg-form-actions"><button class="pg-secondary" type="button" data-action="copy-codex">复制审核包给 Agent</button></div>
         <form data-form="codex">
-          <label class="pg-form-label" for="pg-codex-score">Codex 评分（0-100，仅作记录，不代表通过）</label>
+          <label class="pg-form-label" for="pg-codex-score">Agent 评分（0-100，仅作记录，不代表通过）</label>
           <input class="pg-input" id="pg-codex-score" name="score" type="number" min="0" max="100" value="${gate.score || ""}" required>
-          <label class="pg-form-label" for="pg-codex-feedback">粘贴 Codex 的关键反馈</label>
+          <label class="pg-form-label" for="pg-codex-feedback">粘贴 Agent 的关键反馈</label>
           <textarea class="pg-textarea" id="pg-codex-feedback" name="feedback" required minlength="20">${escapeHtml(gate.feedback)}</textarea>
           <div class="pg-form-actions"><button class="pg-primary" type="submit">保存审核结果</button></div>
         </form>
@@ -867,14 +941,14 @@
     }
     renderWorld();
     refreshDrawer("旧版复盘记录", renderEvidence(gateId));
-    showToast("证据已记录；仍需 Codex 判断内容是否正确。 ");
+    showToast("证据已记录；仍需 Agent 判断内容是否正确。 ");
   }
 
-  function saveCodexReview(data) {
+  function saveAgentReview(data) {
     const score = Number(data.get("score"));
     const feedback = String(data.get("feedback") || "").trim();
     if (!Number.isFinite(score) || score < 0 || score > 100 || feedback.length < 20) {
-      shake("请填写 0-100 分评分，并粘贴至少 20 字的 Codex 反馈。");
+      shake("请填写 0-100 分评分，并粘贴至少 20 字的 Agent 反馈。");
       return;
     }
     const levelId = state.activeLevel;
@@ -941,7 +1015,7 @@
     const content = TRAINING[state.activeLevel];
     const completed = state.training[state.activeLevel];
     return `
-      <p class="pg-panel-intro">题库按认知层级训练，而不是只堆同类选择题：先识别，再迁移，最后处理边界。完成只代表留下练习记录，正确性仍要进入 Codex 审核。</p>
+      <p class="pg-panel-intro">题库按认知层级训练，而不是只堆同类选择题：先识别，再迁移，最后处理边界。完成只代表留下练习记录，正确性仍要进入 Agent 审核。</p>
       <section class="pg-panel-card${completed.recall ? " is-complete" : ""}">
         <div class="pg-card-heading"><h3>层级 1 · 概念识别</h3><span class="pg-status${completed.recall ? " is-complete" : ""}">${completed.recall ? "已记录" : "待记录"}</span></div>
         <p>${escapeHtml(content.recall.prompt)}</p>
@@ -1025,20 +1099,20 @@
     }
     renderWorld();
     refreshDrawer("训练工坊", renderWorkshop());
-    showToast("训练记录已保存；请带着答案进入 Codex 审核。 ");
+    showToast("训练记录已保存；请带着答案进入 Agent 审核。 ");
   }
 
-  function renderCodex() {
+  function renderAgent() {
     const level = currentLevel();
     const gate = state.gates[level.id].codex;
     return `
-      <p class="pg-panel-intro">Codex 是教练和审核者，不是网页里的假按钮。这里把学习上下文压缩成一个可复制审核包，再将真实反馈带回旧版复盘记录。</p>
+      <p class="pg-panel-intro">你的 Agent 是教练和审核者，不是网页里的假按钮。这里把学习上下文压缩成一个可复制审核包，再将真实反馈带回旧版复盘记录。</p>
       <section class="pg-panel-card">
         <div class="pg-card-heading"><h3>当前审核任务</h3><span class="pg-status${gate.status === "recorded" ? " is-complete" : ""}">${gate.status === "recorded" ? `${gate.score} 分` : "待提交"}</span></div>
         <p><strong>${escapeHtml(level.mission)}</strong></p>
         <p>审核包包含闭卷解释、变式答案、项目产物和未解决问题，不再只复制 XP。</p>
         <div class="pg-form-actions">
-          <button class="pg-primary" data-action="copy-codex">复制审核包给 Codex</button>
+          <button class="pg-primary" data-action="copy-codex">复制审核包给 Agent</button>
           <button class="pg-secondary" data-action="evidence">填写审核结果</button>
         </div>
       </section>
@@ -1046,22 +1120,22 @@
         <div class="pg-card-heading"><h3>职责边界</h3></div>
         <p>HTML：保存进度、证据、复测时间与下一步。</p>
         <p>Notion：保存术语、基础知识和长期可检索笔记。</p>
-        <p>Codex：讲解、追问、评分、指出错误并审核修订。</p>
+        <p>Agent：讲解、追问、评分、指出错误并审核修订。</p>
         <div class="pg-form-actions"><button class="pg-secondary" data-action="notes">查看记录标准</button></div>
       </section>`;
   }
 
-  function buildCodexPacket() {
+  function buildAgentPacket() {
     const level = currentLevel();
     const gates = state.gates[level.id];
     const artifact = state.artifacts[level.id];
     const mode = MODES[state.dailyMode];
     const questions = state.questions.length ? state.questions.map((item, index) => `${index + 1}. ${item.text}`).join("\n") : "暂无";
-    return `请作为严格但鼓励的 Codex AI 教练，审核我在《AI 从业者闯关之路》的当前学习证据。\n\n【关卡】第 ${level.id} 关：${level.name}\n【主线任务】${level.mission}\n【今日模式】${mode.label}\n【行动 XP】${state.xp}（只代表行动，不代表掌握）\n【旧版复盘记录】${completedGateCount(level.id)}/4\n\n【闭卷解释】\n${gates.explain.answer || "未提交"}\n\n【变式任务】\n题目：${TRAINING[level.id].transfer}\n答案：${gates.transfer.answer || "未提交"}\n\n【项目产物】\n${artifact.body || "未提交"}\n\n【证据与限制】\n${artifact.evidence || "未提交"}\n\n【未解决问题】\n${questions}\n\n【本关硬失败】\n${level.hardFail}\n\n请给出：1. 每项评分与理由；2. 最需要改进的两点；3. 一个更好的示范；4. 是否达到本题当前评分标准；若不足，请说明仍缺什么证据。若信息不足，请明确指出，不要代替我补写。`;
+    return `请作为严格但鼓励的 Agent 教练，审核我在《AI 从业者闯关之路》的当前学习证据。\n\n【关卡】第 ${level.id} 关：${level.name}\n【主线任务】${level.mission}\n【今日模式】${mode.label}\n【行动 XP】${state.xp}（只代表行动，不代表掌握）\n【旧版复盘记录】${completedGateCount(level.id)}/4\n\n【闭卷解释】\n${gates.explain.answer || "未提交"}\n\n【变式任务】\n题目：${TRAINING[level.id].transfer}\n答案：${gates.transfer.answer || "未提交"}\n\n【项目产物】\n${artifact.body || "未提交"}\n\n【证据与限制】\n${artifact.evidence || "未提交"}\n\n【未解决问题】\n${questions}\n\n【本关硬失败】\n${level.hardFail}\n\n请给出：1. 每项评分与理由；2. 最需要改进的两点；3. 一个更好的示范；4. 是否达到本题当前评分标准；若不足，请说明仍缺什么证据。若信息不足，请明确指出，不要代替我补写。`;
   }
 
-  function copyCodexPacket() {
-    copyText(buildCodexPacket(), "审核包已复制，粘贴到当前 Codex 对话即可。 ");
+  function copyAgentPacket() {
+    copyText(buildAgentPacket(), "审核包已复制，粘贴到你的 Agent 即可。 ");
   }
 
   function renderQuestions() {
@@ -1071,12 +1145,12 @@
         <button class="pg-danger" data-action="delete-question" data-id="${question.id}">移除</button>
       </div>`).join("") : `<div class="pg-callout">当前没有待解决问题。学习中一旦出现“不懂、冲突、无法判断”，立刻记录，不要靠猜。</div>`;
     return `
-      <p class="pg-panel-intro">问题队列只存未解决的问题。带着具体上下文交给 Codex，解决后再移除。</p>
+      <p class="pg-panel-intro">问题队列只存未解决的问题。带着具体上下文交给 Agent，解决后再移除。</p>
       <section class="pg-panel-card">
         <form data-form="question">
           <label class="pg-form-label" for="pg-new-question">新增问题</label>
           <textarea class="pg-textarea" id="pg-new-question" name="question" required minlength="8" placeholder="我不理解的是……；我已经确认……；卡住的判断是……"></textarea>
-          <div class="pg-form-actions"><button class="pg-primary" type="submit">加入队列</button><button class="pg-secondary" type="button" data-action="copy-questions">复制给 Codex</button></div>
+          <div class="pg-form-actions"><button class="pg-primary" type="submit">加入队列</button><button class="pg-secondary" type="button" data-action="copy-questions">复制给 Agent</button></div>
         </form>
       </section>
       <section class="pg-panel-card"><div class="pg-card-heading"><h3>待解决 ${state.questions.length} 项</h3></div>${items}</section>`;
@@ -1224,11 +1298,11 @@
         <div class="pg-responsibility-grid">
           <div class="pg-role"><strong>HTML · 行动层</strong><span>保存进度、答案证据、复测日期、项目产物和下一步。</span></div>
           <div class="pg-role"><strong>Notion · 知识层</strong><span>保存中英文术语、基础概念、例子、误区和长期笔记。</span></div>
-          <div class="pg-role"><strong>Codex · 反馈层</strong><span>负责讲解、追问、评分、纠错、审核和弱点跟踪。</span></div>
+          <div class="pg-role"><strong>Agent · 反馈层</strong><span>负责讲解、追问、评分、纠错、审核和弱点跟踪。</span></div>
         </div>
         <details class="pg-disclosure">
           <summary>本地记录与隐私说明</summary>
-          <div class="pg-callout"><strong>本地记录说明：</strong>这是独立训练工具，不是任何机构的官方课程或考试。学习记录只保存在当前浏览器的当前网址，不同域名和设备不会自动同步；当前“导出”只含旧版基础进度，不含我的复盘、统一训练成绩和公会证据。换网址、换设备或清理数据前，请另行复制关键内容。网页不会自动读取你的 Codex 对话。</div>
+          <div class="pg-callout"><strong>本地记录说明：</strong>这是独立训练工具，不是任何机构的官方课程或考试。学习记录只保存在当前浏览器的当前网址，不同域名和设备不会自动同步；当前“导出”只含旧版基础进度，不含我的复盘、统一训练成绩和公会证据。换网址、换设备或清理数据前，请另行复制关键内容。网页不会自动读取你的 Agent 对话。</div>
         </details>
         <div class="pg-form-actions"><button class="pg-secondary" data-action="copy-notion">复制 Notion 笔记模板</button></div>
       </section>`;
@@ -1236,7 +1310,7 @@
 
   function copyNotionTemplate() {
     const level = currentLevel();
-    const template = `# 第 ${level.id} 关：${level.name}\n\n## 1. 本节一句话\n- 我能用自己的话解释：\n\n## 2. 术语表 Terms\n| 中文 | English | 缩写 | 我的解释 | 例子 | 易错点 |\n|---|---|---|---|---|---|\n|  |  |  |  |  |  |\n\n## 3. 基础知识\n- 它解决什么问题：\n- 输入是什么：\n- 输出是什么：\n- 关键约束：\n- 不适用边界：\n\n## 4. 旧版复盘记录\n- 闭卷解释：\n- 变式任务：\n- 项目产物：${level.artifact}\n- 72h 复测结果：\n\n## 5. Codex 反馈\n- 得分：\n- 最大错误：\n- 修改前：\n- 修改后：\n\n## 6. 未解决问题\n- [ ] \n\n## 7. 复习触发器\n- 72 小时：\n- 7 天：\n- 14 天：`;
+    const template = `# 第 ${level.id} 关：${level.name}\n\n## 1. 本节一句话\n- 我能用自己的话解释：\n\n## 2. 术语表 Terms\n| 中文 | English | 缩写 | 我的解释 | 例子 | 易错点 |\n|---|---|---|---|---|---|\n|  |  |  |  |  |  |\n\n## 3. 基础知识\n- 它解决什么问题：\n- 输入是什么：\n- 输出是什么：\n- 关键约束：\n- 不适用边界：\n\n## 4. 旧版复盘记录\n- 闭卷解释：\n- 变式任务：\n- 项目产物：${level.artifact}\n- 72h 复测结果：\n\n## 5. Agent 反馈\n- 得分：\n- 最大错误：\n- 修改前：\n- 修改后：\n\n## 6. 未解决问题\n- [ ] \n\n## 7. 复习触发器\n- 72 小时：\n- 7 天：\n- 14 天：`;
     copyText(template, "Notion 笔记模板已复制。 ");
   }
 
@@ -1281,7 +1355,7 @@
   }
 })();
 
-/* Linear learning flow v2: library -> workshop -> Codex -> retest -> artifact. */
+/* Linear learning flow v2: library -> workshop -> Agent -> retest -> artifact. */
 (() => {
   const FLOW_KEY = "gogogo_learning_flow_v2";
   const FLOW_LABELS = ["学习", "训练", "审核", "复测", "归档"];
@@ -1393,9 +1467,9 @@
       return {
         stage: 2,
         action: "codex",
-        title: "Codex 审核室 · 整理两份复盘记录",
-        hint: "由 Codex 评分、指出问题并完成修订。",
-        button: "提交 Codex 审核",
+        title: "Agent 审核室 · 整理两份复盘记录",
+        hint: "由 Agent 评分、指出问题并完成修订。",
+        button: "提交 Agent 审核",
         libraryDone,
         gates,
       };

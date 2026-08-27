@@ -259,11 +259,11 @@
     .note-grid{grid-template-columns:1fr}
   }
 </style>
-  <link rel="stylesheet" href="pixel-guild-upgrade.css?v=20260816-homecopy1" data-pixel-upgrade>
+  <link rel="stylesheet" href="pixel-guild-upgrade.css?v=20260827-onboarding1" data-pixel-upgrade>
   <link rel="stylesheet" href="glossary-cards.css?v=20260727-1" data-glossary-cards>
 </head>
 <body>
-<button class="codex-checkin" id="codexCheckin" type="button">⌘ 复制学习快照给 Codex</button>
+<button class="codex-checkin" id="codexCheckin" type="button">⌘ 复制学习快照到你的 Agent</button>
 <div id="app">
   <header>
     <div class="hd-row">
@@ -387,7 +387,7 @@ levels:[
      {x:"把商品介绍改写得更亲切一些",c:0,e:"文字生成改写，LLM 负责。"},
      {x:"查询今天鸡肉鲜食套餐还有没有库存",c:2,e:"实时库存是工具调用，不是 RAG 里的旧文档。"}]},
    {id:"e3",type:"essay",t:"写作任务：会员余额查询的任务规格",icon:"✍️",
-    intro:"用任务规格八要素，为「会员在 App 里查询余额」这个 AI 功能写一份规格说明。写完点「运行字数与关键词检查」——这只核对字数和关键词，不判断内容是否正确；需要语义反馈时，再手动复制给 Codex。",
+    intro:"用任务规格八要素，为「会员在 App 里查询余额」这个 AI 功能写一份规格说明。写完点「运行字数与关键词检查」——这只核对字数和关键词，不判断内容是否正确；需要语义反馈时，再手动复制给 Agent。",
     min:100,
     rub:[
      {k:"目标（要解决什么问题）",words:["目标","为了","解决","让用户"]},
@@ -1441,7 +1441,7 @@ function renderEssay(){
     +'<textarea id="essayTa" style="height:200px" placeholder="在这里写你的答案…（至少 '+ex.min+' 字）"></textarea>'
     +'<div id="essayFb"></div>'
     +'<button class="btn primary" id="essayRun">📋 运行字数与关键词检查</button>'
-    +'<button class="btn ghost" id="essayCopy">🤖 复制作业 + 评分标准，发到 Codex 深度点评</button>';
+    +'<button class="btn ghost" id="essayCopy">🤖 复制作业 + 评分标准，发到 Agent 深度点评</button>';
   openSheet(html);
   document.getElementById("essayRun").onclick=function(){
     var v=document.getElementById("essayTa").value.trim();
@@ -1456,7 +1456,7 @@ function renderEssay(){
     });
     var pass=lenOk && okN>=ex.rub.length-1;
     out+='<div class="explain"><b>'+(pass?"🎯 基础检查通过":"还差一点")+'</b> 覆盖 '+okN+"/"+ex.rub.length+' 项关键词。'
-      +(pass?"这只检查字数和关键词，不判断内容是否正确；需要语义反馈时，再手动复制给 Codex。":"按缺失项补写后重新运行检查。")+'</div>';
+      +(pass?"这只检查字数和关键词，不判断内容是否正确；需要语义反馈时，再手动复制给 Agent。":"按缺失项补写后重新运行检查。")+'</div>';
     fb.innerHTML=out;
     if(pass){
       var st=S.levels[GAME_DATA.levels[EX.li].id].ex[EX.ei];
@@ -1468,7 +1468,7 @@ function renderEssay(){
   document.getElementById("essayCopy").onclick=function(){
     var v=document.getElementById("essayTa").value.trim();
     if(!v){ toast("先写点内容再复制"); return; }
-  var p="请作为严格但鼓励的 Codex AI 教练，点评我的学习作业。\n\n【作业题目】"+ex.claudeTitle
+  var p="请作为严格但鼓励的 Agent 教练，点评我的学习作业。\n\n【作业题目】"+ex.claudeTitle
       +"\n\n【评分标准】\n"+ex.rub.map(function(r,i){return (i+1)+". "+r.k;}).join("\n")
       +"\n\n【我的答案】\n"+v
       +"\n\n请给出：① 每条标准的得分与理由 ② 最需要改进的 2 点 ③ 一个更好的示范段落 ④ 是否达到本题当前评分标准；若不足，请说明仍缺什么证据。";
@@ -1477,13 +1477,13 @@ function renderEssay(){
 }
 function copyText(t){
   if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(t).then(function(){toast("已复制，粘贴到当前 Codex 对话吧 🤖");})
+    navigator.clipboard.writeText(t).then(function(){toast("已复制，粘贴到你的 Agent 对话吧 🤖");})
     .catch(function(){fallbackCopy(t);});
   } else fallbackCopy(t);
 }
 function fallbackCopy(t){
   var ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta);
-  ta.select(); try{document.execCommand("copy"); toast("已复制，粘贴到当前 Codex 对话吧 🤖");}catch(e){toast("复制失败，请手动复制");}
+  ta.select(); try{document.execCommand("copy"); toast("已复制，粘贴到你的 Agent 对话吧 🤖");}catch(e){toast("复制失败，请手动复制");}
   document.body.removeChild(ta);
 }
 
@@ -1746,7 +1746,7 @@ function showIntro(){
    +'</div><div class="goalbox">'
    +'<b>📚 复习路径</b>间隔重复：记得的卡 1→2→4→7→15 天后再见，忘了的明天再见。每天进「复习打卡」清掉到期卡片，红点提醒。'
    +'</div><div class="goalbox">'
-   +'<b>✍️ 直接在 Codex 中问我</b>写作类练习的系统检查只核对字数和关键词，不判断内容是否正确；需要语义反馈时，点右下角「复制学习快照给 Codex」，切回当前 Codex 对话并粘贴，再附上你的问题或作业。我会持续解释、纠错和审核。'
+   +'<b>✍️ 交给你的 Agent 复盘</b>写作类练习的系统检查只核对字数和关键词，不判断内容是否正确；需要语义反馈时，点右下角「复制学习快照到你的 Agent」，粘贴后再附上你的问题或作业，即可获得解释、纠错和作业审核。'
    +'</div><div class="goalbox">'
    +'<b>⚡ XP</b>课卡 +8 · 练习通过 +25 · 满分挑战每题 +30 · 复习 +2~3 · 技能自评 +15 · 打卡 +5 · 全勤 +20 · 周证据 +10。'
    +'</div><div class="goalbox">'
@@ -1780,7 +1780,7 @@ document.getElementById("codexCheckin").onclick=function(){
   var today=GAME_DATA.daily.map(function(d,i){return (S.daily.steps[i]?"✓ ":"□ ")+d[0];}).join("\n");
   var snapshot="我正在使用《GOGO GO · AI 从业者闯关之路》学习。请继续作为我的长期 AI 从业者教练。\n\n【我的学习快照】\n经验值："+S.xp+"\n连续学习："+S.streak+" 天\n\n【各关进度】\n"+levels+"\n\n【第一关能力卡】\n"+notes+"\n\n【今日学习】\n"+today+"\n\n【我现在的问题或要提交的作业】\n（请在这里补充）\n\n请先根据我的进度判断最合适的下一步；如果我提交作业，按概念准确性、逻辑、可落地性和能力证据严格反馈；不要一次塞入多个新概念。";
   copyText(snapshot);
-  toast("学习快照已复制，粘贴到当前 Codex 对话即可");
+  toast("学习快照已复制；粘贴到你的 Agent，即可获得解释、纠错和作业审核");
 };
 </script>
   <link rel="stylesheet" href="unified-learning-upgrade.css?v=20260815-p0p1" data-unified-learning>
@@ -1789,8 +1789,8 @@ document.getElementById("codexCheckin").onclick=function(){
   <script src="curriculum-beginner-reading.js?v=20260728-beginner1" data-curriculum-beginner></script>
   <script src="advanced-certificate-expansion.js?v=20260815-p0p1" data-curriculum-advanced></script>
   <script src="curriculum-reflection-prompts.js?v=20260804-reviewfix1" data-curriculum-reflections></script>
-  <script src="pixel-guild-upgrade.js?v=20260816-homecopy1" data-pixel-upgrade></script>
+  <script src="pixel-guild-upgrade.js?v=20260827-agent1" data-pixel-upgrade></script>
   <script src="glossary-cards.js?v=20260815-p0p1" data-glossary-cards></script>
-  <script src="unified-learning-upgrade.js?v=20260815-p0p1" data-unified-learning></script>
+  <script src="unified-learning-upgrade.js?v=20260827-agent1" data-unified-learning></script>
 </body>
 </html>
