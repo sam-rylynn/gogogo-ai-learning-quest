@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  var VERSION = "20260812-review3";
+  var VERSION = "20260815-p0p1";
   var STORE_KEY = "gogogo_unified_learning_v1";
   var course = window.GAME_DATA;
   if (!course || !Array.isArray(course.levels)) return;
@@ -141,6 +141,7 @@
     activeLevel: 0,
     readFallback: {},
     deepRead: {},
+    readRewarded: {},
     reflections: {},
     reflectionRewarded: {},
     reflectionReviews: {},
@@ -177,7 +178,7 @@
       });
     }
     var next = Object.assign({}, defaults, raw);
-    ["readFallback", "deepRead", "reflections", "reflectionRewarded", "reflectionReviews", "notes", "keyNoteReviewed", "best", "passed", "mockStreak", "wrong", "lastSession", "lastResult", "rewarded"].forEach(function (key) {
+    ["readFallback", "deepRead", "readRewarded", "reflections", "reflectionRewarded", "reflectionReviews", "notes", "keyNoteReviewed", "best", "passed", "mockStreak", "wrong", "lastSession", "lastResult", "rewarded"].forEach(function (key) {
       if (!isPlainRecord(next[key])) next[key] = {};
     });
     next.version = VERSION;
@@ -200,9 +201,17 @@
   function saveState() {
     try {
       localStorage.setItem(STORE_KEY, JSON.stringify(state));
+      return true;
     } catch (error) {
-      notify("训练进度暂时无法保存，请检查浏览器存储权限");
+      return false;
     }
+  }
+
+  /* 后台写入（训练会话、关卡切换等）：失败保留当前内存状态，只给非阻断提示，不承诺已保存 */
+  function persistOrWarn() {
+    var ok = saveState();
+    if (!ok) notify("本次记录未能保存：浏览器存储不可用或已满；重要内容请自行复制备份。");
+    return ok;
   }
 
   function esc(value) {
@@ -428,6 +437,7 @@
           '</nav>' +
           '<button class="ul-icon-button" data-ul-action="close" aria-label="关闭">X</button>' +
         '</header>' +
+        '<p class="ul-boundary-note">独立训练工具 · 非任何机构官方课程或考试｜学习记录仅保存在当前浏览器的当前网址，不同域名和设备不会自动同步；“导出”只含旧版基础进度，不含复盘、训练成绩和公会证据；网页不会自动读取你的 Codex 对话</p>' +
         '<main class="ul-content" id="ul-content"></main>' +
       '</div>';
     document.body.appendChild(overlay);
@@ -479,6 +489,11 @@
     if (!focusable.length) return;
     var first = focusable[0];
     var last = focusable[focusable.length - 1];
+    if (!overlay.contains(document.activeElement)) {
+      event.preventDefault();
+      first.focus();
+      return;
+    }
     if (event.shiftKey && document.activeElement === first) {
       event.preventDefault();
       last.focus();
@@ -511,13 +526,14 @@
     if (!isAdvancedLevel(levelIndex)) return "";
     var level = course.levels[levelIndex] || {};
     return '<section class="ul-credential-brief">' +
-      '<div class="ul-credential-title"><span>' + esc(level.phase || "高级证书阶段") + '</span><strong>' + esc(level.cluster || "综合能力") + '</strong></div>' +
+      '<div class="ul-credential-title"><span>' + esc(level.phase || "高级训练阶段") + '</span><strong>' + esc(level.cluster || "综合能力") + '</strong></div>' +
       '<div class="ul-credential-grid">' +
-        '<div><small>证书覆盖</small><b>' + esc(level.certificates || "高级证书共通能力") + '</b></div>' +
+        '<div><small>能力覆盖</small><b>' + esc(level.certificates || "高级训练共通能力") + '</b></div>' +
         '<div><small>学习优先级</small><b>' + esc(level.priority || "按路线顺序推进") + '</b></div>' +
-        '<div><small>本关作品证据</small><b>' + esc(level.deliverable || "完成本关综合作品") + '</b></div>' +
-        '<div><small>验收门槛</small><b>' + esc(level.acceptance || "连续三次模考达线") + '</b></div>' +
+        '<div><small>建议作品产出（不计入本站完成状态）</small><b>' + esc(level.deliverable || "完成本关综合作品") + '</b></div>' +
+        '<div><small>本站完成标准（唯一）</small><b>连续 3 轮不低于 85 分；本站训练纪律，与外部考试无关</b></div>' +
       '</div>' +
+      '<div class="ul-hardware-note"><span>NOTE</span><p>课卡、理解表述与作品均为建议学习与作品产出，不计入本站完成状态。</p></div>' +
       (level.hardware ? '<div class="ul-hardware-note"><span>DEVICE</span><p>' + esc(level.hardware) + '</p></div>' : "") +
     '</section>';
   }
@@ -537,9 +553,9 @@
       return '<button class="ul-book' + (done ? " is-read" : "") + '" data-ul-action="lesson" data-lesson="' + index + '">' +
         '<span class="ul-book-icon">' + (done ? "OK" : String(index + 1).padStart(2, "0")) + '</span>' +
         '<span class="ul-book-copy">' +
-          '<span class="ul-book-meta"><span>课卡 ' + String(index + 1).padStart(2, "0") + '</span><em>' + (done ? "已读" : "待读") + '</em><em class="ul-expression-state' + (reflected ? " is-done" : "") + '">' + (reflected ? "表达已完成" : "表达待完成") + '</em></span>' +
+          '<span class="ul-book-meta"><span>课卡 ' + String(index + 1).padStart(2, "0") + '</span><em>' + (done ? "已读" : "待读") + '</em><em class="ul-expression-state' + (reflected ? " is-done" : "") + '">' + (reflected ? "表达已记录" : "表达待记录") + '</em></span>' +
           '<h3>' + esc(lessonName(lesson, index)) + '</h3>' +
-          '<p>' + esc(preview || "打开课卡，掌握本节核心概念与案例。") + '</p>' +
+          '<p>' + esc(preview || "打开课卡，学习本节核心概念与案例。") + '</p>' +
         '</span>' +
       '</button>';
     }).join("");
@@ -585,7 +601,7 @@
     }
     el.innerHTML =
       '<p>累计 · 已读 <strong>' + totalRead + "/" + totalLessons + '</strong> 张课卡 · 书写 <strong>' + totalWords + '</strong> 字反思' +
-      (passedCount ? ' · 高级已通关 <strong>' + passedCount + "/" + (allLevels - 6) + "</strong>" : "") +
+      (passedCount ? ' · 高级已完成 <strong>' + passedCount + "/" + (allLevels - 6) + "</strong>" : "") +
       '</p>';
     el.hidden = false;
   }
@@ -656,7 +672,7 @@
   }
 
   function reviewStatusLabel(meta) {
-    if (meta.status === "confirmed") return "已确认";
+    if (meta.status === "confirmed") return "回执：通过";
     if (meta.status === "needs-revision") return "需修改";
     if (meta.status === "insufficient") return "信息不足";
     if (meta.status === "missing") return "未表达";
@@ -715,7 +731,7 @@
       '<h3>' + esc(lessonName(entry.lesson, entry.index)) + '</h3>' +
       (meta.status === "missing"
         ? '<div class="ul-review-empty-answer"><b>还没有自己的理解</b><p>先回到课卡，用自己的话完成一段表达；这里不会复制教材摘要充当你的笔记。</p></div>'
-        : '<div class="ul-review-answer"><b>' + (meta.status === "confirmed" ? "经确认的我的理解" : "我的理解") + '</b><p>' + esc(meta.answer) + '</p></div>') +
+        : '<div class="ul-review-answer"><b>' + (meta.status === "confirmed" ? "已录入“通过”回执的我的理解" : "我的理解") + '</b><p>' + esc(meta.answer) + '</p></div>') +
       (entry.doubt ? '<div class="ul-review-doubt"><b>真实疑问</b><p>' + esc(entry.doubt) + '</p></div>' : "") +
       feedback +
       '<div class="ul-button-row">' + actions + '</div>' +
@@ -845,29 +861,29 @@
     }
     var cards = visible.length
       ? visible.map(reviewCardHtml).join("")
-      : '<div class="ul-empty"><h3>' + (reviewFilter === "confirmed" ? "还没有经确认的理解" : "还没有需要处理的个人表达") + '</h3><p>' + (reviewFilter === "confirmed" ? "完成课卡表达并把 Codex 回执粘贴回来后，会形成你的理解档案。" : "这里不会把未写的课卡变成任务。可以直接训练；真实表达、疑问和错误出现后再回来复盘。") + '</p></div>';
+      : '<div class="ul-empty"><h3>' + (reviewFilter === "confirmed" ? "还没有回执通过的理解" : "还没有需要处理的个人表达") + '</h3><p>' + (reviewFilter === "confirmed" ? "完成课卡表达并把 Codex 回执粘贴回来后，会形成你的理解档案。" : "这里不会把未写的课卡变成任务。可以直接训练；真实表达、疑问和错误出现后再回来复盘。") + '</p></div>';
     content.innerHTML =
-      pageHead("MY REVIEW / PERSONAL EVIDENCE", levelName(levelIndex), "这里只保留你的表达、真实疑问、训练错误和 Codex 反馈；课程原文仍在书库。", '<span class="ul-chip">待处理 <strong>' + (counts.pending + counts.revision) + '</strong></span><span class="ul-chip is-complete">已确认 <strong>' + counts.confirmed + '</strong></span>') +
+      pageHead("MY REVIEW / PERSONAL EVIDENCE", levelName(levelIndex), "这里只保留你的表达、真实疑问、训练错误和 Codex 反馈；课程原文仍在书库。", '<span class="ul-chip">待处理 <strong>' + (counts.pending + counts.revision) + '</strong></span><span class="ul-chip is-complete">回执通过 <strong>' + counts.confirmed + '</strong></span>') +
       levelTabs() +
       '<section class="ul-review-dashboard" aria-label="本关复盘统计">' +
         '<div><span>待 Codex 审核</span><strong>' + counts.pending + '</strong></div>' +
         '<div class="is-warn"><span>需要修改</span><strong>' + counts.revision + '</strong></div>' +
-        '<div class="is-good"><span>已确认理解</span><strong>' + counts.confirmed + '</strong></div>' +
+        '<div class="is-good"><span>回执通过</span><strong>' + counts.confirmed + '</strong></div>' +
         '<div><span>当前错题</span><strong>' + wrongIds(levelIndex).length + '</strong></div>' +
       '</section>' +
       '<section class="ul-review-handoff"><span>CODEX HANDOFF</span><p><strong>网页不会自动读取 Codex 对话。</strong>先复制审核包，粘贴到 Codex，再把三行关键反馈带回这里保存。</p></section>' +
       reviewTrainingEvidenceHtml(levelIndex) +
       reviewSignalsHtml(levelIndex) +
-      '<section class="ul-review-toolbar"><div role="group" aria-label="复盘筛选"><button class="ul-review-filter' + (reviewFilter === "pending" ? " is-active" : "") + '" data-ul-action="review-filter" data-filter="pending" aria-pressed="' + (reviewFilter === "pending" ? "true" : "false") + '">待处理</button><button class="ul-review-filter' + (reviewFilter === "confirmed" ? " is-active" : "") + '" data-ul-action="review-filter" data-filter="confirmed" aria-pressed="' + (reviewFilter === "confirmed" ? "true" : "false") + '">已确认</button></div>' + primaryAction + '</section>' +
+      '<section class="ul-review-toolbar"><div role="group" aria-label="复盘筛选"><button class="ul-review-filter' + (reviewFilter === "pending" ? " is-active" : "") + '" data-ul-action="review-filter" data-filter="pending" aria-pressed="' + (reviewFilter === "pending" ? "true" : "false") + '">待处理</button><button class="ul-review-filter' + (reviewFilter === "confirmed" ? " is-active" : "") + '" data-ul-action="review-filter" data-filter="confirmed" aria-pressed="' + (reviewFilter === "confirmed" ? "true" : "false") + '">回执通过</button></div>' + primaryAction + '</section>' +
       '<section class="ul-review-list" aria-label="个人理解审核记录">' + cards + '</section>' +
       '<footer class="ul-footer-action ul-review-footer"><p>待处理页只显示优先级最高的 3 项。复盘不会阻塞训练；训练负责继续发现问题。</p><button class="ul-button" data-ul-action="training">进入本关训练</button></footer>';
     restoreReviewRenderState(renderState, preferredFocus);
   }
 
-  function reflectionReviewPacket(levelIndex, lessonIndex) {
+  function reflectionReviewPacket(levelIndex, lessonIndex, answerOverride) {
     var lesson = curriculumLessons(levelIndex)[lessonIndex];
     if (!lesson) return "";
-    var answer = reflectionValue(levelIndex, lessonIndex).trim();
+    var answer = (answerOverride !== undefined ? String(answerOverride) : reflectionValue(levelIndex, lessonIndex)).trim();
     var checks = Array.isArray(lesson.reflectionChecks) ? lesson.reflectionChecks : [];
     var doubt = lessonNoteValue(levelIndex, lessonIndex).trim();
     return "请作为严格但鼓励的 AI 从业者教练，只审核这一张课卡的理解表达。不要替我写最终答案，也不要给虚假的精确分数。\n\n" +
@@ -884,13 +900,16 @@
       "追问或提示：只给一个，让我自己修改或迁移应用";
   }
 
-  function copyReflectionReviewPacket(levelIndex, lessonIndex) {
-    var answer = reflectionValue(levelIndex, lessonIndex).trim();
+  function copyReflectionReviewPacket(levelIndex, lessonIndex, options) {
+    options = options || {};
+    var answer = (options.answer !== undefined ? String(options.answer) : reflectionValue(levelIndex, lessonIndex)).trim();
     if (answer.length < 20) {
       notify("请先在课卡中写下至少 20 字自己的理解");
       return;
     }
-    copyPlainText(reflectionReviewPacket(levelIndex, lessonIndex), "审核包已复制；在 Codex 审核后把三行回执粘贴回来", function () {
+    copyPlainText(reflectionReviewPacket(levelIndex, lessonIndex, answer), options.recordFailed
+      ? "审核包已复制；但理解表达未能保存到浏览器，请稍后重试记录"
+      : "审核包已复制；在 Codex 审核后把三行回执粘贴回来", function () {
       var key = lessonProgressKey(levelIndex, lessonIndex);
       var existing = isPlainRecord(state.reflectionReviews[key]) ? state.reflectionReviews[key] : null;
       var currentAnswerSignature = textSignature(answer);
@@ -898,6 +917,9 @@
       var currentDoubtSignature = textSignature(lessonNoteValue(levelIndex, lessonIndex));
       var sameSource = Boolean(existing && existing.answerSignature === currentAnswerSignature && String(existing.answer || "").trim() === answer && existing.courseSignature === currentCourseSignature && existing.doubtSignature === currentDoubtSignature);
       var now = Date.now();
+      var previous = Object.prototype.hasOwnProperty.call(state.reflectionReviews, key) ? state.reflectionReviews[key] : undefined;
+      var prevCopiedAt = existing ? existing.copiedAt : 0;
+      var prevUpdatedAt = existing ? existing.updatedAt : 0;
       if (sameSource) {
         existing.copiedAt = now;
         existing.updatedAt = now;
@@ -921,8 +943,20 @@
           history: history.slice(-5)
         };
       }
-      saveState();
+      if (!saveState()) {
+        /* 复制本身已成功，但复制记录落盘失败：回滚 copiedAt/记录，调用方据此改提示 */
+        if (sameSource && existing) {
+          existing.copiedAt = prevCopiedAt;
+          existing.updatedAt = prevUpdatedAt;
+        } else if (previous === undefined) {
+          delete state.reflectionReviews[key];
+        } else {
+          state.reflectionReviews[key] = previous;
+        }
+        return false;
+      }
       refreshHomeSoon();
+      return true;
     });
   }
 
@@ -977,6 +1011,7 @@
       return;
     }
     var now = Date.now();
+    var previous = state.reflectionReviews[key];
     state.reflectionReviews[key] = {
       schema: 1,
       status: parsed.status,
@@ -992,10 +1027,15 @@
       confirmedAt: parsed.status === "confirmed" ? now : 0,
       history: Array.isArray(existing.history) ? existing.history.slice(-5) : []
     };
-    saveState();
+    if (!saveState()) {
+      state.reflectionReviews[key] = previous;
+      notify("回执未能保存：浏览器存储不可用或已满，请稍后重试");
+      renderKeyNotes({ reviewKey: key });
+      return;
+    }
     refreshHomeSoon();
     reviewFilter = parsed.status === "confirmed" ? "confirmed" : "pending";
-    notify(parsed.status === "confirmed" ? "这版理解已记录为 Codex 确认" : "Codex 反馈已保存，下一步按关键问题修改");
+    notify(parsed.status === "confirmed" ? "已保存 Codex 回执：通过（仅代表你粘贴的内容）" : "Codex 反馈已保存，下一步按关键问题修改");
     renderKeyNotes({ reviewKey: key });
   }
 
@@ -1038,11 +1078,11 @@
         '<div class="ul-core-card"><strong>本卡核心结论</strong>' + esc(lessonCore(lesson)) + '</div>' +
         readingContent +
         '<section class="ul-reflection-card' + (reflectionDone ? " is-complete" : "") + '">' +
-          '<header><div><span>WRITTEN CHECK / 理解力测试</span><h2>只写一段自己的话</h2></div><em data-reflection-badge>' + (reflectionDone ? "已完成" : "待完成") + '</em></header>' +
+          '<header><div><span>WRITTEN CHECK / 理解表述</span><h2>只写一段自己的话</h2></div><em data-reflection-badge>' + (reflectionDone ? "已记录" : "待记录") + '</em></header>' +
           '<p class="ul-reflection-prompt">' + esc(reflectionPrompt) + '</p>' +
           '<div class="ul-reflection-checks">' + reflectionCheckHtml + '</div>' +
           '<label for="ul-reflection">我的理解表述</label>' +
-          '<small>建议 30–120 字。至少 20 字会记为“已完成”；字数只代表形成记录，不代表内容一定正确。</small>' +
+          '<small>建议 30–120 字。至少 20 字会记为“已记录”；字数只代表形成记录，不代表内容一定正确。</small>' +
           '<textarea id="ul-reflection" data-reflection-key="' + esc(reflectionKey) + '" data-level-index="' + levelIndex + '" data-lesson-index="' + lessonIndex + '" placeholder="不要抄原文。先关掉上面的完整教材，再用自己的话说明。">' + esc(savedReflection) + '</textarea>' +
           '<footer><span data-reflection-count>' + savedReflection.trim().length + ' 字 · ' + (reflectionDone ? "已形成记录" : "至少还需 " + Math.max(0, 20 - savedReflection.trim().length) + " 字") + '</span><div class="ul-button-row"><button class="ul-button" data-ul-action="save-reflection">保存表达</button><button class="ul-button is-cyan" data-ul-action="copy-reflection">复制给 Codex 审核</button></div></footer>' +
         '</section>' +
@@ -1070,20 +1110,48 @@
       notify("先写一段自己的理解再标记已读，至少 20 字");
       return;
     }
-    state.deepRead[lessonProgressKey(levelIndex, lessonIndex)] = true;
+    var readKey = lessonProgressKey(levelIndex, lessonIndex);
     var legacyIndex = legacyLessonIndex(levelIndex, lessonIndex);
-    if (legacyIndex !== null) state.readFallback[levelIndex + ":" + legacyIndex] = true;
-    var legacy = getLegacyLevelState(levelIndex);
-    if (legacyIndex !== null && legacy && Array.isArray(legacy.les)) legacy.les[legacyIndex] = true;
-    if (!wasRead && typeof window.addXP === "function") {
-      window.addXP(8, "读完课卡");
+    var fallbackKey = legacyIndex === null ? "" : levelIndex + ":" + legacyIndex;
+    var hadDeep = Boolean(state.deepRead[readKey]);
+    var hadFallback = fallbackKey ? Boolean(state.readFallback[fallbackKey]) : false;
+    var hadRewardMarker = Object.prototype.hasOwnProperty.call(state.readRewarded, readKey);
+    var previousRewardMarker = state.readRewarded[readKey];
+    state.deepRead[readKey] = true;
+    if (fallbackKey) state.readFallback[fallbackKey] = true;
+    /* 旧版已读记录没有奖励回执字段时，假定历史 XP 已经处理，避免升级后重复发放。
+       新的首次已读显式写 false；若 XP 保存失败，下一次点击可安全重试。 */
+    if (!wasRead) state.readRewarded[readKey] = false;
+    else if (!hadRewardMarker) state.readRewarded[readKey] = true;
+    /* 先持久化 unified 已读状态；失败恢复旧值，不触碰 legacy 与 XP。 */
+    if (!saveState()) {
+      if (hadDeep) state.deepRead[readKey] = true;
+      else delete state.deepRead[readKey];
+      if (fallbackKey) {
+        if (hadFallback) state.readFallback[fallbackKey] = true;
+        else delete state.readFallback[fallbackKey];
+      }
+      if (hadRewardMarker) state.readRewarded[readKey] = previousRewardMarker;
+      else delete state.readRewarded[readKey];
+      notify("已读记录未能保存：浏览器存储不可用或已满，请稍后重试");
+      renderLibrary();
+      return;
     }
-    if (typeof window.save === "function") window.save();
+    var legacy = getLegacyLevelState(levelIndex);
+    var legacyWasRead = legacyIndex !== null && legacy && Array.isArray(legacy.les) ? Boolean(legacy.les[legacyIndex]) : false;
+    if (legacyIndex !== null && legacy && Array.isArray(legacy.les)) legacy.les[legacyIndex] = true;
+    if (typeof window.save === "function" && window.save() === false && legacyIndex !== null && legacy && Array.isArray(legacy.les)) {
+      legacy.les[legacyIndex] = legacyWasRead;
+    }
+    var rewardPending = state.readRewarded[readKey] === false;
+    if (rewardPending && typeof window.addXP === "function" && window.addXP(8, "读完课卡", "unified:lesson:" + readKey)) {
+      state.readRewarded[readKey] = true;
+      if (!saveState()) state.readRewarded[readKey] = false;
+    }
     if (typeof window.renderMap === "function") window.renderMap();
     if (typeof window.renderMe === "function") window.renderMe();
-    saveState();
     refreshHomeSoon();
-    notify(wasRead ? "这张课卡已经读过" : "课卡已记录");
+    notify(state.readRewarded[readKey] === false ? "课卡已记录；XP 暂未同步，再点一次可安全重试" : (wasRead ? "这张课卡已经读过" : "课卡已记录"));
     renderLibrary();
   }
 
@@ -1108,14 +1176,14 @@
     });
     var reviewNeedsAttention = reviewCounts.pending + reviewCounts.revision;
     content.innerHTML =
-      pageHead("WORKSHOP / PRACTICE + REVIEW", levelName(levelIndex), "每次随机抽题，一次只判断一个概念；作答后立即解释，结束后自动审核并生成错题。", '<span class="ul-chip">题库 <strong>' + total + '</strong></span><span class="ul-chip">最高 <strong>' + best + ' 分</strong></span>' + (isAdvancedLevel(levelIndex) ? '<span class="ul-chip">连胜 <strong>' + Math.min(streak, streakTarget) + '/' + streakTarget + '</strong></span>' : "")) +
+      pageHead("WORKSHOP / PRACTICE + REVIEW", levelName(levelIndex), "每次随机抽题，一次只判断一个概念；作答后立即解释，结束后自动判分并生成错题。", '<span class="ul-chip">题库 <strong>' + total + '</strong></span><span class="ul-chip">最高 <strong>' + best + ' 分</strong></span>' + (isAdvancedLevel(levelIndex) ? '<span class="ul-chip">连胜 <strong>' + Math.min(streak, streakTarget) + '/' + streakTarget + '</strong></span>' : "")) +
       levelTabs() +
       credentialBrief(levelIndex) +
       '<section class="ul-training-note-gate ' + (reviewNeedsAttention ? "" : "is-ready") + '"><div><span>MY REVIEW / OPTIONAL</span><strong>' + (reviewNeedsAttention ? "有 " + reviewNeedsAttention + " 条理解待审核或修改" : "当前没有待处理理解") + '</strong><p>复盘不再是训练门槛。你可以先训练诊断，再回到“我的复盘”处理真实理解、疑问和错题。</p></div><button class="ul-button ' + (reviewNeedsAttention ? "is-cyan" : "") + '" data-ul-action="key-notes">打开我的复盘</button></section>' +
       '<div class="ul-training-grid">' +
         '<section class="ul-mission-card">' +
           '<h3>本关训练任务</h3>' +
-          '<p>本轮抽取 ' + Math.min(size, total) + ' 题，包含判断题和选择题。' + (isAdvancedLevel(levelIndex) ? '每轮至少 85 分，连续 3 轮达线才完成正式考试前的模考门槛；一轮未达线会重新计数。' : '达到 80 分即通过。') + '系统按标准答案精确审核，不需要再进入独立审核室。</p>' +
+          '<p>本轮抽取 ' + Math.min(size, total) + ' 题，包含判断题和选择题。' + (isAdvancedLevel(levelIndex) ? '每轮至少 85 分，连续 3 轮达线才完成本关高级训练要求；一轮未达线会重新计数。这是自我训练纪律，与任何外部考试报名无关。' : '达到 80 分即通过。') + '系统按当前题库答案判分，判分范围只覆盖本题库。</p>' +
           '<div class="ul-stat-row">' +
             '<div class="ul-stat"><strong>' + read + "/" + lessons.length + '</strong>课卡已读</div>' +
             '<div class="ul-stat"><strong>' + total + '</strong>题库总量</div>' +
@@ -1124,7 +1192,7 @@
           '</div>' +
           (read < lessons.length ? '<div class="ul-flow-note"><span>!</span><div>还有课卡未读。可以先训练诊断，也可以返回书库完成输入。</div></div>' : "") +
           '<div class="ul-button-row">' +
-            '<button class="ul-button is-primary" data-ul-action="start" data-mode="normal">' + (isAdvancedLevel(levelIndex) ? "开始一轮模考" : "开始随机训练") + '</button>' +
+            '<button class="ul-button is-primary" data-ul-action="start" data-mode="normal">' + (isAdvancedLevel(levelIndex) ? "开始一轮高级训练" : "开始随机训练") + '</button>' +
             '<button class="ul-button" data-ul-action="start" data-mode="wrong"' + (wrong ? "" : " disabled") + '>只练错题</button>' +
             '<button class="ul-button" data-ul-action="library">返回书库</button>' +
           '</div>' +
@@ -1134,7 +1202,7 @@
           '<div class="ul-flow-list">' +
             '<div class="ul-flow-item"><span>1</span><div>选择或判断</div></div>' +
             '<div class="ul-flow-item"><span>2</span><div>立即看到解释</div></div>' +
-            '<div class="ul-flow-item"><span>3</span><div>系统自动审核成绩</div></div>' +
+            '<div class="ul-flow-item"><span>3</span><div>系统自动判分</div></div>' +
             '<div class="ul-flow-item"><span>4</span><div>错题进入复盘档案</div></div>' +
           '</div>' +
           '<p>Codex 深度复盘改为可选项，只在你对错题解释仍有疑问时使用。</p>' +
@@ -1158,7 +1226,7 @@
     var count = mode === "wrong" ? source.length : Math.min(sessionSize(levelIndex), source.length);
     var selected = ordered.slice(0, count);
     state.lastSession[levelIndex] = selected.map(function (item) { return item.id; });
-    saveState();
+    persistOrWarn();
     session = {
       levelIndex: levelIndex,
       mode: mode,
@@ -1203,7 +1271,7 @@
       var correct = session.chosen === item.answer;
       var lessonLink = "";
       if (!correct && sourceLesson) {
-        lessonLink = '<div class="ul-source-hint" style="margin-top:8px"><a class="ul-question-link" data-ul-action="goto-lesson" data-lesson="' + (sourceLesson - 1) + '">📖 回课卡 ' + String(sourceLesson).padStart(2, "0") + ' 重读</a></div>';
+        lessonLink = '<div class="ul-source-hint" style="margin-top:8px"><button type="button" class="ul-button ul-question-link" data-ul-action="goto-lesson" data-lesson="' + (sourceLesson - 1) + '">📖 回课卡 ' + String(sourceLesson).padStart(2, "0") + ' 重读</button></div>';
       }
       feedback = '<div class="ul-feedback ' + (correct ? "is-correct" : "is-wrong") + '">' +
         '<strong>' + (correct ? "判断正确" : "判断错误，正确答案是 " + esc(item.options[item.answer])) + '</strong>' +
@@ -1212,7 +1280,7 @@
         '<small class="ul-source-hint">知识来源：' + esc(sourceLabel) + '</small>' +
         lessonLink +
       '</div>' +
-      '<div class="ul-button-row" style="margin-top:16px"><button class="ul-button is-primary" data-ul-action="next-question">' + (number === total ? "查看审核结果" : "下一题") + '</button></div>';
+      '<div class="ul-button-row" style="margin-top:16px"><button class="ul-button is-primary" data-ul-action="next-question">' + (number === total ? "查看判分结果" : "下一题") + '</button></div>';
     }
     content.innerHTML =
       '<div class="ul-question-wrap">' +
@@ -1245,7 +1313,7 @@
     if (correct && position >= 0) wrong.splice(position, 1);
     if (!correct && position < 0) wrong.push(item.id);
     state.wrong[session.levelIndex] = wrong;
-    saveState();
+    persistOrWarn();
     renderQuestion();
   }
 
@@ -1270,18 +1338,25 @@
     var levelIndex = session.levelIndex;
     var threshold = passThreshold(levelIndex);
     var passed = fullTraining && score >= threshold;
+    var wrongNow = session.answers.filter(function (answer) { return !answer.correct; }).map(function (answer) { return answer.id; });
+    /* 先快照旧持久状态：best/streak/passed/rewarded 只有落盘成功才生效 */
+    var prevBest = Number(state.best[levelIndex]) || 0;
+    var prevStreak = Number(state.mockStreak[levelIndex]) || 0;
+    var prevPassed = Boolean(state.passed[levelIndex]);
+    var prevRewarded = Boolean(state.rewarded[levelIndex]);
     var qualified = false;
     if (fullTraining) {
-      state.best[levelIndex] = Math.max(Number(state.best[levelIndex]) || 0, score);
+      state.best[levelIndex] = Math.max(prevBest, score);
       if (isAdvancedLevel(levelIndex)) {
-        state.mockStreak[levelIndex] = passed ? (Number(state.mockStreak[levelIndex]) || 0) + 1 : 0;
+        state.mockStreak[levelIndex] = passed ? prevStreak + 1 : 0;
         qualified = state.mockStreak[levelIndex] >= requiredMockStreak(levelIndex);
-        state.passed[levelIndex] = Boolean(state.passed[levelIndex] || qualified);
+        state.passed[levelIndex] = Boolean(prevPassed || qualified);
       } else {
         qualified = passed;
-        state.passed[levelIndex] = Boolean(state.passed[levelIndex] || passed);
+        state.passed[levelIndex] = Boolean(prevPassed || passed);
       }
     }
+    var rewardNow = fullTraining && state.passed[levelIndex] && !prevRewarded;
     state.lastResult[levelIndex] = {
       mode: session.mode,
       score: score,
@@ -1291,21 +1366,48 @@
       streak: Number(state.mockStreak[levelIndex]) || 0,
       qualified: Boolean(state.passed[levelIndex]),
       at: Date.now(),
-      wrong: session.answers.filter(function (answer) { return !answer.correct; }).map(function (answer) { return answer.id; })
+      wrong: wrongNow,
+      persisted: true
     };
-    if (fullTraining && state.passed[levelIndex] && !state.rewarded[levelIndex]) {
+    if (!saveState()) {
+      /* 持久化失败：回滚全部完成相关状态，本轮分数仅以 persisted=false 展示，
+         不计入正式通过/完成，不发 XP、不同步 legacy */
+      state.best[levelIndex] = prevBest;
+      state.mockStreak[levelIndex] = prevStreak;
+      state.passed[levelIndex] = prevPassed;
+      state.rewarded[levelIndex] = prevRewarded;
+      state.lastResult[levelIndex] = {
+        mode: session.mode,
+        score: score,
+        total: total,
+        correct: correct,
+        threshold: threshold,
+        streak: prevStreak,
+        qualified: prevPassed,
+        at: Date.now(),
+        wrong: wrongNow,
+        persisted: false
+      };
+      refreshHomeSoon();
+      lessonReturnToQuestion = false;
+      session = null;
+      renderResult(levelIndex);
+      return;
+    }
+    if (rewardNow && typeof window.addXP === "function" && window.addXP(25, "本关训练通过", "unified:training:" + levelIndex)) {
       state.rewarded[levelIndex] = true;
-      if (typeof window.addXP === "function") window.addXP(25, "本关训练通过");
+      if (!saveState()) state.rewarded[levelIndex] = prevRewarded;
+    }
+    if (rewardNow && !state.rewarded[levelIndex]) {
+      notify("训练结果已保存；XP 暂未同步，完成下一轮训练时会安全重试且不会重复发放");
     }
     if (fullTraining && state.passed[levelIndex] && isAdvancedLevel(levelIndex)) {
       var legacy = getLegacyLevelState(levelIndex);
-      if (legacy) {
-        if (Array.isArray(legacy.ex)) legacy.ex.forEach(function (item) { item.p = true; });
-        legacy.quiz = true;
-      }
+      /* 只同步旧版练习勾选显示；legacy.quiz 不再回写——它不再是正式完成依据，
+         正式完成只以本模块 state.passed 为准。 */
+      if (legacy && Array.isArray(legacy.ex)) legacy.ex.forEach(function (item) { item.p = true; });
+      if (typeof window.save === "function") window.save();
     }
-    if (typeof window.save === "function") window.save();
-    saveState();
     refreshHomeSoon();
     lessonReturnToQuestion = false;
     session = null;
@@ -1318,7 +1420,7 @@
       renderTrainingHome();
       return;
     }
-    openOverlay("result", "训练审核结果");
+    openOverlay("result", "训练判分结果");
     var fullTraining = result.mode !== "wrong";
     var threshold = Number(result.threshold) || passThreshold(levelIndex);
     var passed = fullTraining ? result.score >= threshold : wrongIds(levelIndex).length === 0;
@@ -1333,17 +1435,21 @@
     var tagHtml = Object.keys(tags).length
       ? Object.keys(tags).map(function (tag) { return '<span class="ul-tag">' + esc(tag) + " x" + tags[tag] + '</span>'; }).join("")
       : '<span class="ul-tag">本轮无薄弱项</span>';
+    var unsaved = result.persisted === false;
     content.innerHTML =
-      '<section class="ul-result-card' + (passed ? " is-pass" : "") + '">' +
-        '<p class="ul-kicker">AUTOMATIC REVIEW / 客观题审核</p>' +
+      '<section class="ul-result-card' + (passed && !unsaved ? " is-pass" : "") + '">' +
+        '<p class="ul-kicker">AUTOMATIC SCORING / 客观题判分</p>' +
+        (unsaved
+          ? '<div class="ul-flow-note"><span>!</span><div>本轮结果未保存（浏览器存储不可用或已满），请保留页面并稍后重试；当前分数仅为本轮展示，不计入正式完成或连续记录。</div></div>'
+          : "") +
         '<div class="ul-result-score">' +
           '<div class="ul-score-orb">' + result.score + '</div>' +
-          '<div><h2>' + (fullTraining ? (advanced ? (passed ? (qualified ? "三次模考门槛已完成" : "本轮达线，继续保持") : "本轮未达 85 分") : (passed ? "本轮训练通过" : "本轮需要复训")) : (passed ? "本轮错题已清零" : "仍有错题需要复训")) + '</h2>' +
-          '<p>答对 ' + result.correct + " / " + result.total + " 题。" + (fullTraining ? (advanced ? "本轮门槛为 " + threshold + " 分，当前连续达线 " + Math.min(streak, 3) + "/3。错误题目已自动进入错题档案。" : "系统已经根据标准答案完成整组审核，错误题目已自动进入错题档案。") : "错题复训只负责修正错误，不会被记录为整关成绩或奖励 XP。") + '</p></div>' +
+          '<div><h2>' + (unsaved ? "本轮分数已计算，但未保存" : (fullTraining ? (advanced ? (passed ? (qualified ? "连续三轮达线已完成" : "本轮达线，继续保持") : "本轮未达 85 分") : (passed ? "本轮训练通过" : "本轮需要复训")) : (passed ? "本轮错题已清零" : "仍有错题需要复训"))) + '</h2>' +
+          '<p>答对 ' + result.correct + " / " + result.total + " 题。" + (unsaved ? "本轮结果未保存，不计入正式完成或连续记录；错题清单仅供本轮参考。" : (fullTraining ? (advanced ? "本轮门槛为 " + threshold + " 分，当前连续达线 " + Math.min(streak, 3) + "/3。错误题目已自动进入错题档案。" : "系统已按当前题库答案完成本轮判分，错误题目已自动进入错题档案。") : "错题复训只负责修正错误，不会被记录为整关成绩或奖励 XP。")) + '</p></div>' +
         '</div>' +
         '<h3>本轮薄弱概念</h3>' +
         '<div class="ul-tag-list">' + tagHtml + '</div>' +
-        '<div class="ul-flow-note"><span>i</span><div>' + (fullTraining ? (advanced ? (qualified ? "模考稳定性门槛已完成；正式报名仍以证书当期官方规则为准，实操能力还要看本关作品证据。" : (passed ? "不要立刻背答案重考。先隔时复述薄弱概念，再完成下一轮模考。" : "连续记录已归零。先只练错题，理解后再开始新的完整模考。")) : (passed ? "客观训练已经形成可靠证据。若解释仍不清楚，再把错题发给 Codex 深度复盘。" : "先只练本轮错题，不要立刻重做整套题。错题清零后再进行新的随机训练。")) : (passed ? "错题已清零。现在完成一组完整随机训练，才能形成本关成绩。" : "继续针对仍未掌握的错题复训。")) + '</div></div>' +
+        (unsaved ? "" : '<div class="ul-flow-note"><span>i</span><div>' + (fullTraining ? (advanced ? (qualified ? "连续三轮达线已完成；若自选报考外部证书，规则以发证方当期通知为准，实操能力还要看本关作品证据。" : (passed ? "不要立刻背答案重考。先隔时复述薄弱概念，再完成下一轮训练。" : "连续记录已归零。先只练错题，理解后再开始新的完整训练。")) : (passed ? "本轮训练已形成记录。若解释仍不清楚，再把错题发给 Codex 深度复盘。" : "先只练本轮错题，不要立刻重做整套题。错题清零后再进行新的随机训练。")) : (passed ? "错题已清零。现在完成一组完整随机训练，才能形成本关成绩。" : "继续针对仍答错的错题复训。")) + '</div></div>') +
         '<div class="ul-button-row">' +
           '<button class="ul-button is-primary" data-ul-action="start" data-mode="wrong"' + (wrongIds(levelIndex).length ? "" : " disabled") + '>只练错题</button>' +
           '<button class="ul-button" data-ul-action="start" data-mode="normal">' + (fullTraining ? "再抽一组" : "开始完整训练") + '</button>' +
@@ -1453,45 +1559,68 @@
   function saveCurrentNote() {
     var textarea = overlay.querySelector("textarea[data-note-key]");
     if (!textarea) return;
-    state.notes[textarea.dataset.noteKey] = textarea.value.trim();
-    saveState();
+    var key = textarea.dataset.noteKey;
+    var previous = Object.prototype.hasOwnProperty.call(state.notes, key) ? state.notes[key] : undefined;
+    state.notes[key] = textarea.value.trim();
+    if (!saveState()) {
+      if (previous === undefined) delete state.notes[key];
+      else state.notes[key] = previous;
+      notify("疑问未能保存：浏览器存储不可用或已满，请稍后重试");
+      return;
+    }
     notify(textarea.value.trim() ? "疑问已保存" : "该课卡没有待解决疑问");
   }
 
-  function updateReflectionUi(textarea) {
+  function updateReflectionUi(textarea, persisted) {
     var value = textarea.value.trim();
     var card = textarea.closest(".ul-reflection-card");
     if (!card) return;
     var complete = value.length >= 20;
-    card.classList.toggle("is-complete", complete);
+    var unsaved = persisted === false;
+    card.classList.toggle("is-complete", complete && !unsaved);
     var badge = card.querySelector("[data-reflection-badge]");
     var counter = card.querySelector("[data-reflection-count]");
-    if (badge) badge.textContent = complete ? "已完成" : "待完成";
-    if (counter) counter.textContent = value.length + " 字 · " + (complete ? "已形成记录" : "至少还需 " + Math.max(0, 20 - value.length) + " 字");
+    if (badge) badge.textContent = unsaved ? "未保存，请重试" : (complete ? "已记录" : "待记录");
+    if (counter) counter.textContent = value.length + " 字 · " + (unsaved ? "未保存，请重试" : (complete ? "已形成记录" : "至少还需 " + Math.max(0, 20 - value.length) + " 字"));
   }
 
   function saveCurrentReflection() {
     var textarea = overlay.querySelector("textarea[data-reflection-key]");
     if (!textarea) return;
+    var key = textarea.dataset.reflectionKey;
     var value = textarea.value.trim();
-    state.reflections[textarea.dataset.reflectionKey] = value;
+    var previous = Object.prototype.hasOwnProperty.call(state.reflections, key) ? state.reflections[key] : undefined;
+    var hadReward = Boolean(state.reflectionRewarded[key]);
     var complete = value.length >= 20;
-    if (complete && !state.reflectionRewarded[textarea.dataset.reflectionKey]) {
-      state.reflectionRewarded[textarea.dataset.reflectionKey] = true;
-      if (typeof window.addXP === "function") window.addXP(4, "完成理解表达");
-      if (typeof window.save === "function") window.save();
+    var rewardNow = complete && !hadReward;
+    state.reflections[key] = value;
+    if (!saveState()) {
+      /* 失败回滚理解与奖励标记：不发 XP、不同步 legacy、不显示已记录 */
+      if (previous === undefined) delete state.reflections[key];
+      else state.reflections[key] = previous;
+      updateReflectionUi(textarea, false);
+      notify("理解表达未能保存：浏览器存储不可用或已满，请稍后重试");
+      return;
+    }
+    if (rewardNow) {
+      if (typeof window.addXP === "function" && window.addXP(4, "记录理解表达", "unified:reflection:" + key)) {
+        state.reflectionRewarded[key] = true;
+        if (!saveState()) delete state.reflectionRewarded[key];
+      }
       if (typeof window.renderMe === "function") window.renderMe();
     }
-    saveState();
     updateReflectionUi(textarea);
     refreshHomeSoon();
-    notify(complete ? "理解表达已保存" : "内容已保存；写满 20 字后记为完成");
+    notify(complete && !state.reflectionRewarded[key] ? "理解表达已保存；XP 暂未同步，再次保存可安全重试" : (complete ? "理解表达已保存" : "内容已保存；写满 20 字后记为已记录"));
   }
 
   function copyPlainText(text, successMessage, onSuccess) {
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(text).then(function () {
-        if (typeof onSuccess === "function") onSuccess();
+        if (typeof onSuccess === "function" && onSuccess() === false) {
+          notify("内容已复制，但复制记录未保存，请稍后重试");
+          return;
+        }
         notify(successMessage);
       }).catch(function () {
         fallbackCopyPlainText(text, successMessage, onSuccess);
@@ -1510,7 +1639,11 @@
     textarea.select();
     try {
       if (!document.execCommand("copy")) throw new Error("copy command rejected");
-      if (typeof onSuccess === "function") onSuccess();
+      if (typeof onSuccess === "function" && onSuccess() === false) {
+        notify("内容已复制，但复制记录未保存，请稍后重试");
+        textarea.remove();
+        return;
+      }
       notify(successMessage);
     } catch (error) {
       notify("复制失败，请手动选择理解表达");
@@ -1528,24 +1661,45 @@
       notify("请先写下你的理解，再复制给 Codex");
       return;
     }
-    state.reflections[textarea.dataset.reflectionKey] = answer;
-    saveState();
-    copyReflectionReviewPacket(levelIndex, lessonIndex);
+    var key = textarea.dataset.reflectionKey;
+    var previous = Object.prototype.hasOwnProperty.call(state.reflections, key) ? state.reflections[key] : undefined;
+    state.reflections[key] = answer;
+    var persisted = saveState();
+    if (!persisted) {
+      /* 复制仍用本次输入的内容，但记录落盘失败：回滚状态，提示文案区分“已复制但记录未保存” */
+      if (previous === undefined) delete state.reflections[key];
+      else state.reflections[key] = previous;
+      updateReflectionUi(textarea, false);
+    }
+    copyReflectionReviewPacket(levelIndex, lessonIndex, { answer: answer, recordFailed: !persisted });
   }
 
   function handleOverlayInput(event) {
     var reflection = event.target.closest("textarea[data-reflection-key]");
     if (reflection) {
-      state.reflections[reflection.dataset.reflectionKey] = reflection.value;
-      saveState();
-      updateReflectionUi(reflection);
+      var rKey = reflection.dataset.reflectionKey;
+      var rPrev = Object.prototype.hasOwnProperty.call(state.reflections, rKey) ? state.reflections[rKey] : undefined;
+      state.reflections[rKey] = reflection.value;
+      var ok = saveState();
+      if (!ok) {
+        if (rPrev === undefined) delete state.reflections[rKey];
+        else state.reflections[rKey] = rPrev;
+        notify("输入内容未能保存：浏览器存储不可用或已满");
+      }
+      updateReflectionUi(reflection, ok);
       refreshHomeSoon();
       return;
     }
     var textarea = event.target.closest("textarea[data-note-key]");
     if (!textarea) return;
-    state.notes[textarea.dataset.noteKey] = textarea.value;
-    saveState();
+    var nKey = textarea.dataset.noteKey;
+    var nPrev = Object.prototype.hasOwnProperty.call(state.notes, nKey) ? state.notes[nKey] : undefined;
+    state.notes[nKey] = textarea.value;
+    if (!saveState()) {
+      if (nPrev === undefined) delete state.notes[nKey];
+      else state.notes[nKey] = nPrev;
+      notify("输入内容未能保存：浏览器存储不可用或已满");
+    }
     refreshHomeSoon();
   }
 
@@ -1560,7 +1714,7 @@
     if (action === "wrong") renderWrongArchive();
     if (action === "level") {
       state.activeLevel = Number(button.dataset.level) || 0;
-      saveState();
+      persistOrWarn();
       refreshHomeSoon();
       if (activeView === "key-notes") renderKeyNotes({ action: "level", level: String(state.activeLevel) });
       else if (activeView === "wrong") renderWrongArchive();
@@ -1621,7 +1775,37 @@
     var levelIndex = homeLevelIndex();
     if (state.activeLevel === levelIndex) return;
     state.activeLevel = levelIndex;
-    saveState();
+    persistOrWarn();
+  }
+
+  function renderArtifactArchive() {
+    openOverlay("artifacts", "旧作存档");
+    var artifacts = {};
+    try {
+      var raw = localStorage.getItem("gogogo_pixel_guild_v1");
+      var parsed = raw ? JSON.parse(raw) : null;
+      if (parsed && isPlainRecord(parsed.artifacts)) artifacts = parsed.artifacts;
+    } catch (error) {
+      artifacts = {};
+    }
+    var entries = Object.keys(artifacts).filter(function (key) {
+      var item = artifacts[key];
+      return isPlainRecord(item) && (String(item.body || "").trim() || String(item.evidence || "").trim());
+    });
+    var listHtml = entries.length
+      ? entries.map(function (key) {
+          var item = artifacts[key];
+          return '<section class="ul-artifact-card">' +
+            '<h3>第 ' + esc(key) + ' 关旧作</h3>' +
+            (String(item.body || "").trim() ? '<div><small>项目产物</small><p>' + esc(String(item.body)) + '</p></div>' : "") +
+            (String(item.evidence || "").trim() ? '<div><small>证据与限制</small><p>' + esc(String(item.evidence)) + '</p></div>' : "") +
+          '</section>';
+        }).join("")
+      : '<div class="ul-empty"><h3>没有旧作记录</h3><p>旧版作品门没有留下内容；新的学习证据请走书库、训练与我的复盘。</p></div>';
+    content.innerHTML =
+      pageHead("LEGACY ARCHIVE / READ ONLY", "旧作存档", "这里只读展示旧版“项目作品陈列门”保存的内容，不能编辑；新证据请走书库、训练与我的复盘。", "") +
+      '<section class="ul-artifact-list">' + listHtml + '</section>' +
+      '<footer class="ul-footer-action"><button class="ul-button" data-ul-action="training">进入本关训练</button></footer>';
   }
 
   function interceptLegacyActions(event) {
@@ -1639,12 +1823,13 @@
     var target = event.target.closest("[data-action]");
     if (!target) return;
     var action = target.dataset.action;
-    if (action !== "library" && action !== "workshop" && action !== "codex" && action !== "evidence") return;
+    if (action !== "library" && action !== "workshop" && action !== "codex" && action !== "evidence" && action !== "retest" && action !== "artifact") return;
     event.preventDefault();
     event.stopImmediatePropagation();
     syncActiveLevelToHome();
     if (action === "library") renderLibrary();
     else if (action === "codex") renderWrongArchive();
+    else if (action === "artifact") renderArtifactArchive();
     else renderTrainingHome();
   }
 
@@ -1657,11 +1842,16 @@
       var text = button.classList.contains("pg-station") ? "错题档案" : "错题";
       if (button.textContent.trim() !== text) button.textContent = text;
     });
-    document.querySelectorAll('[data-action="evidence"]').forEach(function (button) {
-      if (button.textContent.trim() !== "进入本关训练") button.textContent = "进入本关训练";
-    });
     document.querySelectorAll('[data-action="key-notes"]').forEach(function (button) {
       var text = button.classList.contains("pg-station") ? "我的复盘" : "复盘";
+      if (button.textContent.trim() !== text) button.textContent = text;
+    });
+    document.querySelectorAll('[data-action="retest"]').forEach(function (button) {
+      var text = button.classList.contains("pg-station") ? "间隔复训" : "复训";
+      if (button.textContent.trim() !== text) button.textContent = text;
+    });
+    document.querySelectorAll('[data-action="artifact"]').forEach(function (button) {
+      var text = button.classList.contains("pg-station") ? "旧作存档" : "旧作";
       if (button.textContent.trim() !== text) button.textContent = text;
     });
     var mentor = document.getElementById("pg-mentor");
@@ -1673,6 +1863,13 @@
     var levelIndex = homeLevelIndex();
     var lessons = curriculumLessons(levelIndex);
     var read = readCount(levelIndex);
+    var evidenceStrong = document.getElementById("pg-evidence-count");
+    if (evidenceStrong && evidenceStrong.textContent !== read + "/" + lessons.length) {
+      evidenceStrong.textContent = read + "/" + lessons.length;
+    }
+    if (evidenceStrong && evidenceStrong.closest("button")) {
+      evidenceStrong.closest("button").setAttribute("aria-label", "课卡已读 " + read + "/" + lessons.length + "，打开课程书库");
+    }
     var best = Number(state.best[levelIndex]) || 0;
     var wrong = wrongIds(levelIndex).length;
     var hasTrainingResult = isPlainRecord(state.lastResult[levelIndex]) && Number(state.lastResult[levelIndex].total) > 0;
@@ -1688,7 +1885,7 @@
     var nextLevelIndex = levelIndex + 1;
     var nextLevelPreview = nextLevelIndex < course.levels.length
       ? "LEVEL " + String(nextLevelIndex + 1).padStart(2, "0") + " · " + levelName(nextLevelIndex)
-      : "全路径终局 · 高级证书作品集";
+      : "全路径终局 · 高级训练作品集";
     var eyebrow = document.querySelector(".pg-eyebrow");
     if (eyebrow && eyebrow.firstChild) eyebrow.firstChild.nodeValue = "当前关卡 · ";
     if (flow && (flow.dataset.ulSignature !== signature || !flow.querySelector(".ul-current-quest"))) {
@@ -1761,7 +1958,8 @@
       openKeyNotes: function () { syncActiveLevelToHome(); renderKeyNotes(); },
       openReview: function () { syncActiveLevelToHome(); renderKeyNotes(); },
       openTraining: renderTrainingHome,
-      openWrongArchive: renderWrongArchive
+      openWrongArchive: renderWrongArchive,
+      openArtifactArchive: renderArtifactArchive
     };
   }
 

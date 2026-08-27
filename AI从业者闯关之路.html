@@ -259,7 +259,7 @@
     .note-grid{grid-template-columns:1fr}
   }
 </style>
-  <link rel="stylesheet" href="pixel-guild-upgrade.css?v=20260804-boardprogress2" data-pixel-upgrade>
+  <link rel="stylesheet" href="pixel-guild-upgrade.css?v=20260816-homecopy1" data-pixel-upgrade>
   <link rel="stylesheet" href="glossary-cards.css?v=20260727-1" data-glossary-cards>
 </head>
 <body>
@@ -271,7 +271,7 @@
       <div class="xp-pill">⚡ <b id="xpNum">0</b> XP</div>
     </div>
     <div class="title-bar">
-      <div class="rank-name"><span>当前称号：<b id="rankName">见习生</b></span><span id="rankNext"></span></div>
+      <div class="rank-name"><span>站内称号：<b id="rankName">见习生</b></span><span id="rankNext"></span></div>
       <div class="xpbar"><i id="xpBar" style="width:0%"></i></div>
     </div>
   </header>
@@ -285,7 +285,7 @@
     <div class="tree-legend">
       <span><i style="background:var(--txt3)"></i>未开始（点标签切换）</span>
       <span><i style="background:var(--blue)"></i>学习中</span>
-      <span><i style="background:var(--green)"></i>已掌握</span>
+      <span><i style="background:var(--green)"></i>自评掌握</span>
     </div>
     <div id="treeWrap"></div>
   </div>
@@ -304,16 +304,16 @@
 
   <div class="page" id="pg-me">
     <div class="stat-grid">
-      <div class="stat"><b id="stLv">0/6</b><span>已通关</span></div>
-      <div class="stat"><b id="stSk">0%</b><span>技能掌握</span></div>
+      <div class="stat"><b id="stLv">0/6</b><span>已完成</span></div>
+      <div class="stat"><b id="stSk">0%</b><span>技能自评</span></div>
       <div class="stat"><b id="stCard">0</b><span>复习卡</span></div>
     </div>
     <div class="plist" id="meLevels"></div>
-    <button class="btn ghost" id="btnExport">📤 导出进度（备份 / 换设备）</button>
-    <textarea id="ioArea" style="height:90px" class="code" placeholder="导出的进度 JSON 显示在这里；导入时粘贴 JSON 再点导入"></textarea>
-    <button class="btn ghost" id="btnImport">📥 导入进度</button>
+    <button class="btn ghost" id="btnExport">📤 导出旧版基础进度（仅部分记录）</button>
+    <textarea id="ioArea" style="height:90px" class="code" placeholder="这里只导出旧版基础进度 JSON，不含我的复盘、统一训练成绩和公会证据；重要内容请另行复制保存"></textarea>
+    <button class="btn ghost" id="btnImport">📥 导入旧版基础进度</button>
     <button class="btn ghost" id="btnHelp">❓ 玩法说明</button>
-    <button class="btn danger" id="btnReset">重置全部进度</button>
+    <button class="btn danger" id="btnReset">重置旧版基础进度</button>
   </div>
 
   <nav>
@@ -331,7 +331,7 @@
 /* ================================================================
    GOGO GO · AI 从业者闯关之路 v2
    每关三段式：📖 学（精读课卡）→ 🎮 练（页内互动练习，系统判分）
-   → ⚔️ 战（通关测验）。全部数据在 GAME_DATA，可复制修改。
+   → ⚔️ 战（可选满分挑战复习，不计入本站完成状态）。全部数据在 GAME_DATA，可复制修改。
 ================================================================ */
 var GAME_DATA = {
 levels:[
@@ -387,7 +387,7 @@ levels:[
      {x:"把商品介绍改写得更亲切一些",c:0,e:"文字生成改写，LLM 负责。"},
      {x:"查询今天鸡肉鲜食套餐还有没有库存",c:2,e:"实时库存是工具调用，不是 RAG 里的旧文档。"}]},
    {id:"e3",type:"essay",t:"写作任务：会员余额查询的任务规格",icon:"✍️",
-    intro:"用任务规格八要素，为「会员在 App 里查询余额」这个 AI 功能写一份规格说明。写完点「提交审核」，系统按评分标准逐项检查；也可以复制到当前 Codex 对话获得深度点评。",
+    intro:"用任务规格八要素，为「会员在 App 里查询余额」这个 AI 功能写一份规格说明。写完点「运行字数与关键词检查」——这只核对字数和关键词，不判断内容是否正确；需要语义反馈时，再手动复制给 Codex。",
     min:100,
     rub:[
      {k:"目标（要解决什么问题）",words:["目标","为了","解决","让用户"]},
@@ -427,7 +427,7 @@ levels:[
     e:"三层评估分开看：结果通过 ≠ 过程评估和安全约束通过。"},
    {q:"查询会员实时余额，应该优先用？",
     o:["RAG 检索知识库","工具调用（Tool Calling）","Agent Memory"],a:1,
-    e:"余额的事实来源（Source of Truth）是交易系统 API。"},
+    e:"余额的事实来源（Source of Truth）是会员账户系统；交易系统 API 是访问它的通道。"},
    {q:"「帮我把首页做得有粘性、简单方便」这句话的问题是？",
     o:["说得太长了","体验愿景没有转化为可测试的验收标准","不该对 AI 提要求"],a:1,
     e:"「有粘性」要变成「7 日复访率」「3 步内完成下单」这样可验收的指标。"},
@@ -636,7 +636,7 @@ levels:[
     steps:["接收输入文本","切分成 Token","转成向量表示","Attention 计算各位置的关联权重","预测下一个 token 的概率分布","输出一个 token 并加入上下文","重复预测直到生成结束"],
     e:"记住这条流水线，你就能解释：计费为什么按 token、幻觉为什么天然存在、为什么同题不同答。"},
    {id:"e3",type:"essay",t:"费曼时刻：给朋友讲明白 LLM",icon:"🎤",
-    intro:"不看资料，用自己的话写 150 字以上：「LLM 是如何生成回答的，为什么它会幻觉」。想象读者是完全不懂 AI 的朋友。写完提交审核。",
+    intro:"不看资料，用自己的话写 150 字以上：「LLM 是如何生成回答的，为什么它会幻觉」。想象读者是完全不懂 AI 的朋友。写完后运行字数与关键词检查（只核对字数和关键词，不判断内容是否正确）。",
     min:150,
     rub:[
      {k:"提到 token / 词元（模型的处理单位）",words:["token","词元","切分","单位"]},
@@ -673,10 +673,10 @@ levels:[
     +'<div class="exm"><b>政策更新五步</b>：更新权威源 → 标版本和生效日期 → 停用旧版 → 重新索引 → 清缓存跑测试。少一步都可能答旧政策。</div>',
     card:["RAG 的四种典型失败方式和政策更新五步？","失败：文档过期/切分破坏语义/检索错片段/模型不忠实引用。更新：改权威源→标版本→停旧版→重新索引→清缓存跑测试。"]},
    {t:"事实来源：谁说了算",
-    body:'<b>Source of Truth（事实来源）</b>=某类数据的最终权威系统。信息优先级：<b>实时 API > 规则配置 > RAG 版本化文档 > Agent Memory > 模型旧知识</b>。模型本身通常不是事实来源。'
-    +'<div class="exm"><b>你笔记里的经典案例</b>：RAG 价目表 99 元 vs API 返回 109 元 → 按 109 结算并报告知识库过期；昨天有库存+今天工具挂了 → 不能声称今天有货。</div>'
-    +'<div class="wrn"><b>口诀</b>：越实时越权威，越陈旧越只能参考。资料"在内部"不代表比实时 API 新。</div>',
-    card:["信息权威优先级从高到低是？","实时 API > 当前规则配置 > RAG 版本化文档 > Agent Memory > 模型参数旧知识。模型本身通常不是事实来源。"]},
+    body:'<b>Source of Truth（事实来源）</b>=某类数据的最终权威所在。权威系统拥有事实；<b>API 是访问通道，RAG 是检索机制，Agent Memory 是保存机制</b>，它们本身不生产事实。规则配置或政策文件<b>也可以就是权威来源</b>——取决于责任主体、当前版本和生效状态：经批准且生效的规则/政策文件就是权威，过期或未经批准的旧版就不是。正确做法是按数据类型找到对应的权威所在，而不是排出"API &gt; 配置 &gt; RAG &gt; Memory"之类的通用权威排序——这种排序并不存在。模型本身通常不是事实来源。'
+    +'<div class="exm"><b>你笔记里的经典案例</b>：RAG 价目表 99 元 vs API 返回 109 元 → 商品系统才是价格权威，按 109 结算并报告知识库过期；昨天有库存+今天工具挂了 → 不能声称今天有货。</div>'
+    +'<div class="wrn"><b>口诀</b>：先问"这类数据归哪个系统管"，再问"我手上的通道新不新"。资料"在内部"不代表它就是权威。</div>',
+    card:["API、RAG、Memory 和事实来源是什么关系？","权威系统拥有事实；API 是访问通道，RAG 是检索机制，Memory 是保存机制。经批准且生效的规则/政策文件本身就是权威来源（看责任主体、版本、生效状态）。不存在 API > 配置 > RAG > Memory 的通用权威排序；模型本身通常不是事实来源。"]},
    {t:"工具调用：模型点菜，后厨做菜",
     body:'<b>工具调用</b>=模型请求外部程序查询或执行：模型决定"需要调什么、传什么参数"，工具返回真实数据，模型基于结果回答。可靠 Agent 还需要：状态管理、工具边界、失败恢复、权限控制、人工确认、可追踪日志。'
     +'<div class="ana"><b>类比</b>：服务员点菜。顾客说"来份熟的"（模糊需求）→ 服务员翻译成标准菜单项（结构化调用）→ 后厨做菜（工具执行）→ 服务员端上来并如实报菜名（忠实引用）。服务员自己下厨（模型编数据）就出事了。</div>'
@@ -692,10 +692,10 @@ levels:[
     intro:"把 RAG 回答一个政策问题的步骤按顺序点出来。",
     steps:["用户提问：跨店能用余额吗？","把问题转成向量并在知识库检索","取回最相关的政策片段","片段放入模型上下文","模型依据片段生成回答","返回回答并附上来源引用"],
     e:"每一步都有失败方式：检索错、切分坏、文档旧、不忠实——测试要覆盖全流程。"},
-   {id:"e2",type:"order",t:"权威金字塔：谁说了算？",icon:"👑",
-    intro:"按权威优先级从高到低，把信息来源依次点出来。",
-    steps:["交易系统实时 API","当前有效的规则配置","RAG 检索的版本化文档","Agent Memory","模型参数中学到的旧知识"],
-    e:"越实时越权威。冲突时听高层的，并报告低层可能过期。"},
+   {id:"e2",type:"order",t:"余额有疑问：按什么顺序核验？",icon:"🔍",
+    intro:"用户说余额不对。按可靠顺序，把核验步骤依次点出来。",
+    steps:["确认查询者身份与权限","读取会员账户系统的实时余额字段","核对返回值、币种和更新时间","检查缓存或知识文档是否过期","仍无法确认就失败闭合，提供人工复核入口"],
+    e:"权威系统拥有事实，API 只是访问通道；核验的顺序是先确权、再读权威源、再怀疑通道，查不清就不猜。"},
    {id:"e3",type:"classify",t:"信息安置所：这条信息放哪里？",icon:"🗂️",
     intro:"为宠物鲜食 App 的每类信息选择正确的存放/获取方式。",
     cats:["实时 API / 工具","RAG 文档","Memory","规则引擎"],
@@ -717,7 +717,7 @@ levels:[
   quiz:[
    {q:"RAG 价目表写 99 元，商品 API 返回 109 元。结算应该按？",
     o:["99 元，知识库是内部资料更可信","109 元，并报告知识库可能过期"],a:1,
-    e:"实时 API > RAG 文档。"},
+    e:"价格以商品系统这个权威源为准；RAG 只是检索机制，检出的旧版文档可能过期。"},
    {q:"向用户解释企业退款政策，应该用？",
     o:["模型参数里的记忆","RAG 检索版本化文档","Agent Memory"],a:1,
     e:"政策要可追溯版本和生效日期。"},
@@ -735,8 +735,8 @@ levels:[
 { id:"l6", icon:"🏆", weeks:"第 11–12 周 · BOSS 关", title:"小型 AI 产品 · 岗位方向验证",
   goal:"做出可运行原型（含测试集、失败记录、用户反馈），完成第一次职业方向选择。",
   lessons:[
-   {t:"从演示到可靠：从业者的分界线",
-    body:'爱好者做 Demo，从业者做<b>可测、可控、可上线的系统</b>。差距就是四样东西：<b>测试集</b>（不是跑一次看看）、<b>失败记录</b>（定位错在 Prompt/检索/工具/代码/产品哪一层）、<b>安全边界</b>（硬性失败清单）、<b>真实用户反馈</b>（不是自己觉得好用）。'
+   {t:"从演示到可靠：练习目标",
+    body:'随手演示做 Demo，可靠实践做<b>可测、可控、可上线的系统</b>。差距就是四样东西：<b>测试集</b>（不是跑一次看看）、<b>失败记录</b>（定位错在 Prompt/检索/工具/代码/产品哪一层）、<b>安全边界</b>（硬性失败清单）、<b>真实用户反馈</b>（不是自己觉得好用）。'
     +'<div class="exm"><b>你的毕业标准</b>：能说清"自己做了什么、AI 做了什么、为什么接受或修改 AI 的方案"——这就是不可替代的专业壁垒。</div>',
     card:["Demo 和可靠系统之间差哪四样东西？","测试集、失败记录（分层定位原因）、安全边界（硬性失败清单）、真实用户反馈。"]},
    {t:"用户访谈：你的十年经验开始变现",
@@ -760,7 +760,7 @@ levels:[
     items:[
      {x:"能在线访问、真的能用的产品原型",c:0,e:"能运行的产品 > 一切截图。"},
      {x:"「精通 ChatGPT、Midjourney 等 20 种工具」",c:1,e:"工具清单没有壁垒，人人都能写。"},
-     {x:"测试集 + 评估结果 + 5 个失败案例的原因定位",c:0,e:"这是从业者思维的直接证明。"},
+     {x:"测试集 + 评估结果 + 5 个失败案例的原因定位",c:0,e:"这是从演示走向可靠实践所需的证据。"},
      {x:"一张好看的产品概念图，没有任何实现",c:1,e:"只有截图属于演示观感。"},
      {x:"真实用户使用一周后的反馈和迭代记录",c:0,e:"真实使用数据是最硬的证据。"},
      {x:"「学习了 300 小时 AI 课程」",c:1,e:"投入时长不等于能力证据。"},
@@ -784,7 +784,7 @@ levels:[
   quiz:[
    {q:"判断一个 AI 产品是否可靠，依据是？",
     o:["演示看起来很流畅","测试集 + 评估结果 + 失败分析"],a:1,
-    e:"从演示到可靠系统，正是从业者和爱好者的分界线。"},
+    e:"从演示到可靠系统，正是可靠实践与随手演示的分界线。"},
    {q:"用户访谈时，下面哪个问题更有效？",
     o:["你会不会用 AI 推荐食谱？","上次给狗狗换粮，你是怎么决定的？"],a:1,
     e:"问过去的具体行为，不问未来的意愿。"},
@@ -834,7 +834,7 @@ weekly:[
  "一条真实失败案例及原因定位",
  "一次不堆术语的口头或文字复述"
 ],
-ranks:[[0,"见习生"],[250,"AI 学徒"],[600,"实践者"],[1100,"准从业者"],[1700,"AI 从业者"],[2600,"从业者 Pro"]]
+ranks:[[0,"见习生"],[250,"学徒"],[600,"实践者"],[1100,"熟练实践者"],[1700,"高级实践者"],[2600,"实践者 Pro"]]
 };
 
 /* ================= state ================= */
@@ -842,13 +842,13 @@ var KEY="gogogo_ai_quest_v2";
 var OLDKEY="gogogo_ai_quest_v1";
 var S=null;
 function freshState(){
-  var s={xp:0,levels:{},skills:{},cards:{},extraCards:[],
+  var s={xp:0,xpReceipts:{},levels:{},skills:{},cards:{},extraCards:[],
     lessonNotes:{},
     daily:{date:"",steps:[false,false,false,false]},streak:0,lastFull:"",
     weekly:{key:"",items:[false,false,false,false]},intro:false};
   GAME_DATA.levels.forEach(function(l){
     s.levels[l.id]={les:l.lessons.map(function(){return false;}),
-      ex:l.exercises.map(function(){return {p:false,m:-1};}),quiz:false};
+      ex:l.exercises.map(function(){return {p:false,m:-1};}),quiz:false,challenge:false};
   });
   GAME_DATA.tree.forEach(function(t){t.skills.forEach(function(sk,i){s.skills[t.id+i]=sk[1];});});
   return s;
@@ -879,10 +879,16 @@ function load(){
     var st=S.levels[l.id];
     while(st.les.length<l.lessons.length) st.les.push(false);
     while(st.ex.length<l.exercises.length) st.ex.push({p:false,m:-1});
+    /* challenge 是满分挑战记录；旧数据没有该字段时，用历史 quiz 记录回填 */
+    if(st.challenge===undefined) st.challenge=!!st.quiz;
   });
+  if(!S.xpReceipts || typeof S.xpReceipts!=="object" || Array.isArray(S.xpReceipts)) S.xpReceipts={};
   rolloverDaily(); rolloverWeekly();
 }
-function save(){ try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){} }
+function save(){
+  try{ localStorage.setItem(KEY,JSON.stringify(S)); return true; }
+  catch(e){ return false; }
+}
 function todayStr(){ var d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 function dstr(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 function addDays(n){ var d=new Date(); d.setDate(d.getDate()+n); return dstr(d); }
@@ -903,8 +909,39 @@ function rolloverWeekly(){
 }
 
 /* ================= xp & rank ================= */
-function addXP(n,msg){ S.xp+=n; save(); renderHeader(); if(msg) toast("+"+n+" XP · "+msg); }
-function subXP(n){ S.xp=Math.max(0,S.xp-n); save(); renderHeader(); }
+function addXP(n,msg,receiptId){
+  var receipt=receiptId?String(receiptId):"";
+  if(receipt && S.xpReceipts[receipt]) return true;
+  var previousXp=S.xp;
+  var previousReceipt=receipt?S.xpReceipts[receipt]:undefined;
+  S.xp+=n;
+  if(receipt) S.xpReceipts[receipt]={amount:n,reason:msg||"",at:Date.now()};
+  if(!save()){
+    S.xp=previousXp;
+    if(receipt){
+      if(previousReceipt===undefined) delete S.xpReceipts[receipt];
+      else S.xpReceipts[receipt]=previousReceipt;
+    }
+    renderHeader();
+    toast("XP 未能保存：浏览器存储不可用或已满，请稍后重试");
+    return false;
+  }
+  renderHeader();
+  if(msg) toast("+"+n+" XP · "+msg);
+  return true;
+}
+function subXP(n){
+  var previousXp=S.xp;
+  S.xp=Math.max(0,S.xp-n);
+  if(!save()){
+    S.xp=previousXp;
+    renderHeader();
+    toast("XP 变更未能保存：浏览器存储不可用或已满");
+    return false;
+  }
+  renderHeader();
+  return true;
+}
 function rankInfo(){
   var r=GAME_DATA.ranks,cur=r[0],next=null;
   for(var i=0;i<r.length;i++){ if(S.xp>=r[i][0]) cur=r[i]; else {next=r[i]; break;} }
@@ -995,7 +1032,19 @@ function notesDone(l){
 function allLes(l){ return lesDone(l)===l.lessons.length; }
 function allNotes(l){ return l.id!=="l1" || notesDone(l)===l.lessons.length; }
 function allEx(l){ return exDone(l)===l.exercises.length; }
-function isDone(l){ return allLes(l)&&allNotes(l)&&allEx(l)&&S.levels[l.id].quiz; }
+/* 正式完成唯一规则：基础关训练达到 80 分；高级关连续 3 轮达到 85 分（均与外部考试无关）。
+   统一训练把通过结果写入 gogogo_unified_learning_v1 的 passed；这里按关卡下标只读。
+   S.levels[].quiz 只是旧版历史数据，不再参与完成或解锁判定（不删除、不回写）；
+   满分挑战只写 challenge 记录，同样不计入正式完成。 */
+var UNIFIED_KEY="gogogo_unified_learning_v1";
+function unifiedPassed(l){
+  try{
+    var u=JSON.parse(localStorage.getItem(UNIFIED_KEY)||"null");
+    if(!u||typeof u!=="object"||!u.passed||typeof u.passed!=="object") return false;
+    return !!u.passed[GAME_DATA.levels.indexOf(l)];
+  }catch(e){ return false; }
+}
+function isDone(l){ return unifiedPassed(l); }
 function levelUnlocked(i){ return i===0 || isDone(GAME_DATA.levels[i-1]); }
 
 /* ================= tabs ================= */
@@ -1016,8 +1065,8 @@ function renderMap(){
   var doneCount=GAME_DATA.levels.filter(isDone).length;
   document.getElementById("mapTip").innerHTML=
     doneCount===GAME_DATA.levels.length
-    ? "🎉 <b>全部通关！</b>你已完成 32 周基础与高级证书路线，并留下作品、评估和模考证据。"
-    : "🎯 两阶段路线：前 12 周打牢 AI 从业基础；第 13–32 周完成平台、工程、产品、运营、视觉、影音与作品集。每卡保留文字理解测试，高级模考须连续 3 次不低于 85 分。";
+    ? "🎉 <b>全部完成！</b>你已走完按 32 周建议节奏编排的基础与高级训练路线，并留下作品、评估和训练证据。"
+    : "🎯 两阶段路线：按 32 周建议节奏编排，可按实际情况调整。前段打牢 AI 从业基础，后段完成平台、工程、产品、运营、视觉、影音与作品集。满分挑战是可选复习，不计入本站完成状态。正式完成规则：基础关训练达到 80 分；高级关连续 3 轮达到 85 分。两者均与外部考试无关。";
   GAME_DATA.levels.forEach(function(l,i){
     var st=S.levels[l.id], unlocked=levelUnlocked(i), fin=isDone(l);
     var row=document.createElement("div");
@@ -1030,8 +1079,8 @@ function renderMap(){
       +'<span>📖 <span class="'+(allLes(l)?"ok":"")+'">'+lesDone(l)+"/"+l.lessons.length+'</span></span>'
       +(l.id==="l1"?'<span>📝 <span class="'+(allNotes(l)?"ok":"")+'">'+notesDone(l)+"/"+l.lessons.length+'</span></span>':"")
       +'<span>🎮 <span class="'+(allEx(l)?"ok":"")+'">'+exDone(l)+"/"+l.exercises.length+'</span></span>'
-      +'<span>⚔️ <span class="'+(st.quiz?"ok":"")+'">'+(st.quiz?"✓":"–")+'</span></span>'
-      +(fin?'<span class="stars">★ 已通关</span>':'')
+      +'<span>⚔️ <span class="'+(st.challenge?"ok":"")+'">'+(st.challenge?"✓":"–")+'</span></span>'
+      +(fin?'<span class="stars">★ 已完成</span>':'')
       +'</div></div>';
     row.querySelector(".lv-card").onclick=function(){ openLevel(i); };
     wrap.appendChild(row);
@@ -1047,9 +1096,9 @@ function openSheet(html){ sheet.innerHTML='<div class="sheet-grab"></div>'+html;
 /* ================= level detail ================= */
 function openLevel(i){
   var l=GAME_DATA.levels[i], st=S.levels[l.id];
-  if(!levelUnlocked(i)){ toast("先通关上一关才能解锁 🔒"); return; }
-  var html='<div class="wk">'+l.weeks+(isDone(l)?' · ★ 已通关':'')+'</div><h2>'+l.icon+" "+l.title+'</h2>'
-    +'<div class="goalbox"><b>🎯 通关目标</b>'+l.goal+'</div>'
+  if(!levelUnlocked(i)){ toast("先完成上一关才能解锁 🔒"); return; }
+  var html='<div class="wk">'+l.weeks+(isDone(l)?' · ★ 已完成':'')+'</div><h2>'+l.icon+" "+l.title+'</h2>'
+    +'<div class="goalbox"><b>🎯 本关目标</b>'+l.goal+'</div>'
     +'<div class="phase-tt"><span class="pn">STEP 1</span>📖 精读课卡（每节 +8 XP，读完自动收入复习卡组）</div>';
   l.lessons.forEach(function(le,j){
     html+='<div class="row-item'+(st.les[j]?" doneR":"")+'" data-les="'+j+'">'
@@ -1062,7 +1111,7 @@ function openLevel(i){
       var nd=noteComplete(S.lessonNotes[noteKey(l,j)]);
       html+='<div class="row-item'+(nd?" doneR":"")+'" data-note="'+j+'">'
         +'<span class="ric">'+(nd?"✅":"📝")+'</span><span>'+le.t+'</span>'
-        +'<span class="rst" style="color:'+(nd?"var(--green)":"var(--txt3)")+'">'+(nd?"已扎实记录":"待补能力卡")+'</span></div>';
+        +'<span class="rst" style="color:'+(nd?"var(--green)":"var(--txt3)")+'">'+(nd?"字段已补齐":"待补能力卡")+'</span></div>';
     });
   }
   html+='<div class="phase-tt"><span class="pn">STEP 2</span>🎮 互动练习（系统判分，通过 +25 XP）</div>';
@@ -1072,13 +1121,13 @@ function openLevel(i){
     html+='<div class="row-item'+(st.ex[j].p?" doneR":"")+(locked?" lockedR":"")+'" data-ex="'+j+'">'
       +'<span class="ric">'+(st.ex[j].p?"✅":locked?"🔒":ex.icon)+'</span><span>'+ex.t+'</span>'
       +'<span class="rst" style="color:'+(st.ex[j].p?"var(--green)":"var(--txt3)")+'">'
-      +(st.ex[j].p?"已通过":locked?"":"待挑战")+'</span></div>';
+      +(st.ex[j].p?(ex.type==="essay"?"基础检查完成":"已通过"):locked?"":"待挑战")+'</span></div>';
   });
-  html+='<div class="phase-tt"><span class="pn">STEP 3</span>⚔️ 通关测验（题库 '+l.quiz.length+' 题，每次随机 '
-    +(l.quizTake||l.quiz.length)+' 题，全对通关）</div>';
-  if(!allEx(l)) html+='<div class="lock-note">🔒 通过全部练习后解锁测验</div>';
+  html+='<div class="phase-tt"><span class="pn">STEP 3</span>⚔️ 满分挑战（题库 '+l.quiz.length+' 题，每次随机 '
+    +(l.quizTake||l.quiz.length)+' 题；可选复习，不计入本站完成状态）</div>';
+  if(!allEx(l)) html+='<div class="lock-note">🔒 通过全部练习后解锁满分挑战</div>';
   html+='<button class="btn primary" id="startQuiz" '+(allEx(l)?"":"disabled")+'>'
-    +(st.quiz?"🔁 重新挑战测验（保持手感）":"⚔️ 开始通关测验")+'</button>';
+    +(st.challenge?"🔁 再次满分挑战（保持手感）":"⚔️ 开始满分挑战")+'</button>';
   openSheet(html);
   sheet.querySelectorAll("[data-les]").forEach(function(el){
     el.onclick=function(){ openLesson(i,+el.dataset.les); };
@@ -1110,7 +1159,7 @@ function capabilityCardHtml(li,j){
     return '<label class="note-field">'+label+'<textarea id="'+id+'" placeholder="'+hint+'">'+escNote(value)+'</textarea></label>';
   }
   return '<section class="note-panel"><h3>📝 本节能力卡</h3>'
-    +'<div class="note-sub">不是摘抄课文。用自己的判断留下可复习证据；标“必填”的三项均达到 12 字后，才算扎实记录。</div>'
+    +'<div class="note-sub">不是摘抄课文。用自己的判断留下可复习证据；标“必填”的三项均达到 12 字后，字段才算补齐。</div>'
     +'<div class="note-grid">'
     +field("noteExplain","自己的解释 · 必填","不用课程原句，像向外行解释一样写。",n.explain)
     +field("noteScene","适用场景","写一个与你的产品或工作有关的场景。",n.scene)
@@ -1119,7 +1168,7 @@ function capabilityCardHtml(li,j){
     +field("noteCorrection","修正后的原则","把纠错结论压缩成一句可复用原则。",n.correction)
     +field("noteEvidence","行动证据 · 必填","写出完成的题、规格、测试用例或真实应用。",n.evidence)
     +'</div><button class="btn primary" id="noteSave">保存能力卡（完成 +12 XP）</button>'
-    +'<div class="note-state '+(ok?"ok":"")+'" id="noteState">'+(ok?"✅ 已形成扎实笔记，并进入复习卡组":"草稿会本地保存；还需补齐三项必填内容")+'</div></section>';
+    +'<div class="note-state '+(ok?"ok":"")+'" id="noteState">'+(ok?"✅ 能力卡记录已补齐，并进入复习卡组":"草稿会本地保存；还需补齐三项必填内容")+'</div></section>';
 }
 function dynamicCapabilityCardHtml(li,j){
   var l=GAME_DATA.levels[li];
@@ -1136,7 +1185,7 @@ function dynamicCapabilityCardHtml(li,j){
     +'<div class="note-grid">'+t.fields.map(field).join("")+'</div>'
     +'<button class="btn primary" id="noteSave">保存能力卡（完成 +12 XP）</button>'
     +'<div class="note-state '+(ok?"ok":"")+'" id="noteState">'
-    +(ok?"✅ 本课专属能力证据已完成":"还需补齐："+missing.map(function(f){return f.label;}).join("、"))
+    +(ok?"✅ 本课能力记录已补齐":"还需补齐："+missing.map(function(f){return f.label;}).join("、"))
     +'</div></section>';
 }
 function readCapabilityNote(j,old){
@@ -1184,7 +1233,7 @@ function openLesson(li,j){
     save(); renderMap(); renderMe();
     var state=document.getElementById("noteState");
     state.className="note-state "+(completed?"ok":"");
-    state.textContent=completed?"✅ 已形成扎实笔记，并进入复习卡组":"已保存草稿；自己的解释、边界和行动证据均需至少 12 字";
+    state.textContent=completed?"✅ 能力卡记录已补齐，并进入复习卡组":"已保存草稿；自己的解释、边界和行动证据均需至少 12 字";
     toast(completed?"能力卡已保存，明天开始复习":"草稿已保存");
   };
   document.getElementById("lesOk").onclick=function(){
@@ -1391,7 +1440,7 @@ function renderEssay(){
   var html=exHead(ex)
     +'<textarea id="essayTa" style="height:200px" placeholder="在这里写你的答案…（至少 '+ex.min+' 字）"></textarea>'
     +'<div id="essayFb"></div>'
-    +'<button class="btn primary" id="essayRun">📋 提交审核（按评分标准逐项检查）</button>'
+    +'<button class="btn primary" id="essayRun">📋 运行字数与关键词检查</button>'
     +'<button class="btn ghost" id="essayCopy">🤖 复制作业 + 评分标准，发到 Codex 深度点评</button>';
   openSheet(html);
   document.getElementById("essayRun").onclick=function(){
@@ -1406,12 +1455,12 @@ function renderEssay(){
       out+='<div class="rub '+(hit?"okR":"noR")+'"><span class="ri">'+(hit?"✅":"❌")+'</span><span>'+r.k+(hit?"":"（似乎没覆盖到——补上这部分）")+'</span></div>';
     });
     var pass=lenOk && okN>=ex.rub.length-1;
-    out+='<div class="explain"><b>'+(pass?"🎯 通过审核！":"还差一点")+'</b> 覆盖 '+okN+"/"+ex.rub.length+' 项评分标准。'
-      +(pass?"关键词检查只是底线——强烈建议再点下方按钮，让 Codex 给你更严格的深度点评。":"按缺失项补写后重新提交。")+'</div>';
+    out+='<div class="explain"><b>'+(pass?"🎯 基础检查通过":"还差一点")+'</b> 覆盖 '+okN+"/"+ex.rub.length+' 项关键词。'
+      +(pass?"这只检查字数和关键词，不判断内容是否正确；需要语义反馈时，再手动复制给 Codex。":"按缺失项补写后重新运行检查。")+'</div>';
     fb.innerHTML=out;
     if(pass){
       var st=S.levels[GAME_DATA.levels[EX.li].id].ex[EX.ei];
-      if(!st.p){ st.p=true; st.m=0; save(); addXP(25,"写作练习通过"); renderMap(); renderMe(); }
+      if(!st.p){ st.p=true; st.m=0; save(); addXP(25,"写作基础检查完成"); renderMap(); renderMe(); }
       fb.innerHTML+='<button class="btn ghost" id="essayBack">返回关卡 →</button>';
       document.getElementById("essayBack").onclick=function(){ openLevel(EX.li); };
     }
@@ -1422,7 +1471,7 @@ function renderEssay(){
   var p="请作为严格但鼓励的 Codex AI 教练，点评我的学习作业。\n\n【作业题目】"+ex.claudeTitle
       +"\n\n【评分标准】\n"+ex.rub.map(function(r,i){return (i+1)+". "+r.k;}).join("\n")
       +"\n\n【我的答案】\n"+v
-      +"\n\n请给出：① 每条标准的得分与理由 ② 最需要改进的 2 点 ③ 一个更好的示范段落 ④ 是否达到 AI 从业者的入门水准。";
+      +"\n\n请给出：① 每条标准的得分与理由 ② 最需要改进的 2 点 ③ 一个更好的示范段落 ④ 是否达到本题当前评分标准；若不足，请说明仍缺什么证据。";
     copyText(p);
   };
 }
@@ -1488,18 +1537,17 @@ function quizResult(){
   var l=GAME_DATA.levels[Q.li], st=S.levels[l.id];
   var total=Q.order.length, pass=Q.correct===total, html;
   if(pass){
-    var first=!st.quiz;
-    st.quiz=true; save();
-    if(first) addXP(30*total,"通关 "+l.title);
-    html='<div class="result-emoji">🏆</div><div class="result-tt">通关成功！</div>'
+    var first=!st.challenge;
+    st.challenge=true; save();
+    if(first) addXP(30*total,"满分挑战 · "+l.title);
+    html='<div class="result-emoji">🏆</div><div class="result-tt">满分挑战完成！</div>'
       +'<div class="result-sub">'+total+' 题全对'+(first?"，获得 "+(30*total)+" XP！":"（复习挑战，不重复计分）")
-      +(Q.li<GAME_DATA.levels.length-1 && isDone(l)?'<br>🔓 已解锁下一关：'+GAME_DATA.levels[Q.li+1].title
-        :Q.li===GAME_DATA.levels.length-1 && isDone(l)?'<br>🎓 你打败了最终 BOSS，完成 32 周全路径闯关！':"")
+      +'<br>满分挑战是可选复习，不计入本站完成状态。正式完成规则：基础关训练达到 80 分；高级关连续 3 轮达到 85 分。两者均与外部考试无关。'
       +'</div><button class="btn primary" id="rOk">继续冒险 →</button>';
     confetti();
   } else {
     html='<div class="result-emoji">💪</div><div class="result-tt">'+Q.correct+" / "+total+'</div>'
-      +'<div class="result-sub">通关需要全对。错题已自动加入复习卡组，<br>去「复习打卡」页刷两轮再来。</div>'
+      +'<div class="result-sub">满分挑战需要全对；它只是可选复习，不计入本站完成状态。错题已自动加入复习卡组，<br>去「复习打卡」页刷两轮再来。</div>'
       +'<button class="btn primary" id="rAgain">🔁 再来一次</button>'
       +'<button class="btn ghost" id="rOk">先去复习</button>';
   }
@@ -1599,7 +1647,7 @@ function renderTree(){
     c.onclick=function(){
       var k=c.dataset.k, old=S.skills[k]||0;
       S.skills[k]=(old+1)%3;
-      if(S.skills[k]===2) addXP(15,"掌握新技能");
+      if(S.skills[k]===2) addXP(15,"更新技能自评");
       save(); renderTree(); renderMe();
     };
   });
@@ -1669,7 +1717,7 @@ function renderMe(){
     var row=document.createElement("div"); row.className="prow";
     row.innerHTML='<span>'+l.icon+'</span><span>'+l.title+'</span>'
       +'<span class="st" style="color:'+(fin?"var(--green)":un?"var(--accent2)":"var(--txt3)")+'">'
-      +(fin?"★ 通关":un?("📖"+lesDone(l)+"/"+l.lessons.length+" 🎮"+exDone(l)+"/"+l.exercises.length+" ⚔️"+(S.levels[l.id].quiz?"✓":"–")):"🔒")+'</span>';
+      +(fin?"★ 完成":un?("📖"+lesDone(l)+"/"+l.lessons.length+" 🎮"+exDone(l)+"/"+l.exercises.length+" ⚔️"+(S.levels[l.id].challenge?"✓":"–")):"🔒")+'</span>';
     ml.appendChild(row);
   });
 }
@@ -1682,27 +1730,27 @@ document.getElementById("btnImport").onclick=function(){
   try{
     var v=document.getElementById("ioArea").value.trim();
     if(!v){ toast("先把进度 JSON 粘贴到上方文本框"); return; }
-    S=JSON.parse(v); save(); load(); renderAll(); toast("导入成功 ✅");
+    S=JSON.parse(v); save(); load(); renderAll(); toast("旧版基础进度导入成功 ✅");
   }catch(e){ toast("JSON 格式不对，导入失败"); }
 };
 document.getElementById("btnReset").onclick=function(){
-  if(confirm("确定重置全部进度？此操作不可恢复（建议先导出备份）")){
-    S=freshState(); S.intro=true; save(); renderAll(); toast("已重置");
+  if(confirm("确定重置旧版基础进度？这不会清除「我的复盘」、统一训练成绩和公会证据；现有导出也不包含这些内容。此操作不可恢复。")){
+    S=freshState(); S.intro=true; save(); renderAll(); toast("旧版基础进度已重置");
   }
 };
 document.getElementById("btnHelp").onclick=showIntro;
 
 function showIntro(){
   openSheet('<h2>🎮 玩法说明 v2</h2><div class="goalbox" style="margin-top:12px">'
-   +'<b>🗺️ 每关三段式</b>📖 学：读精读课卡（含类比和你的宠物场景案例），读完自动生成复习卡。🎮 练：页内互动练习——分类、排序、配对、写 JSON、写作——<span style="color:var(--accent2)">系统当场判分，失误超限必须重做</span>，不再自己打勾。⚔️ 战：测验全对才通关，错题自动进复习卡组。'
+   +'<b>🗺️ 每关三段式</b>📖 学：读精读课卡（含类比和你的宠物场景案例），读完自动生成复习卡。🎮 练：页内互动练习——分类、排序、配对、写 JSON、写作——<span style="color:var(--accent2)">系统当场判分，失误超限必须重做</span>，不再自己打勾。⚔️ 战：满分挑战是可选复习，不计入本站完成状态。正式完成规则：基础关训练达到 80 分；高级关连续 3 轮达到 85 分。两者均与外部考试无关。错题自动进复习卡组。'
    +'</div><div class="goalbox">'
    +'<b>📚 复习路径</b>间隔重复：记得的卡 1→2→4→7→15 天后再见，忘了的明天再见。每天进「复习打卡」清掉到期卡片，红点提醒。'
    +'</div><div class="goalbox">'
-   +'<b>✍️ 直接在 Codex 中问我</b>写作类练习先由系统按评分标准逐项检查；需要深度反馈时，点右下角「复制学习快照给 Codex」，切回当前 Codex 对话并粘贴，再附上你的问题或作业。我会持续解释、纠错和审核。'
+   +'<b>✍️ 直接在 Codex 中问我</b>写作类练习的系统检查只核对字数和关键词，不判断内容是否正确；需要语义反馈时，点右下角「复制学习快照给 Codex」，切回当前 Codex 对话并粘贴，再附上你的问题或作业。我会持续解释、纠错和审核。'
    +'</div><div class="goalbox">'
-   +'<b>⚡ XP</b>课卡 +8 · 练习通过 +25 · 测验每题 +30 · 复习 +2~3 · 技能掌握 +15 · 打卡 +5 · 全勤 +20 · 周证据 +10。'
+   +'<b>⚡ XP</b>课卡 +8 · 练习通过 +25 · 满分挑战每题 +30 · 复习 +2~3 · 技能自评 +15 · 打卡 +5 · 全勤 +20 · 周证据 +10。'
    +'</div><div class="goalbox">'
-   +'<b>🔁 可复制</b>进度可导出导入；所有关卡、课卡、题目都在文件顶部 GAME_DATA，改它即可复用这套玩法学任何东西。'
+   +'<b>🔁 可复制</b>导出只含旧版基础进度，不含我的复盘、统一训练成绩和公会证据；不同域名和设备之间不会自动同步，重要内容请另行复制保存。'
    +'</div><button class="btn primary" id="introOk" style="margin-top:14px">开始闯关 →</button>');
   document.getElementById("introOk").onclick=function(){ S.intro=true; save(); closeSheet(); };
 }
@@ -1719,7 +1767,7 @@ load(); renderAll();
 if(!S.intro) showIntro();
 document.getElementById("codexCheckin").onclick=function(){
   var levels=GAME_DATA.levels.map(function(l){
-    return "• "+l.title+"：课卡 "+lesDone(l)+"/"+l.lessons.length+"，练习 "+exDone(l)+"/"+l.exercises.length+"，测验 "+(S.levels[l.id].quiz?"已通过":"未通过");
+    return "• "+l.title+"：课卡 "+lesDone(l)+"/"+l.lessons.length+"，练习 "+exDone(l)+"/"+l.exercises.length+"，正式完成 "+(isDone(l)?"是":"否")+"，满分挑战 "+(S.levels[l.id].challenge?"有记录":"无记录");
   }).join("\n");
   var notes=GAME_DATA.levels[0].lessons.map(function(le,j){
     var n=S.lessonNotes[noteKey(GAME_DATA.levels[0],j)];
@@ -1735,14 +1783,14 @@ document.getElementById("codexCheckin").onclick=function(){
   toast("学习快照已复制，粘贴到当前 Codex 对话即可");
 };
 </script>
-  <link rel="stylesheet" href="unified-learning-upgrade.css?v=20260812-review3" data-unified-learning>
+  <link rel="stylesheet" href="unified-learning-upgrade.css?v=20260815-p0p1" data-unified-learning>
   <script src="curriculum-depth-upgrade.js?v=20260728-depth1" data-curriculum-depth></script>
   <script src="curriculum-detail-expansion.js?v=20260728-depth2" data-curriculum-detail></script>
   <script src="curriculum-beginner-reading.js?v=20260728-beginner1" data-curriculum-beginner></script>
-  <script src="advanced-certificate-expansion.js?v=20260804-reviewfix1" data-curriculum-advanced></script>
+  <script src="advanced-certificate-expansion.js?v=20260815-p0p1" data-curriculum-advanced></script>
   <script src="curriculum-reflection-prompts.js?v=20260804-reviewfix1" data-curriculum-reflections></script>
-  <script src="pixel-guild-upgrade.js?v=20260812-review3" data-pixel-upgrade></script>
-  <script src="glossary-cards.js?v=20260727-1" data-glossary-cards></script>
-  <script src="unified-learning-upgrade.js?v=20260812-review3" data-unified-learning></script>
+  <script src="pixel-guild-upgrade.js?v=20260816-homecopy1" data-pixel-upgrade></script>
+  <script src="glossary-cards.js?v=20260815-p0p1" data-glossary-cards></script>
+  <script src="unified-learning-upgrade.js?v=20260815-p0p1" data-unified-learning></script>
 </body>
 </html>

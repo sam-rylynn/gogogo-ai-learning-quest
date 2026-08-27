@@ -61,7 +61,7 @@
     {
       id: 6,
       name: "作品集实战",
-      rank: "AI 从业者",
+      rank: "全链路闯关者",
       mission: "整理可验证的 AI 产品案例",
       promise: "用产品、评测、失败与迭代证明能力",
       artifact: "作品集案例 v1",
@@ -71,14 +71,14 @@
   ];
 
   const ADVANCED_PIXEL_PROFILE = [
-    { rank: "工作助手架构师", hardFail: "越权连接外部系统、泄露凭证、自动执行高风险动作", retest: "把助手迁移到另一个办公任务，并重新做权限与失败测试。" },
-    { rank: "智能体编排师", hardFail: "插件空返回后编造事实、工作流无失败出口、发布权限越界", retest: "为同一工作流增加一类异常输入和一条回归测试。" },
-    { rank: "Agent 工程师", hardFail: "破坏用户文件、提交密钥、把 Commit 误报为线上部署", retest: "在最小权限环境重新复现 CLI 流程并演练回退。" },
-    { rank: "AI 产品策划师", hardFail: "没有用户证据、让模型执行确定性高风险动作、用体验分掩盖安全失败", retest: "为另一个角色重写问题证据、非目标和上线门槛。" },
-    { rank: "运营自动化师", hardFail: "编造营销数据、未经授权承诺金额、让概率文本直接驱动 RPA", retest: "用一组新数据复测效率、质量、返工和硬性错误。" },
-    { rank: "AI 视觉设计师", hardFail: "使用未授权素材、泄露云端密钥、忽略持续计费", retest: "用同一视觉规范制作一个新尺寸，并复核来源与一致性。" },
-    { rank: "AI 影音制作人", hardFail: "未经同意克隆肖像或声音、隐瞒合成身份、发布未授权素材", retest: "把成片改编为另一平台规格并重跑完整 QC。" },
-    { rank: "高级 AI 从业者", hardFail: "重复冒充证据、隐瞒失败、把候选或提交状态说成已验证上线", retest: "用 10 分钟答辩两个核心项目，并回答一个失败追问。" }
+    { rank: "助手搭建者", hardFail: "越权连接外部系统、泄露凭证、自动执行高风险动作", retest: "把助手迁移到另一个办公任务，并重新做权限与失败测试。" },
+    { rank: "智能体搭建者", hardFail: "插件空返回后编造事实、工作流无失败出口、发布权限越界", retest: "为同一工作流增加一类异常输入和一条回归测试。" },
+    { rank: "CLI 探险者", hardFail: "破坏用户文件、提交密钥、把 Commit 误报为线上部署", retest: "在最小权限环境重新复现 CLI 流程并演练回退。" },
+    { rank: "产品方法实践者", hardFail: "没有用户证据、让模型执行确定性高风险动作、用体验分掩盖安全失败", retest: "为另一个角色重写问题证据、非目标和上线门槛。" },
+    { rank: "运营自动化实践者", hardFail: "编造营销数据、未经授权承诺金额、让概率文本直接驱动 RPA", retest: "用一组新数据复测效率、质量、返工和硬性错误。" },
+    { rank: "视觉生成实践者", hardFail: "使用未授权素材、泄露云端密钥、忽略持续计费", retest: "用同一视觉规范制作一个新尺寸，并复核来源与一致性。" },
+    { rank: "影音制作实践者", hardFail: "未经同意克隆肖像或声音、隐瞒合成身份、发布未授权素材", retest: "把成片改编为另一平台规格并重跑完整 QC。" },
+    { rank: "高级闯关者", hardFail: "重复冒充证据、隐瞒失败、把候选或提交状态说成已验证上线", retest: "用 10 分钟答辩两个核心项目，并回答一个失败追问。" }
   ];
 
   const advancedCourseLevels = window.GAME_DATA && Array.isArray(window.GAME_DATA.levels)
@@ -291,6 +291,13 @@
     });
 
     merged.questions = Array.isArray(saved.questions) ? saved.questions : [];
+    ["gates", "training", "artifacts"].forEach((section) => {
+      const savedSection = saved[section];
+      if (!savedSection || typeof savedSection !== "object") return;
+      Object.keys(savedSection).forEach((key) => {
+        if (!(key in merged[section])) merged[section][key] = savedSection[key];
+      });
+    });
     merged.activeLevel = Math.min(LEVELS.length, Math.max(1, Number(merged.activeLevel) || 1));
     merged.activeStation = Math.min(5, Math.max(0, Number(merged.activeStation) || 0));
     if (!MODES[merged.dailyMode]) merged.dailyMode = "standard";
@@ -298,8 +305,24 @@
   }
 
   let state = loadState();
+  /* 原始 artifacts subtree 可以是 JSON 任意形态（含显式 null/字符串/数字/布尔），
+     用 hasOwnProperty 独立标记是否存在，不能用 truthy object 判断。 */
+  let hasRawArtifacts = false;
+  let rawArtifactsSnapshot;
+  try {
+    const rawStored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    if (rawStored && typeof rawStored === "object" && Object.prototype.hasOwnProperty.call(rawStored, "artifacts")) {
+      hasRawArtifacts = true;
+      rawArtifactsSnapshot = rawStored.artifacts;
+    }
+  } catch (error) {
+    hasRawArtifacts = false;
+    rawArtifactsSnapshot = undefined;
+  }
   let toastTimer = 0;
   let drawerCloseTimer = 0;
+  let drawerOpener = null;
+  let legacyOpener = null;
   const originalElements = Array.from(document.body.children).filter((element) => {
     return !element.matches("script[data-pixel-upgrade]");
   });
@@ -330,11 +353,11 @@
         <div class="pg-metric-row"><span>XP</span><strong id="pg-xp-text">0/100</strong></div>
         <div class="pg-meter" aria-label="行动经验"><span id="pg-xp-meter"></span></div>
       </div>
-      <button class="pg-hud-chip" data-action="evidence" aria-label="打开能力证据板">
-        能力证据 <strong id="pg-evidence-count">0/4</strong>
+      <button class="pg-hud-chip" data-action="library" aria-label="课卡已读，打开课程书库">
+        课卡已读 <strong id="pg-evidence-count">—</strong>
       </button>
       <button class="pg-hud-chip pg-hud-streak" data-action="daily">
-        连续学习 <strong id="pg-streak">0 天</strong>
+        连续打开 <strong id="pg-streak">0 天</strong>
       </button>
       <button class="pg-hud-action" data-action="questions">
         问题队列 <strong id="pg-question-count">0</strong>
@@ -357,7 +380,7 @@
           <div class="pg-gate-grid" id="pg-gates"></div>
           <div class="pg-quest-footer">
             <span class="pg-artifact-line" id="pg-artifact-line"></span>
-            <button class="pg-primary" data-home-progress data-action="library" aria-label="继续书库 0/8">继续书库 0/8</button>
+            <button class="pg-primary" data-home-progress data-action="library">继续书库 0/8</button>
           </div>
         </section>
         <svg class="pg-foreground-actors" viewBox="0 0 1536 1024" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
@@ -369,7 +392,7 @@
           </defs>
           <image href="assets/pixel-guild-hall.png" width="1536" height="1024" preserveAspectRatio="none" clip-path="url(#pg-foreground-actor-clip)"></image>
         </svg>
-        <div class="pg-mentor" id="pg-mentor">经验值只记录行动；四道证据门才证明能力。</div>
+        <div class="pg-mentor" id="pg-mentor">学习顺序：书库输入并写自己的话，训练诊断，复盘处理真实理解与错误，72h 再验证。</div>
         <div class="pg-controls" aria-hidden="true">
           <span class="pg-key">A</span><span class="pg-key">D</span><span>移动</span>
           <span class="pg-key">E</span><span>互动</span>
@@ -401,10 +424,13 @@
   legacyOverlay.className = "pg-legacy-overlay";
   legacyOverlay.id = "pg-legacy-overlay";
   legacyOverlay.hidden = true;
+  legacyOverlay.setAttribute("role", "dialog");
+  legacyOverlay.setAttribute("aria-modal", "true");
+  legacyOverlay.setAttribute("aria-labelledby", "pg-legacy-title");
   legacyOverlay.innerHTML = `
     <header class="pg-legacy-header">
       <div>
-        <h2>课程书库 · 原课程内容</h2>
+        <h2 id="pg-legacy-title">课程书库 · 原课程内容</h2>
         <span class="pg-legacy-note">学习内容仍由原页面保存；公会层只负责导航、证据与下一步。</span>
       </div>
       <button class="pg-close" data-action="close-legacy" aria-label="返回公会">X</button>
@@ -421,8 +447,7 @@
   const scene = document.getElementById("pg-scene");
   const stage = document.getElementById("pg-stage");
 
-  updateStreak();
-  saveState();
+  if (updateStreak()) saveState();
   renderWorld();
 
   app.addEventListener("click", handleClick);
@@ -444,18 +469,34 @@
     if (!state.lastVisit) {
       state.streak = Math.max(1, state.streak || 0);
       state.lastVisit = today;
-      return;
+      return true;
     }
-    if (state.lastVisit === today) return;
+    if (state.lastVisit === today) return false;
     const previous = new Date(`${state.lastVisit}T00:00:00`);
     const current = new Date(`${today}T00:00:00`);
     const days = Math.round((current - previous) / 86400000);
     state.streak = days === 1 ? state.streak + 1 : 1;
     state.lastVisit = today;
+    return true;
   }
 
-  function saveState() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  /* 普通保存：原样保留存储中的原始 artifacts subtree（含未知 id、非标准值、显式 null）。
+     只有用户明确保存产物（saveArtifact → writeArtifacts:true）才写入新的 artifacts。
+     setItem 失败返回 false，调用方据此给出诚实提示，不显示假成功。 */
+  function saveState(options) {
+    const writeArtifacts = Boolean(options && options.writeArtifacts);
+    const out = { ...state };
+    if (!writeArtifacts && hasRawArtifacts) out.artifacts = rawArtifactsSnapshot;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(out));
+    } catch (error) {
+      return false;
+    }
+    if (writeArtifacts) {
+      rawArtifactsSnapshot = out.artifacts;
+      hasRawArtifacts = true;
+    }
+    return true;
   }
 
   function currentLevel() {
@@ -466,24 +507,15 @@
     return GATES.filter((gate) => state.gates[levelId][gate.id].status === "recorded").length;
   }
 
-  function unlockedLevel() {
-    let unlocked = 1;
-    LEVELS.forEach((level) => {
-      if (completedGateCount(level.id) === 4) unlocked = Math.min(LEVELS.length, level.id + 1);
-    });
-    return unlocked;
-  }
-
   function renderWorld() {
     const level = currentLevel();
-    const gateCount = completedGateCount(level.id);
-    document.getElementById("pg-rank").textContent = `Lv. ${level.id} ${level.rank}`;
+    document.getElementById("pg-rank").textContent = `站内称号 Lv.${level.id} ${level.rank}`;
     document.getElementById("pg-level-label").textContent = `第 ${level.id} 关 · ${level.name}`;
     document.getElementById("pg-mission-title").textContent = level.mission;
     document.getElementById("pg-mission-promise").textContent = level.promise;
     document.getElementById("pg-artifact-line").textContent = `本关产物：${level.artifact} · 未解决问题：${state.questions.length}`;
     const evidenceCount = document.getElementById("pg-evidence-count");
-    if (evidenceCount) evidenceCount.textContent = `${gateCount}/4`;
+    if (evidenceCount && !window.GOGOGO_UNIFIED_LEARNING) evidenceCount.textContent = "—";
     document.getElementById("pg-streak").textContent = `${state.streak} 天`;
     document.getElementById("pg-question-count").textContent = String(state.questions.length);
 
@@ -498,7 +530,7 @@
 
     document.getElementById("pg-gates").innerHTML = GATES.map((gate) => {
       const done = state.gates[level.id][gate.id].status === "recorded";
-      return `<div class="pg-gate${done ? " is-done" : ""}">${done ? "完成" : gate.number}<br>${gate.label}</div>`;
+      return `<div class="pg-gate${done ? " is-done" : ""}">${done ? "已记录" : gate.number}<br>${gate.label}</div>`;
     }).join("");
 
     document.querySelectorAll("[data-station]").forEach((button) => {
@@ -533,17 +565,25 @@
     if (!action) return;
 
     const actions = {
-      library: openLegacy,
+      library: () => {
+        const learning = window.GOGOGO_UNIFIED_LEARNING;
+        if (learning && typeof learning.openLibrary === "function") learning.openLibrary();
+        else showToast("学习模块未就绪，请刷新页面或稍后再试。 ");
+      },
       workshop: () => openDrawer("训练工坊", renderWorkshop()),
       codex: () => openDrawer("Codex 审核室", renderCodex()),
       retest: () => openDrawer("72h 复测塔", renderEvidence("retest")),
-      artifact: () => openDrawer("项目作品陈列门", renderArtifact()),
+      artifact: () => {
+        const learning = window.GOGOGO_UNIFIED_LEARNING;
+        if (learning && typeof learning.openArtifactArchive === "function") learning.openArtifactArchive();
+        else showToast("学习模块未就绪，请刷新页面或稍后再试。 ");
+      },
       "key-notes": () => {
         const learning = window.GOGOGO_UNIFIED_LEARNING;
         if (learning && typeof learning.openKeyNotes === "function") learning.openKeyNotes();
-        else openLegacy();
+        else showToast("学习模块未就绪，请刷新页面或稍后再试。 ");
       },
-      evidence: () => openDrawer("四道能力证据门", renderEvidence()),
+      evidence: () => openDrawer("旧版复盘记录", renderEvidence()),
       questions: () => openDrawer("问题队列", renderQuestions()),
       daily: () => openDrawer("今日路线与关卡", renderDaily()),
       notes: () => openDrawer("学习记录分工", renderNotes()),
@@ -579,8 +619,18 @@
   }
 
   function handleKeydown(event) {
+    if (event.key === "Tab") {
+      if (!drawer.hidden) { trapFocus(event, drawer.querySelector(".pg-drawer-panel")); return; }
+      if (!legacyOverlay.hidden) { trapFocus(event, legacyOverlay); return; }
+    }
     const tag = document.activeElement && document.activeElement.tagName;
-    if (["INPUT", "TEXTAREA", "SELECT"].includes(tag)) return;
+    if (["INPUT", "TEXTAREA", "SELECT", "BUTTON", "A", "SUMMARY"].includes(tag)) {
+      if (event.key === "Escape") {
+        if (!drawer.hidden) closeDrawer();
+        else if (!legacyOverlay.hidden) closeLegacy();
+      }
+      return;
+    }
     if (event.key === "Escape") {
       if (!drawer.hidden) closeDrawer();
       else if (!legacyOverlay.hidden) closeLegacy();
@@ -606,6 +656,27 @@
     if (button) button.click();
   }
 
+  function trapFocus(event, container) {
+    if (!container) return;
+    const focusable = Array.from(container.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), details > summary, [tabindex]:not([tabindex="-1"])'))
+      .filter((node) => node.getClientRects().length > 0);
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (!container.contains(document.activeElement)) {
+      event.preventDefault();
+      first.focus();
+      return;
+    }
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
   function openDrawer(title, html) {
     window.clearTimeout(drawerCloseTimer);
     drawer.classList.remove("is-closing");
@@ -613,6 +684,7 @@
     drawerBody.innerHTML = html;
     drawer.hidden = false;
     drawer.setAttribute("aria-hidden", "false");
+    if (document.activeElement instanceof HTMLElement) drawerOpener = document.activeElement;
     requestAnimationFrame(() => drawer.classList.add("is-open"));
     const closeButton = drawer.querySelector(".pg-close");
     if (closeButton) closeButton.focus();
@@ -621,6 +693,8 @@
   function refreshDrawer(title, html) {
     drawerTitle.textContent = title;
     drawerBody.innerHTML = html;
+    if (!drawerTitle.hasAttribute("tabindex")) drawerTitle.setAttribute("tabindex", "-1");
+    drawerTitle.focus();
   }
 
   function closeDrawer() {
@@ -631,17 +705,22 @@
       drawer.hidden = true;
       drawer.setAttribute("aria-hidden", "true");
       drawer.classList.remove("is-closing");
+      if (drawerOpener && document.contains(drawerOpener)) drawerOpener.focus();
+      drawerOpener = null;
     }, 330);
   }
 
   function openLegacy() {
     playWipe();
+    if (document.activeElement instanceof HTMLElement) legacyOpener = document.activeElement;
     window.setTimeout(() => {
       legacyOverlay.hidden = false;
       const likelyTarget = Array.from(legacyContent.querySelectorAll("h1,h2,h3,h4,[id]")).find((node) => {
         return (node.textContent || "").includes(`第${state.activeLevel}关`);
       });
       if (likelyTarget) likelyTarget.scrollIntoView({ block: "start" });
+      const closeButton = legacyOverlay.querySelector(".pg-close");
+      if (closeButton) closeButton.focus();
     }, 220);
   }
 
@@ -649,6 +728,8 @@
     playWipe();
     window.setTimeout(() => {
       legacyOverlay.hidden = true;
+      if (legacyOpener && document.contains(legacyOpener)) legacyOpener.focus();
+      legacyOpener = null;
     }, 220);
   }
 
@@ -684,7 +765,7 @@
     }).join("");
 
     return `
-      <p class="pg-panel-intro">本关不再用“看过课卡”代替掌握。四份证据全部留下，才解锁下一关；平台只检查证据是否存在，正确性由 Codex 审核。</p>
+      <p class="pg-panel-intro">四份旧版证据只用于复盘，不影响本站完成状态或下一关进入；页面只检查是否留下记录，内容质量需另行审核。</p>
       <div class="pg-progress-route">${route}</div>
       ${gateExplainCard(gates.explain, focusGate === "explain")}
       ${gateTransferCard(gates.transfer, focusGate === "transfer")}
@@ -699,7 +780,7 @@
     const prompt = (TRAINING[state.activeLevel] && TRAINING[state.activeLevel].explain) || "不看课卡，用自己的话解释本关核心概念、适用场景和失败边界。";
     return `
       <section class="pg-panel-card${done ? " is-complete" : ""}"${focused ? " data-focused=\"true\"" : ""}>
-        <div class="pg-card-heading"><h3>01 闭卷解释</h3><span class="pg-status${done ? " is-complete" : ""}">${done ? "已记录" : "待完成"}</span></div>
+        <div class="pg-card-heading"><h3>01 闭卷解释</h3><span class="pg-status${done ? " is-complete" : ""}">${done ? "已记录" : "待记录"}</span></div>
         <p>${escapeHtml(prompt)}</p>
         <form data-form="explain">
           <label class="pg-form-label" for="pg-explain-answer">你的闭卷解释（至少 80 字）</label>
@@ -714,7 +795,7 @@
     const prompt = TRAINING[state.activeLevel].transfer;
     return `
       <section class="pg-panel-card${done ? " is-complete" : ""}"${focused ? " data-focused=\"true\"" : ""}>
-        <div class="pg-card-heading"><h3>02 变式任务</h3><span class="pg-status${done ? " is-complete" : ""}">${done ? "已记录" : "待完成"}</span></div>
+        <div class="pg-card-heading"><h3>02 变式任务</h3><span class="pg-status${done ? " is-complete" : ""}">${done ? "已记录" : "待记录"}</span></div>
         <p>${escapeHtml(prompt)}</p>
         <form data-form="transfer">
           <label class="pg-form-label" for="pg-transfer-answer">你的迁移答案（至少 100 字）</label>
@@ -728,11 +809,11 @@
     const done = gate.status === "recorded";
     return `
       <section class="pg-panel-card${done ? " is-complete" : ""}"${focused ? " data-focused=\"true\"" : ""}>
-        <div class="pg-card-heading"><h3>03 Codex 审核</h3><span class="pg-status${done ? " is-complete" : ""}">${done ? `通过 ${gate.score} 分` : "等待审核"}</span></div>
+        <div class="pg-card-heading"><h3>03 Codex 审核</h3><span class="pg-status${done ? " is-complete" : ""}">${done ? `已记录 ${gate.score} 分` : "待录入反馈"}</span></div>
         <p>先复制审核包到当前 Codex 对话。Codex 负责判断内容质量，HTML 只保存评分和反馈，不假装能自动审核。</p>
         <div class="pg-form-actions"><button class="pg-secondary" type="button" data-action="copy-codex">复制审核包给 Codex</button></div>
         <form data-form="codex">
-          <label class="pg-form-label" for="pg-codex-score">Codex 评分（0-100，70 分通过）</label>
+          <label class="pg-form-label" for="pg-codex-score">Codex 评分（0-100，仅作记录，不代表通过）</label>
           <input class="pg-input" id="pg-codex-score" name="score" type="number" min="0" max="100" value="${gate.score || ""}" required>
           <label class="pg-form-label" for="pg-codex-feedback">粘贴 Codex 的关键反馈</label>
           <textarea class="pg-textarea" id="pg-codex-feedback" name="feedback" required minlength="20">${escapeHtml(gate.feedback)}</textarea>
@@ -744,7 +825,7 @@
   function gateRetestCard(gate, ready, focused) {
     const done = gate.status === "recorded";
     const level = currentLevel();
-    let availability = "先通过 Codex 审核，系统才开始 72 小时倒计时。";
+    let availability = "先保存评分与反馈记录，系统才开始 72 小时倒计时。";
     if (gate.availableAt && !ready) availability = `开放时间：${formatDate(gate.availableAt)}`;
     if (ready) availability = "复测已开放。请不要查看原答案。";
     if (done) availability = `已于 ${formatDate(gate.submittedAt)} 留下复测证据。`;
@@ -767,15 +848,25 @@
       shake(`证据不足：至少需要 ${minimum} 个字符。`);
       return;
     }
-    const gate = state.gates[state.activeLevel][gateId];
+    const levelId = state.activeLevel;
+    const gate = state.gates[levelId][gateId];
+    const previousGate = { ...gate };
+    const previousXp = state.xp;
     const first = gate.status !== "recorded";
     gate.answer = clean;
     gate.status = "recorded";
     gate.submittedAt = Date.now();
     if (first) state.xp += 10;
-    saveState();
+    const persisted = saveState();
+    if (!persisted) {
+      state.gates[levelId][gateId] = previousGate;
+      state.xp = previousXp;
+      renderWorld();
+      showToast("存储写入失败：本次记录未保存，输入仍保留在表单中，请调整浏览器存储后重试。 ");
+      return;
+    }
     renderWorld();
-    refreshDrawer("四道能力证据门", renderEvidence(gateId));
+    refreshDrawer("旧版复盘记录", renderEvidence(gateId));
     showToast("证据已记录；仍需 Codex 判断内容是否正确。 ");
   }
 
@@ -786,34 +877,37 @@
       shake("请填写 0-100 分评分，并粘贴至少 20 字的 Codex 反馈。");
       return;
     }
-    if (score < 70) {
-      const gate = state.gates[state.activeLevel].codex;
-      gate.score = score;
-      gate.feedback = feedback;
-      gate.status = "open";
-      saveState();
-      shake("审核未通过。先按反馈修订，再重新提交。 ");
-      refreshDrawer("四道能力证据门", renderEvidence("codex"));
-      return;
-    }
-    const gate = state.gates[state.activeLevel].codex;
+    const levelId = state.activeLevel;
+    const gate = state.gates[levelId].codex;
+    const retest = state.gates[levelId].retest;
+    const previousGate = { ...gate };
+    const previousRetest = { ...retest };
+    const previousXp = state.xp;
     const first = gate.status !== "recorded";
     gate.score = score;
     gate.feedback = feedback;
     gate.status = "recorded";
     gate.submittedAt = Date.now();
-    const retest = state.gates[state.activeLevel].retest;
     if (!retest.availableAt) retest.availableAt = Date.now() + RETEST_DELAY;
     if (first) state.xp += 20;
-    saveState();
+    const persisted = saveState();
+    if (!persisted) {
+      state.gates[levelId].codex = previousGate;
+      state.gates[levelId].retest = previousRetest;
+      state.xp = previousXp;
+      renderWorld();
+      showToast("存储写入失败：评分与反馈未保存，输入仍保留在表单中，请调整浏览器存储后重试。 ");
+      return;
+    }
     renderWorld();
-    refreshDrawer("四道能力证据门", renderEvidence("codex"));
-    showToast("Codex 审核通过；72 小时后开放变式复测。 ");
+    refreshDrawer("旧版复盘记录", renderEvidence("codex"));
+    showToast("评分与反馈已保存为记录，不代表通过或未通过。 ");
   }
 
   function saveRetest(answer) {
     const clean = answer.trim();
-    const gate = state.gates[state.activeLevel].retest;
+    const levelId = state.activeLevel;
+    const gate = state.gates[levelId].retest;
     if (!gate.availableAt || Date.now() < gate.availableAt) {
       shake("复测尚未开放。延迟回忆不能提前完成。 ");
       return;
@@ -822,15 +916,24 @@
       shake("复测答案至少 100 字。 ");
       return;
     }
+    const previousGate = { ...gate };
+    const previousXp = state.xp;
     const first = gate.status !== "recorded";
     gate.answer = clean;
     gate.status = "recorded";
     gate.submittedAt = Date.now();
     if (first) state.xp += 25;
-    saveState();
+    const persisted = saveState();
+    if (!persisted) {
+      state.gates[levelId].retest = previousGate;
+      state.xp = previousXp;
+      renderWorld();
+      showToast("存储写入失败：复测记录未保存，输入仍保留在表单中，请调整浏览器存储后重试。 ");
+      return;
+    }
     renderWorld();
     refreshDrawer("72h 复测塔", renderEvidence("retest"));
-    if (completedGateCount(state.activeLevel) === 4) showToast("四道证据门完成，下一关已解锁。 ");
+    if (completedGateCount(levelId) === 4) showToast("旧版四份复盘记录已齐，不影响本站正式完成状态。 ");
     else showToast("复测证据已记录。 ");
   }
 
@@ -840,7 +943,7 @@
     return `
       <p class="pg-panel-intro">题库按认知层级训练，而不是只堆同类选择题：先识别，再迁移，最后处理边界。完成只代表留下练习记录，正确性仍要进入 Codex 审核。</p>
       <section class="pg-panel-card${completed.recall ? " is-complete" : ""}">
-        <div class="pg-card-heading"><h3>层级 1 · 概念识别</h3><span class="pg-status${completed.recall ? " is-complete" : ""}">${completed.recall ? "已完成" : "待完成"}</span></div>
+        <div class="pg-card-heading"><h3>层级 1 · 概念识别</h3><span class="pg-status${completed.recall ? " is-complete" : ""}">${completed.recall ? "已记录" : "待记录"}</span></div>
         <p>${escapeHtml(content.recall.prompt)}</p>
         <form data-form="recall">
           <div class="pg-option-list">
@@ -850,7 +953,7 @@
         </form>
       </section>
       <section class="pg-panel-card${completed.transfer ? " is-complete" : ""}">
-        <div class="pg-card-heading"><h3>层级 2 · 场景迁移</h3><span class="pg-status${completed.transfer ? " is-complete" : ""}">${completed.transfer ? "已记录" : "待完成"}</span></div>
+        <div class="pg-card-heading"><h3>层级 2 · 场景迁移</h3><span class="pg-status${completed.transfer ? " is-complete" : ""}">${completed.transfer ? "已记录" : "待记录"}</span></div>
         <p>${escapeHtml(content.transfer)}</p>
         <form data-form="training-transfer">
           <textarea class="pg-textarea" name="answer" required minlength="100">${escapeHtml((completed.transfer && completed.transfer.answer) || "")}</textarea>
@@ -858,7 +961,7 @@
         </form>
       </section>
       <section class="pg-panel-card${completed.boundary ? " is-complete" : ""}">
-        <div class="pg-card-heading"><h3>层级 3 · 边界诊断</h3><span class="pg-status${completed.boundary ? " is-complete" : ""}">${completed.boundary ? "已记录" : "待完成"}</span></div>
+        <div class="pg-card-heading"><h3>层级 3 · 边界诊断</h3><span class="pg-status${completed.boundary ? " is-complete" : ""}">${completed.boundary ? "已记录" : "待记录"}</span></div>
         <p>${escapeHtml(content.boundary)}</p>
         <form data-form="training-boundary">
           <textarea class="pg-textarea" name="answer" required minlength="80">${escapeHtml((completed.boundary && completed.boundary.answer) || "")}</textarea>
@@ -874,10 +977,19 @@
       shake("判断错误。回到事实来源、权限或失败边界重新推理。 ");
       return;
     }
-    const first = !state.training[state.activeLevel].recall;
-    state.training[state.activeLevel].recall = { selected, completedAt: Date.now() };
+    const levelId = state.activeLevel;
+    const previousRecall = state.training[levelId].recall;
+    const previousXp = state.xp;
+    const first = !previousRecall;
+    state.training[levelId].recall = { selected, completedAt: Date.now() };
     if (first) state.xp += 4;
-    saveState();
+    if (!saveState()) {
+      state.training[levelId].recall = previousRecall;
+      state.xp = previousXp;
+      renderWorld();
+      showToast("判断正确，但记录未保存；请调整浏览器存储后重新提交。 ");
+      return;
+    }
     renderWorld();
     refreshDrawer("训练工坊", renderWorkshop());
     showToast(question.why);
@@ -889,16 +1001,28 @@
       shake(`答案至少需要 ${minimum} 个字符。`);
       return;
     }
-    const first = !state.training[state.activeLevel][kind];
-    state.training[state.activeLevel][kind] = { answer: clean, completedAt: Date.now() };
+    const levelId = state.activeLevel;
+    const previousTraining = state.training[levelId][kind];
+    const previousXp = state.xp;
+    const previousTransferGate = kind === "transfer" ? { ...state.gates[levelId].transfer } : null;
+    const first = !previousTraining;
+    state.training[levelId][kind] = { answer: clean, completedAt: Date.now() };
     if (kind === "transfer") {
-      const gate = state.gates[state.activeLevel].transfer;
+      const gate = state.gates[levelId].transfer;
       gate.answer = clean;
       gate.status = "recorded";
       gate.submittedAt = Date.now();
     }
     if (first) state.xp += 6;
-    saveState();
+    const persisted = saveState();
+    if (!persisted) {
+      state.training[levelId][kind] = previousTraining;
+      if (previousTransferGate) state.gates[levelId].transfer = previousTransferGate;
+      state.xp = previousXp;
+      renderWorld();
+      showToast("存储写入失败：训练记录未保存，输入仍保留在表单中，请调整浏览器存储后重试。 ");
+      return;
+    }
     renderWorld();
     refreshDrawer("训练工坊", renderWorkshop());
     showToast("训练记录已保存；请带着答案进入 Codex 审核。 ");
@@ -908,7 +1032,7 @@
     const level = currentLevel();
     const gate = state.gates[level.id].codex;
     return `
-      <p class="pg-panel-intro">Codex 是教练和审核者，不是网页里的假按钮。这里把学习上下文压缩成一个可复制审核包，再将真实反馈带回证据门。</p>
+      <p class="pg-panel-intro">Codex 是教练和审核者，不是网页里的假按钮。这里把学习上下文压缩成一个可复制审核包，再将真实反馈带回旧版复盘记录。</p>
       <section class="pg-panel-card">
         <div class="pg-card-heading"><h3>当前审核任务</h3><span class="pg-status${gate.status === "recorded" ? " is-complete" : ""}">${gate.status === "recorded" ? `${gate.score} 分` : "待提交"}</span></div>
         <p><strong>${escapeHtml(level.mission)}</strong></p>
@@ -933,7 +1057,7 @@
     const artifact = state.artifacts[level.id];
     const mode = MODES[state.dailyMode];
     const questions = state.questions.length ? state.questions.map((item, index) => `${index + 1}. ${item.text}`).join("\n") : "暂无";
-    return `请作为严格但鼓励的 Codex AI 教练，审核我在《AI 从业者闯关之路》的当前学习证据。\n\n【关卡】第 ${level.id} 关：${level.name}\n【主线任务】${level.mission}\n【今日模式】${mode.label}\n【行动 XP】${state.xp}（只代表行动，不代表掌握）\n【能力证据】${completedGateCount(level.id)}/4\n\n【闭卷解释】\n${gates.explain.answer || "未提交"}\n\n【变式任务】\n题目：${TRAINING[level.id].transfer}\n答案：${gates.transfer.answer || "未提交"}\n\n【项目产物】\n${artifact.body || "未提交"}\n\n【证据与限制】\n${artifact.evidence || "未提交"}\n\n【未解决问题】\n${questions}\n\n【本关硬失败】\n${level.hardFail}\n\n请给出：1. 每项评分与理由；2. 最需要改进的两点；3. 一个更好的示范；4. 是否达到本关可迁移的入门水准。若信息不足，请明确指出，不要代替我补写。`;
+    return `请作为严格但鼓励的 Codex AI 教练，审核我在《AI 从业者闯关之路》的当前学习证据。\n\n【关卡】第 ${level.id} 关：${level.name}\n【主线任务】${level.mission}\n【今日模式】${mode.label}\n【行动 XP】${state.xp}（只代表行动，不代表掌握）\n【旧版复盘记录】${completedGateCount(level.id)}/4\n\n【闭卷解释】\n${gates.explain.answer || "未提交"}\n\n【变式任务】\n题目：${TRAINING[level.id].transfer}\n答案：${gates.transfer.answer || "未提交"}\n\n【项目产物】\n${artifact.body || "未提交"}\n\n【证据与限制】\n${artifact.evidence || "未提交"}\n\n【未解决问题】\n${questions}\n\n【本关硬失败】\n${level.hardFail}\n\n请给出：1. 每项评分与理由；2. 最需要改进的两点；3. 一个更好的示范；4. 是否达到本题当前评分标准；若不足，请说明仍缺什么证据。若信息不足，请明确指出，不要代替我补写。`;
   }
 
   function copyCodexPacket() {
@@ -964,16 +1088,29 @@
       shake("请把问题写具体一些。 ");
       return;
     }
-    state.questions.push({ id: `${Date.now()}-${Math.random().toString(16).slice(2)}`, text: clean, createdAt: Date.now() });
-    saveState();
+    const previousQuestions = state.questions;
+    state.questions = previousQuestions.concat({ id: `${Date.now()}-${Math.random().toString(16).slice(2)}`, text: clean, createdAt: Date.now() });
+    const persisted = saveState();
+    if (!persisted) {
+      state.questions = previousQuestions;
+      renderWorld();
+      showToast("存储写入失败：问题未加入队列，输入仍保留在表单中，请调整浏览器存储后重试。 ");
+      return;
+    }
     renderWorld();
     refreshDrawer("问题队列", renderQuestions());
     showToast("问题已加入队列。 ");
   }
 
   function deleteQuestion(id) {
-    state.questions = state.questions.filter((question) => question.id !== id);
-    saveState();
+    const previousQuestions = state.questions;
+    state.questions = previousQuestions.filter((question) => question.id !== id);
+    if (!saveState()) {
+      state.questions = previousQuestions;
+      renderWorld();
+      showToast("存储写入失败：问题未删除，请调整浏览器存储后重试。 ");
+      return;
+    }
     renderWorld();
     refreshDrawer("问题队列", renderQuestions());
   }
@@ -988,11 +1125,11 @@
   function renderArtifact() {
     const level = currentLevel();
     const artifact = state.artifacts[level.id];
-    const ready = completedGateCount(level.id) === 4;
+    const ready = Boolean(artifact.updatedAt);
     return `
-      <p class="pg-panel-intro">每一关必须留下一个可以被别人检查的真实产物。四道证据门完成后，作品才获得“本关完成”状态。</p>
+      <p class="pg-panel-intro">建议为本关留下一个可以被别人检查的真实产物。产物与四份复盘记录均为建议复盘内容，不计入本站完成状态。</p>
       <section class="pg-panel-card${ready ? " is-complete" : ""}">
-        <div class="pg-card-heading"><h3>${escapeHtml(level.artifact)}</h3><span class="pg-status${ready ? " is-complete" : ""}">${ready ? "已解锁" : `${completedGateCount(level.id)}/4 证据`}</span></div>
+        <div class="pg-card-heading"><h3>${escapeHtml(level.artifact)}</h3><span class="pg-status${ready ? " is-complete" : ""}">${ready ? "已保存" : "待保存"}</span></div>
         <form data-form="artifact">
           <label class="pg-form-label" for="pg-artifact-body">产物正文或关键摘要</label>
           <textarea class="pg-textarea" id="pg-artifact-body" name="body" required minlength="120">${escapeHtml(artifact.body)}</textarea>
@@ -1011,16 +1148,35 @@
       shake("产物正文至少 120 字，证据与限制至少 40 字。 ");
       return;
     }
-    const artifact = state.artifacts[state.activeLevel];
-    const first = !artifact.updatedAt;
-    artifact.body = body;
-    artifact.evidence = evidence;
-    artifact.updatedAt = Date.now();
+    const levelKey = String(state.activeLevel);
+    const target = state.artifacts[state.activeLevel];
+    const first = !target.updatedAt;
+    /* 不可变更新：新建本关产物对象（保留 target 的额外字段，再覆盖本次提交），
+       并新建整个 artifacts 对象，绝不原地修改与 rawArtifactsSnapshot 共享的引用。
+       这样 setItem 失败时 snapshot 保持上一次成功内容，后续普通保存不会落盘失败内容。 */
+    const nextArtifact = { ...target, body: body, evidence: evidence, updatedAt: Date.now() };
+    const nextArtifacts = { ...state.artifacts, [levelKey]: nextArtifact };
+    /* 原始 subtree 里本关以外的条目（未知 id、非标准值如显式 null）原样并入 */
+    if (rawArtifactsSnapshot && typeof rawArtifactsSnapshot === "object" && !Array.isArray(rawArtifactsSnapshot)) {
+      Object.keys(rawArtifactsSnapshot).forEach((key) => {
+        if (key !== levelKey) nextArtifacts[key] = rawArtifactsSnapshot[key];
+      });
+    }
+    const previousArtifacts = state.artifacts;
+    const previousXp = state.xp;
+    state.artifacts = nextArtifacts;
     if (first) state.xp += 12;
-    saveState();
+    const persisted = saveState({ writeArtifacts: true });
+    if (!persisted) {
+      state.artifacts = previousArtifacts;
+      state.xp = previousXp;
+      renderWorld();
+      showToast("存储写入失败：本次产物未保存，输入仍保留在表单中，请调整浏览器存储后重试。 ");
+      return;
+    }
     renderWorld();
     refreshDrawer("项目作品陈列门", renderArtifact());
-    showToast("项目产物已保存；是否通关仍由四道证据门决定。 ");
+    showToast("项目产物已保存；产物只作为建议复盘记录，不计入本站完成状态。");
   }
 
   function copyArtifactPacket() {
@@ -1031,7 +1187,6 @@
   }
 
   function renderDaily() {
-    const unlock = unlockedLevel();
     return `
       <p class="pg-panel-intro">先根据当天精力选择时间预算，再给自己一个不可删减的学习闭环。90 分钟不是默认义务。</p>
       <div class="pg-mode-grid">
@@ -1042,10 +1197,10 @@
           </button>`).join("")}
       </div>
       <section class="pg-panel-card">
-        <div class="pg-card-heading"><h3>选择已解锁关卡</h3><span class="pg-status">最高第 ${unlock} 关</span></div>
+        <div class="pg-card-heading"><h3>选择学习关卡</h3><span class="pg-status">全部可进入</span></div>
         <div class="pg-level-grid">
           ${LEVELS.map((level) => `
-            <button class="pg-level-card${state.activeLevel === level.id ? " is-selected" : ""}" data-action="choose-level" data-level="${level.id}" ${level.id > unlock ? "disabled" : ""}>
+            <button class="pg-level-card${state.activeLevel === level.id ? " is-selected" : ""}" data-action="choose-level" data-level="${level.id}">
               <strong>第 ${level.id} 关 · ${escapeHtml(level.name)}</strong>
               <span>${escapeHtml(level.artifact)}</span>
             </button>`).join("")}
@@ -1055,10 +1210,6 @@
   }
 
   function chooseLevel(levelId) {
-    if (levelId > unlockedLevel()) {
-      shake("先完成上一关四道证据门。 ");
-      return;
-    }
     state.activeLevel = levelId;
     saveState();
     renderWorld();
@@ -1075,13 +1226,17 @@
           <div class="pg-role"><strong>Notion · 知识层</strong><span>保存中英文术语、基础概念、例子、误区和长期笔记。</span></div>
           <div class="pg-role"><strong>Codex · 反馈层</strong><span>负责讲解、追问、评分、纠错、审核和弱点跟踪。</span></div>
         </div>
+        <details class="pg-disclosure">
+          <summary>本地记录与隐私说明</summary>
+          <div class="pg-callout"><strong>本地记录说明：</strong>这是独立训练工具，不是任何机构的官方课程或考试。学习记录只保存在当前浏览器的当前网址，不同域名和设备不会自动同步；当前“导出”只含旧版基础进度，不含我的复盘、统一训练成绩和公会证据。换网址、换设备或清理数据前，请另行复制关键内容。网页不会自动读取你的 Codex 对话。</div>
+        </details>
         <div class="pg-form-actions"><button class="pg-secondary" data-action="copy-notion">复制 Notion 笔记模板</button></div>
       </section>`;
   }
 
   function copyNotionTemplate() {
     const level = currentLevel();
-    const template = `# 第 ${level.id} 关：${level.name}\n\n## 1. 本节一句话\n- 我能用自己的话解释：\n\n## 2. 术语表 Terms\n| 中文 | English | 缩写 | 我的解释 | 例子 | 易错点 |\n|---|---|---|---|---|---|\n|  |  |  |  |  |  |\n\n## 3. 基础知识\n- 它解决什么问题：\n- 输入是什么：\n- 输出是什么：\n- 关键约束：\n- 不适用边界：\n\n## 4. 能力证据\n- 闭卷解释：\n- 变式任务：\n- 项目产物：${level.artifact}\n- 72h 复测结果：\n\n## 5. Codex 反馈\n- 得分：\n- 最大错误：\n- 修改前：\n- 修改后：\n\n## 6. 未解决问题\n- [ ] \n\n## 7. 复习触发器\n- 72 小时：\n- 7 天：\n- 14 天：`;
+    const template = `# 第 ${level.id} 关：${level.name}\n\n## 1. 本节一句话\n- 我能用自己的话解释：\n\n## 2. 术语表 Terms\n| 中文 | English | 缩写 | 我的解释 | 例子 | 易错点 |\n|---|---|---|---|---|---|\n|  |  |  |  |  |  |\n\n## 3. 基础知识\n- 它解决什么问题：\n- 输入是什么：\n- 输出是什么：\n- 关键约束：\n- 不适用边界：\n\n## 4. 旧版复盘记录\n- 闭卷解释：\n- 变式任务：\n- 项目产物：${level.artifact}\n- 72h 复测结果：\n\n## 5. Codex 反馈\n- 得分：\n- 最大错误：\n- 修改前：\n- 修改后：\n\n## 6. 未解决问题\n- [ ] \n\n## 7. 复习触发器\n- 72 小时：\n- 7 天：\n- 14 天：`;
     copyText(template, "Notion 笔记模板已复制。 ");
   }
 
@@ -1238,7 +1393,7 @@
       return {
         stage: 2,
         action: "codex",
-        title: "Codex 审核室 · 提交两份证据",
+        title: "Codex 审核室 · 整理两份复盘记录",
         hint: "由 Codex 评分、指出问题并完成修订。",
         button: "提交 Codex 审核",
         libraryDone,
@@ -1250,9 +1405,9 @@
       return {
         stage: 3,
         action: "retest",
-        title: "72h 复测塔 · 验证长期掌握",
-        hint: "等待开放后，不看笔记完成新的迁移题。",
-        button: "查看 72h 复测",
+        title: "间隔复训 · 验证保持",
+        hint: "隔一段时间后，不看笔记完成新的一轮训练。",
+        button: "查看间隔复训",
         libraryDone,
         gates,
       };
@@ -1261,8 +1416,8 @@
     return {
       stage: 4,
       action: "artifact",
-      title: "作品门 · 归档本关能力证据",
-      hint: "保存最终版本、评分和修订记录，再进入下一关。",
+      title: "作品归档 · 保存本关产物记录",
+      hint: "保存产物、评分和修订记录；这只是建议复盘记录，不影响进入其它关卡。",
       button: "归档本关作品",
       libraryDone,
       gates,
@@ -1302,7 +1457,7 @@
     const note = header.querySelector(".pg-legacy-note");
     if (title) title.textContent = "课程书库 · 本关学习";
     if (note) {
-      note.textContent = "阅读本关课卡并完成能力卡；训练与验收回公会继续。";
+      note.textContent = "阅读本关课卡并完成能力卡；训练与旧版复盘回公会继续。";
     }
 
     const overlay = document.querySelector("#pg-legacy-overlay");
@@ -1370,7 +1525,7 @@
       primary.setAttribute("aria-label", next.button);
     }
 
-    document.querySelector("#pg-gates")?.setAttribute("aria-label", "本关四份验收证据");
+    document.querySelector("#pg-gates")?.setAttribute("aria-label", "本关四份旧版复盘记录");
 
     document.querySelectorAll("[data-action]").forEach((control) => {
       if (control === primary) return;
@@ -1442,7 +1597,7 @@
         const currentMask = overlay.querySelector("#mask.on");
         if (
           currentMask &&
-          currentMask.textContent.includes("通关目标") &&
+          currentMask.textContent.includes("本关目标") &&
           !currentMask.textContent.includes("本节能力卡")
         ) {
           currentMask

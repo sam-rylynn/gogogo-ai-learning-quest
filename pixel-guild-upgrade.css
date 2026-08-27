@@ -61,6 +61,8 @@ body.pg-active {
   position: fixed;
   inset: 0;
   z-index: 9000;
+  display: flex;
+  flex-direction: column;
   min-width: 320px;
   overflow: hidden;
   background: var(--pg-ink);
@@ -69,9 +71,9 @@ body.pg-active {
 }
 
 .pg-hud {
-  position: absolute;
-  inset: 0 0 auto 0;
+  position: relative;
   z-index: 20;
+  flex: 0 0 auto;
   height: 76px;
   display: grid;
   grid-template-columns: minmax(250px, 1.3fr) minmax(170px, 0.8fr) minmax(150px, 0.72fr) auto auto;
@@ -190,8 +192,9 @@ body.pg-active {
 }
 
 .pg-stage {
-  position: absolute;
-  inset: 76px 0 0;
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: hidden;
   background: #070d14;
 }
@@ -495,10 +498,9 @@ body.pg-active {
   right: 18px;
   bottom: 18px;
   z-index: 7;
-  display: flex;
-  width: max-content;
-  max-width: calc(100vw - 250px);
-  overflow-x: auto;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  width: min(640px, calc(100vw - 36px));
   background: rgba(7, 14, 22, 0.96);
   border: 2px solid #6a4b2c;
   box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.7);
@@ -506,8 +508,9 @@ body.pg-active {
 }
 
 .pg-location-strip button {
-  flex: 0 0 auto;
-  padding: 10px 15px;
+  min-width: 0;
+  padding: 10px 6px;
+  overflow: hidden;
   background: transparent;
   border: 0;
   border-right: 1px solid #34495b;
@@ -516,6 +519,8 @@ body.pg-active {
   font-family: var(--pg-pixel-font);
   font-size: 11px;
   font-weight: 800;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .pg-location-strip button:hover,
@@ -715,6 +720,29 @@ body.pg-active {
   background: #2b1718;
   border-left-color: var(--pg-red);
   color: #ffd0cb;
+}
+
+.pg-disclosure {
+  margin: 12px 0;
+  border: 2px solid #3c566b;
+  background: #07111b;
+}
+
+.pg-disclosure summary {
+  padding: 10px 12px;
+  color: #b9c8d3;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.pg-disclosure[open] summary {
+  border-bottom: 1px solid #3c566b;
+}
+
+.pg-disclosure .pg-callout {
+  margin: 0;
+  border-left-width: 0;
 }
 
 .pg-progress-route {
@@ -970,11 +998,6 @@ body.pg-active {
     font-size: 11px;
   }
 
-  .pg-stage {
-    inset-top: 68px;
-    top: 68px;
-  }
-
   .pg-scene {
     background-size: auto 100%;
   }
@@ -1034,12 +1057,11 @@ body.pg-active {
     right: 8px;
     bottom: 8px;
     width: auto;
-    max-width: none;
   }
 
   .pg-location-strip button {
-    flex: 1 0 auto;
-    padding: 9px 11px;
+    min-width: 0;
+    padding: 9px 2px;
     font-size: 10px;
   }
 

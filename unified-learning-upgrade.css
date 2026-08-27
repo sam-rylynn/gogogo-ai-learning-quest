@@ -11,6 +11,8 @@
   --ul-red: #ff796f;
   --ul-shadow: #02060b;
   --ul-font: "Fusion Pixel 12px Proportional SC", "ZCOOL KuaiLe", "PingFang SC", sans-serif;
+  --ul-pixel: "Fusion Pixel 12px Proportional SC", "ZCOOL KuaiLe", "PingFang SC", sans-serif;
+  --ul-body-font: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
 }
 
 body.ul-locked {
@@ -25,7 +27,7 @@ body.ul-locked {
   place-items: center;
   padding: 18px;
   color: var(--ul-ink);
-  font-family: var(--ul-font);
+  font-family: var(--ul-body-font);
   background:
     linear-gradient(rgba(4, 10, 18, .88), rgba(4, 10, 18, .96)),
     repeating-linear-gradient(0deg, transparent 0 3px, rgba(71, 215, 223, .04) 3px 4px);
@@ -36,11 +38,39 @@ body.ul-locked {
   display: none;
 }
 
+/* 像素字体只用于标题、标签、按钮和数字；多行正文用系统字体。 */
+.ul-brand,
+.ul-kicker,
+.ul-page-head h2,
+.ul-lesson-title,
+.ul-question-card h2,
+.ul-chip,
+.ul-nav button,
+.ul-button,
+.ul-icon-button,
+.ul-level-tab,
+.ul-stat strong,
+.ul-book-meta,
+.ul-reflection-card em,
+.ul-boundary-note {
+  font-family: var(--ul-font);
+}
+
+.ul-boundary-note {
+  margin: 0;
+  padding: 8px 18px;
+  border-bottom: 2px solid var(--ul-line);
+  color: var(--ul-gold);
+  font-size: 12px;
+  line-height: 1.6;
+  background: #0a1727;
+}
+
 .ul-window {
   width: min(1180px, 100%);
   height: min(880px, calc(100vh - 36px));
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
   overflow: hidden;
   border: 3px solid var(--ul-gold);
   outline: 5px solid var(--ul-shadow);
@@ -93,6 +123,7 @@ body.ul-locked {
   height: auto !important;
   transform: none !important;
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 5px;
   border: 2px solid #263d59;
@@ -700,7 +731,11 @@ body.ul-locked {
 }
 
 .ul-back {
+  position: sticky;
+  top: 0;
+  z-index: 5;
   margin-bottom: 16px;
+  box-shadow: 0 6px 0 rgba(2, 6, 11, .55);
 }
 
 .ul-lesson-shell {
@@ -845,9 +880,12 @@ body.ul-locked {
 
 .ul-depth-table {
   display: block;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
   margin: 16px 0 24px;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  contain: inline-size;
   border-collapse: collapse;
   white-space: normal;
 }
@@ -2122,6 +2160,39 @@ body.ul-locked {
   cursor: pointer;
   font-size: 12.5px;
   font-weight: 700;
+  text-decoration: none;
+}
+
+/* ---- 旧作存档（只读） ---- */
+.ul-artifact-list {
+  display: grid;
+  gap: 14px;
+}
+
+.ul-artifact-card {
+  padding: 16px 18px;
+  border: 2px solid #2b4260;
+  background: #0d1a2c;
+}
+
+.ul-artifact-card h3 {
+  margin: 0 0 10px;
+  color: var(--ul-gold);
+  font-size: 16px;
+}
+
+.ul-artifact-card small {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--ul-cyan);
+  font-size: 12px;
+}
+
+.ul-artifact-card p {
+  margin: 0 0 12px;
+  color: var(--ul-muted);
+  line-height: 1.7;
+  white-space: pre-wrap;
 }
 
 /* ---- 反思即时反馈对照 ---- */
