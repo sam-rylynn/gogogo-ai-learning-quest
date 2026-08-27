@@ -20,7 +20,14 @@ cp advanced-certificate-expansion.js \
    "$STAGE/"
 cp "AI从业者闯关之路.html" "$STAGE/course.html"
 cp "AI从业者闯关之路.html" "$STAGE/index.html"
-cp -R assets "$STAGE/assets"
+mkdir -p "$STAGE/assets/fonts"
+cp assets/pixel-guild-hall.webp \
+   assets/pixel-learner-portrait.webp \
+   assets/pixel-quest-board.webp \
+   "$STAGE/assets/"
+cp assets/fonts/fusion-pixel-12px-proportional-zh-hans.woff2 \
+   assets/fonts/LICENSE-OFL.txt \
+   "$STAGE/assets/fonts/"
 
 npx --yes wrangler@latest pages deploy "$STAGE" \
   --project-name=gogogo-ai-quest \

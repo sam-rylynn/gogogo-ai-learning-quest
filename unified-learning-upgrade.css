@@ -2569,7 +2569,7 @@ body.ul-locked {
   padding: 0 0 15px;
 }
 
-/* Personal review: user-authored evidence and explicit Codex handoff. */
+/* Personal review: user-authored evidence and explicit Agent handoff. */
 .ul-training-note-gate {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

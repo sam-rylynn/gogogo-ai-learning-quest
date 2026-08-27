@@ -344,7 +344,7 @@
   app.innerHTML = `
     <header class="pg-hud">
       <div class="pg-identity">
-        <img class="pg-avatar" src="assets/pixel-learner-portrait.png" alt="学习者像素头像">
+        <img class="pg-avatar" src="assets/pixel-learner-portrait.webp?v=20260827-webp1" alt="学习者像素头像">
         <div>
           <p class="pg-kicker">GOGO GO 冒险公会</p>
           <h1>AI 从业者闯关之路</h1>
@@ -392,7 +392,7 @@
               <path d="M454 597 L480 604 L496 622 L505 642 L527 650 L516 674 L499 665 L501 707 L520 748 L493 756 L480 713 L468 712 L457 756 L430 750 L445 705 L440 670 L424 652 L434 624 Z"></path>
             </clipPath>
           </defs>
-          <image href="assets/pixel-guild-hall.png" width="1536" height="1024" preserveAspectRatio="none" clip-path="url(#pg-foreground-actor-clip)"></image>
+          <image href="assets/pixel-guild-hall.webp?v=20260827-webp1" width="1536" height="1024" preserveAspectRatio="none" clip-path="url(#pg-foreground-actor-clip)"></image>
         </svg>
         <div class="pg-mentor" id="pg-mentor">学习顺序：书库输入并写自己的话，训练诊断，复盘处理真实理解与错误，72h 再验证。</div>
         <div class="pg-controls" aria-hidden="true">

@@ -204,7 +204,7 @@ body.pg-active {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  background-image: url("assets/pixel-guild-hall.png");
+  background-image: url("assets/pixel-guild-hall.webp?v=20260827-webp1");
   background-repeat: no-repeat;
   background-position: calc(50% + var(--camera-x)) 50%;
   background-size: cover;
@@ -299,7 +299,7 @@ body.pg-active {
   align-items: stretch;
   justify-content: center;
   padding: 52px 48px 40px;
-  background-image: url("assets/pixel-quest-board.png");
+  background-image: url("assets/pixel-quest-board.webp?v=20260827-webp1");
   background-position: center;
   background-repeat: no-repeat;
   background-size: 100% 100%;
@@ -1123,7 +1123,7 @@ body.pg-active {
     height: auto;
     min-height: 330px;
     padding: 56px 44px 42px;
-    background-image: url("assets/pixel-quest-board.png");
+    background-image: url("assets/pixel-quest-board.webp?v=20260827-webp1");
     background-position: center;
     background-repeat: no-repeat;
     background-size: 100% 100%;
