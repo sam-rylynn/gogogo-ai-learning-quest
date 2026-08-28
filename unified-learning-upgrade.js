@@ -428,7 +428,7 @@
     overlay.innerHTML =
       '<div class="ul-window" role="dialog" aria-modal="true" aria-labelledby="ul-brand-title">' +
         '<header class="ul-topbar">' +
-          '<div class="ul-brand"><small>GOGO GO / LEARNING QUEST</small><strong id="ul-brand-title">统一学习舱</strong></div>' +
+          '<div class="ul-brand"><small>GOGO / AI QUEST</small><strong id="ul-brand-title">统一学习舱</strong></div>' +
           '<nav class="ul-nav" aria-label="学习流程">' +
             '<button data-ul-action="library">课程书库</button>' +
             '<button data-ul-action="key-notes">我的复盘</button>' +
@@ -437,7 +437,7 @@
           '</nav>' +
           '<button class="ul-icon-button" data-ul-action="close" aria-label="关闭">X</button>' +
         '</header>' +
-        '<p class="ul-boundary-note">独立训练工具 · 非任何机构官方课程或考试｜学习记录仅保存在当前浏览器的当前网址，不同域名和设备不会自动同步；“导出”只含旧版基础进度，不含复盘、训练成绩和公会证据；网页不会自动读取你的 Agent 对话</p>' +
+        '<p class="ul-boundary-note"><span>进度仅保存在当前浏览器；换设备、换网址或清理数据前请下载完整备份。</span><button class="ul-boundary-action" data-ul-action="data-manager">数据管理</button></p>' +
         '<main class="ul-content" id="ul-content"></main>' +
       '</div>';
     document.body.appendChild(overlay);
@@ -871,7 +871,7 @@
         '<div class="is-good"><span>回执通过</span><strong>' + counts.confirmed + '</strong></div>' +
         '<div><span>当前错题</span><strong>' + wrongIds(levelIndex).length + '</strong></div>' +
       '</section>' +
-      '<section class="ul-review-handoff"><span>AGENT HANDOFF</span><p><strong>网页不会自动读取你的 Agent 对话。</strong>先复制审核包，粘贴到你的 Agent，再把三行关键反馈带回这里保存。</p></section>' +
+      '<section class="ul-review-handoff"><span>AGENT HANDOFF</span><p><strong>网页不会自动读取你的 Agent 对话。</strong>先复制审核包，粘贴到你的 Agent，再把三行关键反馈带回这里保存。</p><button class="ul-button is-cyan" data-ul-action="copy-full-snapshot" data-ul-prompt="review">复制完整学习快照</button></section>' +
       reviewTrainingEvidenceHtml(levelIndex) +
       reviewSignalsHtml(levelIndex) +
       '<section class="ul-review-toolbar"><div role="group" aria-label="复盘筛选"><button class="ul-review-filter' + (reviewFilter === "pending" ? " is-active" : "") + '" data-ul-action="review-filter" data-filter="pending" aria-pressed="' + (reviewFilter === "pending" ? "true" : "false") + '">待处理</button><button class="ul-review-filter' + (reviewFilter === "confirmed" ? " is-active" : "") + '" data-ul-action="review-filter" data-filter="confirmed" aria-pressed="' + (reviewFilter === "confirmed" ? "true" : "false") + '">回执通过</button></div>' + primaryAction + '</section>' +
@@ -886,7 +886,7 @@
     var answer = (answerOverride !== undefined ? String(answerOverride) : reflectionValue(levelIndex, lessonIndex)).trim();
     var checks = Array.isArray(lesson.reflectionChecks) ? lesson.reflectionChecks : [];
     var doubt = lessonNoteValue(levelIndex, lessonIndex).trim();
-    return "请作为严格但鼓励的 AI 从业者教练，只审核这一张课卡的理解表达。不要替我写最终答案，也不要给虚假的精确分数。\n\n" +
+    return "请作为严格但鼓励的 AI 学习教练，只审核这一张课卡的理解表达。不要替我写最终答案，也不要给虚假的精确分数。\n\n" +
       "【关卡】" + levelName(levelIndex) + "\n" +
       "【课卡】" + lessonName(lesson, lessonIndex) + "\n" +
       "【表达题】" + (lesson.reflectionPrompt || "") + "\n" +
@@ -1519,7 +1519,7 @@
       if (!item) return "";
       return (index + 1) + ". " + item.q + "\n正确答案：" + item.options[item.answer] + "\n页面解释：" + item.explain;
     }).filter(Boolean).join("\n\n");
-    return "请继续作为我的长期 AI 从业者教练，帮我复盘《GOGO GO · AI 从业者闯关之路》的客观训练。\n\n" +
+    return "请继续作为我的长期 AI 学习教练，帮我复盘《GOGO · AI 闯关地图》的客观训练。\n\n" +
       "【当前关卡】" + levelName(levelIndex) + "\n" +
       "【最近成绩】" + (result.score == null ? "暂无" : result.score + " 分（" + result.correct + "/" + result.total + "）") + "\n" +
       "【仍未消除的错题】" + ids.length + " 道\n\n" +
@@ -1744,6 +1744,20 @@
     if (action === "copy-review-packet") copyReflectionReviewPacket(Number(button.dataset.level), Number(button.dataset.lesson));
     if (action === "save-review-receipt") saveReflectionReviewReceipt(button);
     if (action === "view-doubts") renderDoubts();
+    if (action === "copy-full-snapshot") {
+      var snapshotHub = window.GOGOGO_PROGRESS_HUB;
+      if (snapshotHub && typeof snapshotHub.copyFullAgentSnapshot === "function") snapshotHub.copyFullAgentSnapshot(button.dataset.ulPrompt || "review");
+      else notify("完整学习快照模块未就绪，请刷新页面后重试");
+    }
+    if (action === "data-manager") {
+      var dataHub = window.GOGOGO_PROGRESS_HUB;
+      if (!dataHub || typeof dataHub.openDataManager !== "function") {
+        notify("数据管理模块未就绪，请刷新页面后重试");
+      } else {
+        closeOverlay();
+        window.setTimeout(function () { dataHub.openDataManager(); }, 360);
+      }
+    }
   }
 
   function notify(message) {
@@ -1823,7 +1837,7 @@
     var target = event.target.closest("[data-action]");
     if (!target) return;
     var action = target.dataset.action;
-    if (action !== "library" && action !== "workshop" && action !== "codex" && action !== "evidence" && action !== "retest" && action !== "artifact") return;
+    if (action !== "library" && action !== "workshop" && action !== "codex" && action !== "retest" && action !== "artifact") return;
     event.preventDefault();
     event.stopImmediatePropagation();
     syncActiveLevelToHome();
@@ -1941,6 +1955,8 @@
     ensureOverlay();
     document.addEventListener("click", interceptLegacyActions, true);
     document.addEventListener("keydown", function (event) {
+      var glossaryOverlay = document.querySelector(".gc-overlay");
+      if (glossaryOverlay && !glossaryOverlay.hidden) return;
       if (event.key === "Escape" && overlay && !overlay.hidden) {
         event.preventDefault();
         closeOverlay();

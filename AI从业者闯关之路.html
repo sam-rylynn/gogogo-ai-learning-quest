@@ -3,7 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GOGO GO · AI 从业者闯关之路 v2</title>
+<title>GOGO · AI 闯关地图</title>
+<meta name="description" content="边学边练，把学习快照交给 Agent 复盘。通过课卡、训练、错题和项目证据，完成可验证的 AI 能力闯关。">
+<meta name="theme-color" content="#07111d">
+<link rel="canonical" href="https://learn.zhixng.cn/course">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GOGO">
+<meta property="og:title" content="GOGO · AI 闯关地图">
+<meta property="og:description" content="边学边练，把学习快照交给 Agent 复盘。通过课卡、训练、错题和项目证据，完成可验证的 AI 能力闯关。">
+<meta property="og:url" content="https://learn.zhixng.cn/course">
+<meta property="og:image" content="https://learn.zhixng.cn/assets/pixel-guild-hall.webp">
+<meta property="og:image:type" content="image/webp">
+<meta property="og:image:width" content="1586">
+<meta property="og:image:height" content="992">
+<meta property="og:image:alt" content="GOGO AI 闯关地图像素学习大厅">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="GOGO · AI 闯关地图">
+<meta name="twitter:description" content="边学边练，把学习快照交给 Agent 复盘，完成可验证的 AI 能力闯关。">
+<meta name="twitter:image" content="https://learn.zhixng.cn/assets/pixel-guild-hall.webp">
+<meta name="twitter:image:alt" content="GOGO AI 闯关地图像素学习大厅">
 <style>
   :root{
     --bg:#0e1120; --bg2:#141a30; --card:#1a2138; --card2:#212a4a;
@@ -259,7 +278,7 @@
     .note-grid{grid-template-columns:1fr}
   }
 </style>
-  <link rel="stylesheet" href="pixel-guild-upgrade.css?v=20260827-webp1" data-pixel-upgrade>
+  <link rel="stylesheet" href="pixel-guild-upgrade.css?v=20260828-data11" data-pixel-upgrade>
   <link rel="stylesheet" href="glossary-cards.css?v=20260727-1" data-glossary-cards>
 </head>
 <body>
@@ -267,7 +286,7 @@
 <div id="app">
   <header>
     <div class="hd-row">
-      <div class="logo">GOGO GO · <span>AI 从业者闯关之路</span></div>
+      <div class="logo">GOGO · <span>AI 闯关地图</span></div>
       <div class="xp-pill">⚡ <b id="xpNum">0</b> XP</div>
     </div>
     <div class="title-bar">
@@ -309,11 +328,11 @@
       <div class="stat"><b id="stCard">0</b><span>复习卡</span></div>
     </div>
     <div class="plist" id="meLevels"></div>
-    <button class="btn ghost" id="btnExport">📤 导出旧版基础进度（仅部分记录）</button>
-    <textarea id="ioArea" style="height:90px" class="code" placeholder="这里只导出旧版基础进度 JSON，不含我的复盘、统一训练成绩和公会证据；重要内容请另行复制保存"></textarea>
-    <button class="btn ghost" id="btnImport">📥 导入旧版基础进度</button>
+    <button class="btn ghost" id="btnExport">🛡️ 打开完整进度备份</button>
+    <textarea id="ioArea" style="height:90px" class="code" readonly placeholder="完整进度备份与恢复已移至“数据管理”，覆盖课程、训练、复盘、Agent 回执、公会证据和流程状态。"></textarea>
+    <button class="btn ghost" id="btnImport">📥 打开完整进度恢复</button>
     <button class="btn ghost" id="btnHelp">❓ 玩法说明</button>
-    <button class="btn danger" id="btnReset">重置旧版基础进度</button>
+    <button class="btn danger" id="btnReset">仅重置旧版基础进度</button>
   </div>
 
   <nav>
@@ -329,7 +348,7 @@
 
 <script>
 /* ================================================================
-   GOGO GO · AI 从业者闯关之路 v2
+   GOGO · AI 闯关地图
    每关三段式：📖 学（精读课卡）→ 🎮 练（页内互动练习，系统判分）
    → ⚔️ 战（可选满分挑战复习，不计入本站完成状态）。全部数据在 GAME_DATA，可复制修改。
 ================================================================ */
@@ -883,6 +902,21 @@ function load(){
     if(st.challenge===undefined) st.challenge=!!st.quiz;
   });
   if(!S.xpReceipts || typeof S.xpReceipts!=="object" || Array.isArray(S.xpReceipts)) S.xpReceipts={};
+  var safeStreak=Number(S.streak);
+  S.streak=Number.isFinite(safeStreak)?Math.max(0,Math.floor(safeStreak)):0;
+  if(!S.skills || typeof S.skills!=="object" || Array.isArray(S.skills)) S.skills={};
+  GAME_DATA.tree.forEach(function(t){t.skills.forEach(function(_,i){
+    var skillKey=t.id+i, skillValue=Number(S.skills[skillKey]);
+    S.skills[skillKey]=(skillValue===1||skillValue===2)?skillValue:0;
+  });});
+  if(!S.cards || typeof S.cards!=="object" || Array.isArray(S.cards)) S.cards={};
+  for(var cardKey in S.cards){
+    var cardState=S.cards[cardKey];
+    if(!cardState || typeof cardState!=="object" || Array.isArray(cardState)){ delete S.cards[cardKey]; continue; }
+    var cardBox=Number(cardState.box);
+    cardState.box=Number.isFinite(cardBox)?Math.max(0,Math.min(4,Math.floor(cardBox))):0;
+    if(typeof cardState.due!=="string" || !/^\d{4}-\d{2}-\d{2}$/.test(cardState.due)) cardState.due=todayStr();
+  }
   rolloverDaily(); rolloverWeekly();
 }
 function save(){
@@ -1602,14 +1636,17 @@ function renderCard(showBack){
     return;
   }
   var key=RV.queue[RV.idx], c=cardContent(key), cd=S.cards[key];
+  var safeBox=Number(cd&&cd.box); safeBox=Number.isFinite(safeBox)?Math.max(0,Math.min(4,Math.floor(safeBox))):0; cd.box=safeBox;
+  var face=showBack?c.b:c.f;
+  if(key.indexOf("wq_")===0) face=escNote(face);
   var html='<div class="wk">📚 复习 · 第 '+(RV.idx+1)+"/"+RV.queue.length+' 张</div>'
-    +'<div class="fc-meta">熟练度 '+"▁▂▃▅▇"[Math.min(cd.box,4)]+' · 盒子 '+(cd.box+1)+"/5"+'</div>'
-    +'<div class="fc'+(showBack?" back-side":"")+'">'+(showBack?c.b:c.f)+'</div>';
+    +'<div class="fc-meta">熟练度 '+"▁▂▃▅▇"[safeBox]+' · 盒子 '+(safeBox+1)+"/5"+'</div>'
+    +'<div class="fc'+(showBack?" back-side":"")+'">'+face+'</div>';
   if(!showBack){
     html+='<button class="btn primary" id="fcFlip">翻开答案</button>';
   } else {
     html+='<div class="fc-btns"><button class="btn forget" id="fcNo">😵 忘了<br><span style="font-size:10px;font-weight:400">明天再见</span></button>'
-      +'<button class="btn remember" id="fcYes">😎 记得<br><span style="font-size:10px;font-weight:400">'+INTERVALS[Math.min(cd.box+1,4)]+' 天后见</span></button></div>';
+      +'<button class="btn remember" id="fcYes">😎 记得<br><span style="font-size:10px;font-weight:400">'+INTERVALS[Math.min(safeBox+1,4)]+' 天后见</span></button></div>';
   }
   openSheet(html);
   if(!showBack){
@@ -1629,7 +1666,7 @@ function renderCard(showBack){
 function renderTree(){
   var wrap=document.getElementById("treeWrap"); wrap.innerHTML="";
   GAME_DATA.tree.forEach(function(t){
-    var states=t.skills.map(function(_,i){return S.skills[t.id+i]||0;});
+    var states=t.skills.map(function(_,i){var value=Number(S.skills[t.id+i]); return value===1||value===2?value:0;});
     var pct=Math.round(states.reduce(function(a,b){return a+b;},0)/(t.skills.length*2)*100);
     var div=document.createElement("div"); div.className="layer";
     var chips="";
@@ -1656,6 +1693,7 @@ function renderTree(){
 /* ================= daily ================= */
 function renderDaily(){
   rolloverDaily(); rolloverWeekly();
+  var safeStreak=Number(S.streak); safeStreak=Number.isFinite(safeStreak)?Math.max(0,Math.floor(safeStreak)):0; S.streak=safeStreak;
   var d=new Date(), wd="日一二三四五六"[d.getDay()];
   document.getElementById("todayStr").textContent=(d.getMonth()+1)+" 月 "+d.getDate()+" 日 · 周"+wd;
   document.getElementById("streakN").textContent=S.streak;
@@ -1670,7 +1708,7 @@ function renderDaily(){
   document.getElementById("rvBtn").onclick=startReview;
   var allDone=S.daily.steps.every(function(x){return x;});
   document.getElementById("dailyDone").innerHTML=allDone
-    ? '<div class="done-banner">🔥 今日 90 分钟完成！连续 '+S.streak+' 天</div>':"";
+    ? '<div class="done-banner">🔥 今日 90 分钟完成！连续 '+safeStreak+' 天</div>':"";
   var sw=document.getElementById("stepsWrap"); sw.innerHTML="";
   GAME_DATA.daily.forEach(function(s,i){
     var div=document.createElement("div");
@@ -1722,19 +1760,15 @@ function renderMe(){
   });
 }
 document.getElementById("btnExport").onclick=function(){
-  var j=JSON.stringify(S);
-  document.getElementById("ioArea").value=j;
-  copyText(j);
+  if(window.GOGOGO_PROGRESS_HUB && window.GOGOGO_PROGRESS_HUB.openDataManager){ window.GOGOGO_PROGRESS_HUB.openDataManager(); return; }
+  toast("完整备份模块未就绪，请刷新页面后重试");
 };
 document.getElementById("btnImport").onclick=function(){
-  try{
-    var v=document.getElementById("ioArea").value.trim();
-    if(!v){ toast("先把进度 JSON 粘贴到上方文本框"); return; }
-    S=JSON.parse(v); save(); load(); renderAll(); toast("旧版基础进度导入成功 ✅");
-  }catch(e){ toast("JSON 格式不对，导入失败"); }
+  if(window.GOGOGO_PROGRESS_HUB && window.GOGOGO_PROGRESS_HUB.openDataManager){ window.GOGOGO_PROGRESS_HUB.openDataManager(); return; }
+  toast("完整恢复模块未就绪，请刷新页面后重试");
 };
 document.getElementById("btnReset").onclick=function(){
-  if(confirm("确定重置旧版基础进度？这不会清除「我的复盘」、统一训练成绩和公会证据；现有导出也不包含这些内容。此操作不可恢复。")){
+  if(confirm("确定只重置旧版基础进度？这不会清除「我的复盘」、统一训练成绩和公会证据。操作前建议先在数据管理下载完整备份；此操作不可恢复。")){
     S=freshState(); S.intro=true; save(); renderAll(); toast("旧版基础进度已重置");
   }
 };
@@ -1750,7 +1784,7 @@ function showIntro(){
    +'</div><div class="goalbox">'
    +'<b>⚡ XP</b>课卡 +8 · 练习通过 +25 · 满分挑战每题 +30 · 复习 +2~3 · 技能自评 +15 · 打卡 +5 · 全勤 +20 · 周证据 +10。'
    +'</div><div class="goalbox">'
-   +'<b>🔁 可复制</b>导出只含旧版基础进度，不含我的复盘、统一训练成绩和公会证据；不同域名和设备之间不会自动同步，重要内容请另行复制保存。'
+   +'<b>🔁 可迁移</b>“数据管理”可以下载完整进度备份，覆盖课程、训练、错题、复盘、Agent 回执、公会证据和流程状态；不同网址和设备之间不会自动同步。'
    +'</div><button class="btn primary" id="introOk" style="margin-top:14px">开始闯关 →</button>');
   document.getElementById("introOk").onclick=function(){ S.intro=true; save(); closeSheet(); };
 }
@@ -1766,6 +1800,7 @@ function renderAll(){ renderHeader(); renderMap(); renderTree(); renderDaily(); 
 load(); renderAll();
 if(!S.intro) showIntro();
 document.getElementById("codexCheckin").onclick=function(){
+  if(window.GOGOGO_PROGRESS_HUB && window.GOGOGO_PROGRESS_HUB.copyFullAgentSnapshot){ window.GOGOGO_PROGRESS_HUB.copyFullAgentSnapshot("next"); return; }
   var levels=GAME_DATA.levels.map(function(l){
     return "• "+l.title+"：课卡 "+lesDone(l)+"/"+l.lessons.length+"，练习 "+exDone(l)+"/"+l.exercises.length+"，正式完成 "+(isDone(l)?"是":"否")+"，满分挑战 "+(S.levels[l.id].challenge?"有记录":"无记录");
   }).join("\n");
@@ -1778,19 +1813,20 @@ document.getElementById("codexCheckin").onclick=function(){
     }).join("\n");
   }).join("\n");
   var today=GAME_DATA.daily.map(function(d,i){return (S.daily.steps[i]?"✓ ":"□ ")+d[0];}).join("\n");
-  var snapshot="我正在使用《GOGO GO · AI 从业者闯关之路》学习。请继续作为我的长期 AI 从业者教练。\n\n【我的学习快照】\n经验值："+S.xp+"\n连续学习："+S.streak+" 天\n\n【各关进度】\n"+levels+"\n\n【第一关能力卡】\n"+notes+"\n\n【今日学习】\n"+today+"\n\n【我现在的问题或要提交的作业】\n（请在这里补充）\n\n请先根据我的进度判断最合适的下一步；如果我提交作业，按概念准确性、逻辑、可落地性和能力证据严格反馈；不要一次塞入多个新概念。";
+  var snapshot="我正在使用《GOGO · AI 闯关地图》学习。请继续作为我的长期 AI 学习教练。\n\n【我的学习快照】\n经验值："+S.xp+"\n连续学习："+S.streak+" 天\n\n【各关进度】\n"+levels+"\n\n【第一关能力卡】\n"+notes+"\n\n【今日学习】\n"+today+"\n\n【我现在的问题或要提交的作业】\n（请在这里补充）\n\n请先根据我的进度判断最合适的下一步；如果我提交作业，按概念准确性、逻辑、可落地性和能力证据严格反馈；不要一次塞入多个新概念。";
   copyText(snapshot);
   toast("学习快照已复制；粘贴到你的 Agent，即可获得解释、纠错和作业审核");
 };
 </script>
-  <link rel="stylesheet" href="unified-learning-upgrade.css?v=20260815-p0p1" data-unified-learning>
+  <link rel="stylesheet" href="unified-learning-upgrade.css?v=20260828-data11" data-unified-learning>
   <script src="curriculum-depth-upgrade.js?v=20260728-depth1" data-curriculum-depth></script>
   <script src="curriculum-detail-expansion.js?v=20260728-depth2" data-curriculum-detail></script>
   <script src="curriculum-beginner-reading.js?v=20260728-beginner1" data-curriculum-beginner></script>
   <script src="advanced-certificate-expansion.js?v=20260815-p0p1" data-curriculum-advanced></script>
   <script src="curriculum-reflection-prompts.js?v=20260804-reviewfix1" data-curriculum-reflections></script>
-  <script src="pixel-guild-upgrade.js?v=20260827-webp1" data-pixel-upgrade></script>
-  <script src="glossary-cards.js?v=20260815-p0p1" data-glossary-cards></script>
-  <script src="unified-learning-upgrade.js?v=20260827-agent1" data-unified-learning></script>
+  <script src="progress-backup.js?v=20260828-data11" data-progress-backup></script>
+  <script src="pixel-guild-upgrade.js?v=20260828-data11" data-pixel-upgrade></script>
+  <script src="glossary-cards.js?v=20260828-data11" data-glossary-cards></script>
+  <script src="unified-learning-upgrade.js?v=20260828-data11" data-unified-learning></script>
 </body>
 </html>

@@ -1,14 +1,18 @@
-# GOGO GO AI 从业者闯关之路
+# GOGO · AI 闯关地图
 
-一个面向 AI 从业者入门训练的像素风单页课程平台。课程包含知识学习、变式训练、Codex 审核、72 小时复测和项目证据积累。
+边学边练，把学习快照交给 Agent 复盘。它是一张从基础到实战的像素风 AI 能力闯关地图，包含课卡学习、变式训练、错题复盘、间隔复训和项目证据积累。
 
 ## 在线训练
 
-[直接进入训练](https://sam-rylynn.github.io/gogogo-ai-learning-quest/)
+[国内主入口](https://learn.zhixng.cn/course) · [GitHub Pages 备用入口](https://sam-rylynn.github.io/gogogo-ai-learning-quest/) · [Cloudflare 备用入口](https://gogogo-ai-quest.pages.dev/course)
 
 ## 学习进度
 
-学习进度保存在当前浏览器的 `localStorage` 中，不会自动上传到 GitHub。更换浏览器或清除网站数据前，请先使用页面内的“复制学习快照给 Codex”功能保存学习状态。
+学习进度保存在当前浏览器的 `localStorage` 中，不会自动上传或跨网址同步。更换浏览器、网址或清除网站数据前，请先在“玩法 → 数据管理”下载完整 JSON 备份；“复制完整学习快照”用于把当前进度交给你的 Agent 获取解释、纠错、测验或学习计划。
+
+## 入口文件
+
+`AI从业者闯关之路.html` 与 `index.html` 保持逐字节一致：前者兼容既有本地与历史链接，后者保证 GitHub Pages 根路径保持干净。Cloudflare 部署脚本会在二者不一致时中止，避免入口漂移。
 
 ## 字体许可
 

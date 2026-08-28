@@ -57,6 +57,10 @@ body.ul-locked {
 }
 
 .ul-boundary-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   margin: 0;
   padding: 8px 18px;
   border-bottom: 2px solid var(--ul-line);
@@ -64,6 +68,17 @@ body.ul-locked {
   font-size: 12px;
   line-height: 1.6;
   background: #0a1727;
+}
+
+.ul-boundary-action {
+  min-height: 34px;
+  flex: 0 0 auto;
+  padding: 5px 10px;
+  border: 1px solid var(--ul-gold);
+  color: #07111d;
+  background: var(--ul-gold);
+  cursor: pointer;
+  font: inherit;
 }
 
 .ul-window {
@@ -2652,7 +2667,7 @@ body.ul-locked {
 
 .ul-review-handoff {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 14px;
   align-items: center;
   margin-bottom: 14px;
@@ -3016,6 +3031,12 @@ body.ul-locked {
 
   .ul-review-handoff > span {
     width: max-content;
+  }
+
+  .ul-boundary-note {
+    align-items: flex-start;
+    padding: 8px 12px;
+    font-size: 11px;
   }
 
   .ul-review-card {

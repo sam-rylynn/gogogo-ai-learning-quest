@@ -449,7 +449,24 @@
       openCard(trigger.dataset.gcTerm, trigger);
     });
     document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" && card && !card.hidden) closeCard();
+      if (!card || card.hidden) return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        closeCard();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const focusable = Array.from(card.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+        .filter((node) => node.getClientRects().length > 0);
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!card.contains(document.activeElement) || (event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        (event.shiftKey ? last : first).focus();
+      }
     });
     new MutationObserver(queueScan).observe(document.body, {
       childList: true,

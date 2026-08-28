@@ -8,18 +8,23 @@ STAGE=".cf-upload"
 rm -rf "$STAGE"
 mkdir -p "$STAGE"
 
-# 与线上一致的 18 个文件
+# 与线上一致的 19 个文件
+if ! cmp -s "AI从业者闯关之路.html" index.html; then
+  echo "发布中止：index.html 与主课程 HTML 不一致，请先同步两个入口文件。" >&2
+  exit 1
+fi
+
 cp advanced-certificate-expansion.js \
    curriculum-beginner-reading.js \
    curriculum-depth-upgrade.js \
    curriculum-detail-expansion.js \
    curriculum-reflection-prompts.js \
    glossary-cards.css glossary-cards.js \
-   pixel-guild-upgrade.css pixel-guild-upgrade.js \
+   pixel-guild-upgrade.css pixel-guild-upgrade.js progress-backup.js \
    unified-learning-upgrade.css unified-learning-upgrade.js \
    "$STAGE/"
-cp "AI从业者闯关之路.html" "$STAGE/course.html"
-cp "AI从业者闯关之路.html" "$STAGE/index.html"
+cp index.html "$STAGE/course.html"
+cp index.html "$STAGE/index.html"
 mkdir -p "$STAGE/assets/fonts"
 cp assets/pixel-guild-hall.webp \
    assets/pixel-learner-portrait.webp \
