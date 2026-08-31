@@ -277,6 +277,10 @@
     }
   };
 
+  // Share the maintained course glossary with the AI application station.
+  // The station only reads this object; course-side scanning and cards remain unchanged.
+  window.GOGO_GLOSSARY_TERMS = TERMS;
+
   const aliasToKey = {};
   Object.keys(TERMS).forEach((key) => {
     TERMS[key].aliases.forEach((alias) => {

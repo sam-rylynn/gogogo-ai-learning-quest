@@ -598,6 +598,7 @@
 
     const actions = {
       intro: openIntro,
+      "ai-tools": () => { window.location.href = "ai-tools.html"; },
       library: openLibrary,
       "start-course": startCourse,
       workshop: () => openDrawer("训练工坊", renderWorkshop()),
@@ -804,6 +805,7 @@
         <div class="pg-onboarding-tip"><strong>今天只做一小步：</strong>读 1 张课卡，或者完成 1 轮训练。</div>
         <div class="pg-onboarding-actions">
           <button class="pg-primary" type="button" data-action="start-course">${actionLabel}</button>
+          <button class="pg-secondary" type="button" data-action="ai-tools">AI应用站</button>
           <button class="pg-secondary" type="button" data-action="copy-full-snapshot" data-prompt="next">复制完整学习快照</button>
           <button class="pg-secondary" type="button" data-action="data-manager">数据管理</button>
           <button class="pg-secondary" type="button" data-action="close-drawer">先看看地图</button>

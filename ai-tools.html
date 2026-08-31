@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="GOGO AI应用站：找工具、看模型排行与 AI 动态、按实战流程完成任务，并用中文听懂常用词。">
+  <meta name="theme-color" content="#08111c">
+  <title>AI应用站 · GOGO</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="ai-tools.css?v=20260831-station1">
+  <script src="glossary-cards.js?v=20260831-station1" defer></script>
+  <script src="ai-tools-data.js?v=20260831-catalog3" defer></script>
+  <script src="ai-station-data.js?v=20260831-station1" defer></script>
+  <script src="aihot-snapshot.js?v=20260831-station1" defer></script>
+  <script src="ai-station.js?v=20260831-station1" defer></script>
+  <script src="ai-tools.js?v=20260831-station1" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#portal-grid">跳到主要内容</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="ai-tools.html" aria-label="返回 AI应用站首页">
+        <span class="brand-mark" aria-hidden="true">G</span>
+        <span class="brand-copy"><strong>GOGO</strong><small>AI应用站</small></span>
+      </a>
+      <nav class="top-nav" aria-label="AI应用站导航">
+        <a href="ai-tools.html" data-nav-view="home">首页</a>
+        <a href="?view=tools" data-nav-view="tools">工具</a>
+        <a href="?view=hot" data-nav-view="hot">热榜</a>
+        <a href="?view=flows" data-nav-view="flows">流程</a>
+        <a href="?view=glossary" data-nav-view="glossary">常用词</a>
+        <button id="header-compare" type="button" hidden disabled>对比 <span id="header-compare-count">0</span></button>
+        <a class="back-link" href="index.html">返回 GOGO</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="view-panel home-view" data-view-panel="home" aria-labelledby="home-title">
+      <header class="home-hero">
+        <div class="home-title-block">
+          <p class="eyebrow">GOGO AI APPLICATION STATION</p>
+          <h1 id="home-title">AI应用站</h1>
+          <p>找工具、看变化、按流程做事、随手查术语。</p>
+        </div>
+        <div class="global-search-shell">
+          <label class="sr-only" for="global-search">搜索工具、流程或常用词</label>
+          <span class="search-icon" aria-hidden="true">⌕</span>
+          <input id="global-search" type="search" autocomplete="off" placeholder="你现在想做什么，或想查哪个词？">
+          <button id="clear-global-search" type="button" aria-label="清空全站搜索" hidden>×</button>
+        </div>
+      </header>
+
+      <div class="global-search-results" id="global-search-results" aria-live="polite" hidden></div>
+
+      <section class="portal-section" aria-labelledby="portal-title">
+        <div class="section-heading compact-heading">
+          <div>
+            <p class="eyebrow">CHOOSE AN ENTRANCE</p>
+            <h2 id="portal-title">从这里开始</h2>
+          </div>
+          <p>四个入口，各自只解决一类问题。</p>
+        </div>
+        <div class="portal-grid" id="portal-grid"></div>
+      </section>
+
+      <section class="ranking-section home-ranking" aria-labelledby="home-ranking-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">MODEL RANKING</p>
+            <h2 id="home-ranking-title">模型排行榜</h2>
+          </div>
+          <p>按 AIHOT 共识分展示当前前五名；它反映多项公开评测的综合证据，不代表每个具体任务都适用。</p>
+        </div>
+        <div id="model-ranking-home"></div>
+      </section>
+
+      <section class="workflow-preview" aria-labelledby="home-workflow-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">START WITH AN OUTCOME</p>
+            <h2 id="home-workflow-title">选一件事，直接开始</h2>
+          </div>
+          <a class="section-link" href="?view=flows">查看全部流程 →</a>
+        </div>
+        <div class="workflow-grid preview-grid" id="home-workflow-grid"></div>
+      </section>
+    </section>
+
+    <section class="view-panel tools-view" data-view-panel="tools" aria-labelledby="page-title" hidden>
+      <section class="catalog-intro">
+        <div class="title-block">
+          <p class="eyebrow">AI TOOL EXPLORER</p>
+          <h1 id="page-title">应用工具库</h1>
+          <p>搜索、筛选、比较，找到适合当前任务的工具。</p>
+        </div>
+        <div class="search-wrap">
+          <label class="sr-only" for="tool-search">搜索 AI 工具或任务</label>
+          <span class="search-icon" aria-hidden="true">⌕</span>
+          <input id="tool-search" type="search" autocomplete="off" placeholder="你想用 AI 做什么？搜索工具或任务">
+          <button id="clear-search" type="button" aria-label="清空搜索" hidden>×</button>
+        </div>
+      </section>
+
+      <section class="filter-panel" aria-label="筛选工具">
+        <div class="filter-group">
+          <span class="filter-label">任务</span>
+          <div class="category-filters" id="category-filters" role="group" aria-label="按任务筛选"></div>
+        </div>
+        <div class="filter-group region-row">
+          <span class="filter-label">入口</span>
+          <div class="region-filters" id="region-filters" role="group" aria-label="按产品入口筛选"></div>
+          <button class="reset-button" id="reset-filters" type="button" hidden>清除筛选</button>
+        </div>
+      </section>
+
+      <section class="tool-results" aria-labelledby="results-title">
+        <div class="results-bar">
+          <h2 id="results-title">全部工具</h2>
+          <p id="result-count" role="status" aria-live="polite"></p>
+        </div>
+        <div class="tool-grid" id="tool-grid"></div>
+        <div class="empty-state" id="empty-state" hidden>
+          <strong>没有找到匹配工具</strong>
+          <p>换一个关键词，或清除当前筛选。</p>
+          <button type="button" data-reset-all>查看全部工具</button>
+        </div>
+      </section>
+
+      <section class="comparison-preview" id="comparison" aria-labelledby="comparison-title">
+        <div>
+          <p class="eyebrow">COMPARE</p>
+          <h2 id="comparison-title">能力对比</h2>
+        </div>
+        <p id="comparison-hint">从工具卡片中加入 2–4 个工具，即可横向查看能力。</p>
+        <button id="section-compare" type="button" disabled>开始对比</button>
+      </section>
+    </section>
+
+    <section class="view-panel hot-view" data-view-panel="hot" aria-labelledby="hot-title" hidden>
+      <header class="page-intro">
+        <p class="eyebrow">AI RANKING & UPDATES</p>
+        <h1 id="hot-title">AI 热榜</h1>
+        <p>先看模型排行，再看近期被集中关注的事件与产品更新。</p>
+      </header>
+
+      <section class="ranking-section" aria-labelledby="full-ranking-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">MODEL RANKING</p>
+            <h2 id="full-ranking-title">模型排行榜</h2>
+          </div>
+          <p>默认按 AIHOT 共识分排序，展示前五名与评测完整度。</p>
+        </div>
+        <div id="model-ranking-full"></div>
+      </section>
+
+      <section class="news-section" aria-labelledby="event-news-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">EVENT ATTENTION</p>
+            <h2 id="event-news-title">事件热度</h2>
+          </div>
+          <p>根据多个来源对同一事件的集中报道整理。</p>
+        </div>
+        <div class="news-grid event-grid" id="event-news-grid"></div>
+      </section>
+
+      <section class="news-section" aria-labelledby="product-news-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">PRODUCT UPDATES</p>
+            <h2 id="product-news-title">产品关注</h2>
+          </div>
+          <p>最近一周值得继续打开原文核对的 AI 产品动态。</p>
+        </div>
+        <div class="news-grid product-grid" id="product-news-grid"></div>
+      </section>
+
+      <div class="live-status-row">
+        <p id="aihot-live-status" role="status" aria-live="polite">当前显示最近一次同步 · 正在检查近期动态</p>
+        <button id="retry-aihot" type="button" hidden>重新加载动态</button>
+        <a href="https://aihot.virxact.com/" target="_blank" rel="noopener noreferrer">数据来源：AIHOT ↗</a>
+      </div>
+    </section>
+
+    <section class="view-panel flows-view" data-view-panel="flows" aria-labelledby="flows-title" hidden>
+      <header class="page-intro">
+        <p class="eyebrow">AI WORKFLOWS</p>
+        <h1 id="flows-title">实战流程</h1>
+        <p>不从工具名字开始，先选你要完成的结果。</p>
+      </header>
+
+      <section aria-labelledby="workflow-grid-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">CHOOSE A RESULT</p>
+            <h2 id="workflow-grid-title">选择你要完成的事</h2>
+          </div>
+          <p>每条流程都给出材料、步骤、工具和完成检查。</p>
+        </div>
+        <div class="workflow-grid" id="workflow-grid"></div>
+      </section>
+
+      <section class="method-section" aria-labelledby="method-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">USE AI WITH A METHOD</p>
+            <h2 id="method-title">六张方法卡</h2>
+          </div>
+          <p>遇到不同任务时都能复用的基本判断。</p>
+        </div>
+        <div class="method-card-grid" id="method-card-grid"></div>
+      </section>
+    </section>
+
+    <section class="view-panel glossary-view" data-view-panel="glossary" aria-labelledby="glossary-title" hidden>
+      <header class="page-intro glossary-intro">
+        <div>
+          <p class="eyebrow">PLAIN CHINESE GLOSSARY</p>
+          <h1 id="glossary-title">常用词</h1>
+          <p>先用中文听懂，再决定要不要继续深入。</p>
+        </div>
+        <div class="search-wrap glossary-search-wrap">
+          <label class="sr-only" for="glossary-search">搜索常用词</label>
+          <span class="search-icon" aria-hidden="true">⌕</span>
+          <input id="glossary-search" type="search" autocomplete="off" placeholder="搜索 Agent、MCP、部署、验收标准……">
+        </div>
+      </header>
+      <section class="glossary-controls" aria-label="筛选常用词">
+        <div class="category-filters" id="glossary-filters" role="group" aria-label="按词语类别筛选"></div>
+        <p id="glossary-count" role="status" aria-live="polite"></p>
+      </section>
+      <div class="glossary-grid" id="glossary-grid"></div>
+    </section>
+  </main>
+
+  <aside class="compare-tray" id="compare-tray" aria-label="已选对比工具" hidden>
+    <div class="compare-selection">
+      <span class="compare-label">已选对比</span>
+      <div class="selected-tools" id="selected-tools"></div>
+    </div>
+    <div class="compare-actions">
+      <button class="text-button" id="clear-comparison" type="button">清空</button>
+      <button class="primary-button" id="open-comparison" type="button" disabled>对比 <span id="tray-count">0</span> 个工具</button>
+    </div>
+  </aside>
+
+  <dialog class="tool-dialog" id="tool-dialog" aria-labelledby="tool-dialog-title">
+    <div class="dialog-shell">
+      <button class="dialog-close" type="button" data-close-dialog aria-label="关闭工具详情">×</button>
+      <div id="tool-dialog-content"></div>
+    </div>
+  </dialog>
+
+  <dialog class="compare-dialog" id="compare-dialog" aria-labelledby="compare-dialog-title">
+    <div class="dialog-shell compare-shell">
+      <div class="dialog-heading">
+        <div>
+          <p class="eyebrow">SIDE BY SIDE</p>
+          <h2 id="compare-dialog-title">能力对比</h2>
+        </div>
+        <button class="dialog-close" type="button" data-close-comparison aria-label="关闭能力对比">×</button>
+      </div>
+      <div class="comparison-table-wrap" id="comparison-table-wrap"></div>
+    </div>
+  </dialog>
+
+  <dialog class="content-dialog" id="workflow-dialog" aria-label="实战流程详情">
+    <div class="dialog-shell content-dialog-shell">
+      <button class="dialog-close" type="button" data-close-content-dialog aria-label="关闭实战流程">×</button>
+      <div id="workflow-dialog-content"></div>
+    </div>
+  </dialog>
+
+  <dialog class="content-dialog" id="term-dialog" aria-label="常用词解释">
+    <div class="dialog-shell content-dialog-shell term-dialog-shell">
+      <button class="dialog-close" type="button" data-close-content-dialog aria-label="关闭常用词解释">×</button>
+      <div id="term-dialog-content"></div>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <footer>
+    <p>AI应用站用于非商业学习与查询。工具能力、模型排行和产品信息会变化，请以原始页面为准。</p>
+    <a href="index.html">返回 GOGO AI 闯关地图</a>
+  </footer>
+
+  <noscript>请启用 JavaScript 使用导航、筛选、排行、流程和常用词。</noscript>
+</body>
+</html>

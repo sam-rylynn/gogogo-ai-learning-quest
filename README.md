@@ -6,6 +6,10 @@
 
 [国内主入口](https://learn.zhixng.cn/course) · [GitHub Pages 备用入口](https://sam-rylynn.github.io/gogogo-ai-learning-quest/) · [Cloudflare 备用入口](https://gogogo-ai-quest.pages.dev/course)
 
+## AI应用站
+
+`ai-tools.html` 是四入口的 AI应用站：应用工具库、AI 热榜、实战流程和常用词。首页四张入口卡下直接展示 AIHOT 模型排行前五；热榜页继续展示事件热度与产品更新。模型排行使用随版本发布的低频快照，动态接口失败时仍可继续使用工具、流程与词库。
+
 ## 学习进度
 
 学习进度保存在当前浏览器的 `localStorage` 中，不会自动上传或跨网址同步。更换浏览器、网址或清除网站数据前，请先在“玩法 → 数据管理”下载完整 JSON 备份；“复制完整学习快照”用于把当前进度交给你的 Agent 获取解释、纠错、测验或学习计划。

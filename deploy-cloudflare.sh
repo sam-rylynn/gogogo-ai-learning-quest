@@ -8,13 +8,15 @@ STAGE=".cf-upload"
 rm -rf "$STAGE"
 mkdir -p "$STAGE"
 
-# 与线上一致的 19 个文件
+# 显式白名单：课程文件 + AI应用站
 if ! cmp -s "AI从业者闯关之路.html" index.html; then
   echo "发布中止：index.html 与主课程 HTML 不一致，请先同步两个入口文件。" >&2
   exit 1
 fi
 
 cp advanced-certificate-expansion.js \
+   ai-tools.css ai-tools-data.js ai-tools.js ai-tools.html \
+   ai-station-data.js ai-station.js aihot-snapshot.js \
    curriculum-beginner-reading.js \
    curriculum-depth-upgrade.js \
    curriculum-detail-expansion.js \
