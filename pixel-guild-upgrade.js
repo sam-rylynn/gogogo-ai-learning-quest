@@ -379,6 +379,10 @@
         <button class="pg-station pg-station-project" data-station="4" data-action="artifact">项目作品陈列门</button>
         <button class="pg-station pg-station-notes" data-station="5" data-action="key-notes">我的复盘</button>
         <section class="pg-quest" aria-label="GOGOGO 最新进度">
+          <div class="pg-board-links" role="group" aria-label="扩展资源入口">
+            <button class="pg-board-link pg-board-link-tools" type="button" data-action="ai-tools">AI应用站</button>
+            <button class="pg-board-link pg-board-link-certificates" type="button" data-action="certificates">考证清单</button>
+          </div>
           <strong class="pg-board-title" aria-hidden="true">GOGOGO</strong>
           <p class="pg-eyebrow">主线任务 · <span id="pg-level-label"></span></p>
           <h2 id="pg-mission-title"></h2>
@@ -598,6 +602,7 @@
 
     const actions = {
       intro: openIntro,
+      certificates: () => { window.location.href = "certificates.html"; },
       "ai-tools": () => { window.location.href = "ai-tools.html"; },
       library: openLibrary,
       "start-course": startCourse,
@@ -806,6 +811,7 @@
         <div class="pg-onboarding-actions">
           <button class="pg-primary" type="button" data-action="start-course">${actionLabel}</button>
           <button class="pg-secondary" type="button" data-action="ai-tools">AI应用站</button>
+          <button class="pg-secondary" type="button" data-action="certificates">先看 AI 证书导航</button>
           <button class="pg-secondary" type="button" data-action="copy-full-snapshot" data-prompt="next">复制完整学习快照</button>
           <button class="pg-secondary" type="button" data-action="data-manager">数据管理</button>
           <button class="pg-secondary" type="button" data-action="close-drawer">先看看地图</button>

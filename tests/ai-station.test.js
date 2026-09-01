@@ -96,9 +96,15 @@ test("router preserves old tool links and AIHOT uses the stable v1 API", () => {
 
 test("GOGO entry and Cloudflare package include the complete station", () => {
   const guild = read("pixel-guild-upgrade.js");
+  const styles = read("unified-learning-upgrade.css");
   const deploy = read("deploy-cloudflare.sh");
-  assert.match(guild, />AI应用站<\/button>/);
+  assert.match(guild, /<div class="pg-board-links" role="group" aria-label="扩展资源入口">/);
+  assert.match(guild, /class="pg-board-link pg-board-link-tools" type="button" data-action="ai-tools">AI应用站<\/button>/);
   assert.doesNotMatch(guild, />AI应用工具大全<\/button>/);
+  assert.match(styles, /#pixel-guild-app \.pg-board-link-tools/);
+  assert.match(styles, /background: #173a43/);
+  assert.match(styles, /clip-path: polygon\(/);
+  assert.match(styles, /pointer-events: auto/);
   [
     "ai-tools.html", "ai-tools.css", "ai-tools-data.js", "ai-tools.js",
     "ai-station-data.js", "ai-station.js", "aihot-snapshot.js"

@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="面向 AI 转型、产品、办公与开发方向的证书和培训认证导航，附官方来源与核验状态。">
+  <meta name="theme-color" content="#050916">
+  <title>AI 证书与培训认证导航 · GOGO</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="certificate-library.css?v=20260829-1">
+  <script src="certificate-library-data.js?v=20260829-1" defer></script>
+  <script src="certificate-library.js?v=20260829-1" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#certificate-results">跳到证书列表</a>
+
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="返回 GOGO AI 闯关地图">
+      <span class="brand-mark" aria-hidden="true">G</span>
+      <span><strong>GOGO</strong><small>AI 闯关地图</small></span>
+    </a>
+    <a class="course-link" href="index.html">进入小游戏 <span aria-hidden="true">→</span></a>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="page-title">
+      <div class="hero-copy">
+        <p class="eyebrow">CERTIFICATE COMPASS · 2026</p>
+        <h1 id="page-title">AI 证书与培训认证导航</h1>
+        <p class="hero-lead">先分清谁发、是什么性质、适合谁、学什么、怎么考，再决定要不要投入时间和钱。</p>
+        <p class="scope-note"><strong>收录范围：</strong>面向中文用户转向 AI 产品、办公、智能体、开发与机器学习的代表性路径。这里不是全球穷尽清单，也不按所谓“含金量”排名。</p>
+      </div>
+      <aside class="status-key" aria-label="核验说明">
+        <span class="status-key-icon" aria-hidden="true">i</span>
+        <div>
+          <strong>“当前可查”不等于推荐</strong>
+          <p>它只表示已找到对应官方页面。报名资格、考试版本、价格和开放状态仍以付款前的官方页面为准。</p>
+        </div>
+      </aside>
+    </section>
+
+    <section class="summary-grid" aria-label="证书库概况">
+      <article class="summary-card">
+        <span class="summary-value" id="summary-total">—</span>
+        <span class="summary-label">收录条目</span>
+      </article>
+      <article class="summary-card">
+        <span class="summary-value" id="summary-current">—</span>
+        <span class="summary-label">当前可查</span>
+      </article>
+      <article class="summary-card">
+        <span class="summary-value" id="summary-tracks">—</span>
+        <span class="summary-label">学习方向</span>
+      </article>
+      <article class="summary-card summary-card-wide">
+        <span class="summary-value summary-date" id="summary-date">—</span>
+        <span class="summary-label">资料最后核验</span>
+      </article>
+    </section>
+
+    <section class="library-panel" aria-labelledby="filter-title">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">FIND YOUR ROUTE</p>
+          <h2 id="filter-title">按你的方向筛选</h2>
+        </div>
+        <p>建议先选“学习方向”和“代码程度”，再看证书性质与核验状态；点击证书名称可打开官方原页面。</p>
+      </div>
+
+      <form class="filter-form" id="certificate-filters" role="search">
+        <div class="filter-field filter-search">
+          <label for="filter-query">关键词</label>
+          <input id="filter-query" name="q" type="search" autocomplete="off" placeholder="例如：智能体、产品经理、AWS">
+        </div>
+        <div class="filter-field">
+          <label for="filter-status">核验状态</label>
+          <select id="filter-status" name="status">
+            <option value="">全部状态</option>
+            <option value="verified-current">当前可查</option>
+            <option value="enroll-check">报名前复核</option>
+            <option value="upcoming">即将开放</option>
+            <option value="direction-only">职业或认证方向</option>
+            <option value="legacy-unverified">历史名称待核</option>
+            <option value="retired-replaced">已关闭或替换</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label for="filter-issuer">发证 / 标准主体</label>
+          <select id="filter-issuer" name="issuer">
+            <option value="">全部主体</option>
+            <option value="association">行业协会</option>
+            <option value="government-training">政府部门培训项目</option>
+            <option value="public-institution">事业单位 / 专业机构</option>
+            <option value="local-government">地方政府培训项目</option>
+            <option value="vendor">厂商认证</option>
+            <option value="occupational-standard">国家职业标准 / 方向</option>
+            <option value="third-party">第三方认证</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label for="filter-track">学习方向</label>
+          <select id="filter-track" name="track">
+            <option value="">全部方向</option>
+            <option value="办公与业务">办公与业务</option>
+            <option value="产品与管理">产品与管理</option>
+            <option value="智能体与低代码">智能体与低代码</option>
+            <option value="开发与工程">开发与工程</option>
+            <option value="机器学习">机器学习</option>
+            <option value="职业技能">职业技能</option>
+            <option value="视觉与内容">视觉与内容</option>
+            <option value="安全与治理">安全与治理</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label for="filter-code">代码程度</label>
+          <select id="filter-code" name="code">
+            <option value="">全部程度</option>
+            <option value="无需代码">无需代码</option>
+            <option value="少量代码">少量代码</option>
+            <option value="需要编程">需要编程</option>
+            <option value="按等级">按等级</option>
+            <option value="按岗位">按岗位</option>
+            <option value="按项目">按项目</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label for="filter-sort">排序方式</label>
+          <select id="filter-sort" name="sort">
+            <option value="status">先看当前可查</option>
+            <option value="name">按名称</option>
+            <option value="issuer">按主体</option>
+            <option value="updated">按核验日期</option>
+          </select>
+        </div>
+      </form>
+
+      <div class="filter-toolbar">
+        <p class="result-count" id="result-count" aria-live="polite">正在读取证书资料…</p>
+        <div class="toolbar-actions">
+          <button class="text-button" id="reset-filters" type="button">清空筛选</button>
+          <button class="share-button" id="copy-filter-link" type="button">复制当前筛选链接</button>
+        </div>
+      </div>
+      <p class="copy-feedback" id="copy-feedback" aria-live="polite"></p>
+
+      <div class="table-frame" id="certificate-results" tabindex="-1">
+        <table class="certificate-table">
+          <caption>AI 证书与培训认证导航筛选结果</caption>
+          <thead>
+            <tr>
+              <th scope="col">证书 / 路径</th>
+              <th scope="col">性质与主体</th>
+              <th scope="col">学习方向</th>
+              <th scope="col">代码程度</th>
+              <th scope="col">核验状态</th>
+              <th scope="col"><span class="visually-hidden">展开详情</span></th>
+            </tr>
+          </thead>
+          <tbody id="certificate-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="route-next" aria-labelledby="route-next-title">
+      <div>
+        <p class="section-kicker">FROM ROUTE TO PRACTICE</p>
+        <h2 id="route-next-title">选好方向，不等于已经学会</h2>
+        <p>证书库帮你缩小范围。GOGO 把提示设计、API、RAG、工具调用、智能体、评测和项目证据拆成一关关练习。</p>
+      </div>
+      <a class="primary-link" href="index.html">去 GOGO 玩第一关 <span aria-hidden="true">→</span></a>
+    </section>
+  </main>
+
+  <footer>
+    <p>独立整理的学习导航，不代表任何机构背书，也不是报名、就业或薪资承诺。</p>
+    <p>资料核验日：<time datetime="2026-08-29">2026-08-29</time> · 每条详情均保留官方来源。</p>
+  </footer>
+
+  <noscript>请启用 JavaScript 查看并筛选证书资料；所有外部报名信息仍请以官方页面为准。</noscript>
+</body>
+</html>
