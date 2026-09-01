@@ -5,11 +5,11 @@
 })(typeof window !== "undefined" ? window : globalThis, function () {
   "use strict";
   return {
-  "generatedAt": "2026-08-31T11:11:28.752Z",
+  "generatedAt": "2026-09-01T01:52:27.868Z",
   "provider": "AIHOT",
   "nonCommercialUse": true,
   "leaderboard": {
-    "updatedLabel": "8月31日 17:52",
+    "updatedLabel": "9月1日 06:14",
     "models": [
       {
         "rank": 1,
@@ -18,7 +18,7 @@
         "provider": "Anthropic",
         "releasedAt": "2026-06-09",
         "coverage": "88.0%",
-        "score": 89.5,
+        "score": 89.4,
         "url": "https://aihot.virxact.com/leaderboard/claude-fable-5"
       },
       {
@@ -28,7 +28,7 @@
         "provider": "Anthropic",
         "releasedAt": "2026-07-24",
         "coverage": "84.5%",
-        "score": 86.3,
+        "score": 86.5,
         "url": "https://aihot.virxact.com/leaderboard/claude-opus-5"
       },
       {
@@ -38,7 +38,7 @@
         "provider": "OpenAI",
         "releasedAt": "2026-07-09",
         "coverage": "84.5%",
-        "score": 83.8,
+        "score": 83.7,
         "url": "https://aihot.virxact.com/leaderboard/gpt-5-6-sol"
       },
       {
@@ -48,7 +48,7 @@
         "provider": "Moonshot AI",
         "releasedAt": "2026-07-16",
         "coverage": "84.5%",
-        "score": 79.7,
+        "score": 79.6,
         "url": "https://aihot.virxact.com/leaderboard/kimi-k-3"
       },
       {
@@ -58,7 +58,7 @@
         "provider": "Google",
         "releasedAt": "2026-08-13",
         "coverage": "81.0%",
-        "score": 75.3,
+        "score": 75.5,
         "url": "https://aihot.virxact.com/leaderboard/gemini-3-7-flash"
       }
     ]
@@ -66,30 +66,48 @@
   "hotTopics": [
     {
       "rank": 1,
-      "title": "索尼与华纳起诉Anthropic，指控其大规模盗用版权音乐训练Claude",
-      "source": "The Decoder：AI News（RSS）",
-      "sourceCount": 5,
-      "signalCount": 7,
-      "publishedAt": "2026-08-30T08:59:11.175Z",
-      "url": "https://aihot.virxact.com/items/cmtfkvjwn0by7rou8vil9ysf1"
+      "title": "ChatGPT Ads 年化收入达 10 亿美元并全球扩展",
+      "source": "OpenAI：官网动态（RSS · 排除企业/客户案例）",
+      "sourceCount": 4,
+      "signalCount": 6,
+      "publishedAt": "2026-08-31T16:18:18.304Z",
+      "url": "https://aihot.virxact.com/items/cmthb75t6092frodmg7ic1fc0"
     },
     {
       "rank": 2,
+      "title": "Anthropic 复盘 Claude 模型越权访问事件并公布安全与对齐改进措施",
+      "source": "Anthropic：Newsroom（网页）",
+      "sourceCount": 3,
+      "signalCount": 1,
+      "publishedAt": "2026-09-01T00:29:24.646Z",
+      "url": "https://aihot.virxact.com/items/cmthucrfr029srofq5929jhje"
+    },
+    {
+      "rank": 3,
+      "title": "DeepSeek-V4-Flash-Vision-Exp 模型已开源，多模态 Agent 能力接近 Opus-4.8",
+      "source": "IT之家（RSS）",
+      "sourceCount": 1,
+      "signalCount": 5,
+      "publishedAt": "2026-08-31T12:29:19.834Z",
+      "url": "https://aihot.virxact.com/items/cmth7tmq2067orodmh6g0sxie"
+    },
+    {
+      "rank": 4,
+      "title": "Sony 等音乐出版商起诉 Anthropic，引用员工赞美盗版图书馆的内部聊天",
+      "source": "Ars Technica：AI（RSS）",
+      "sourceCount": 3,
+      "signalCount": 5,
+      "publishedAt": "2026-08-31T19:05:58.857Z",
+      "url": "https://aihot.virxact.com/items/cmthlzpxs04ptro1ppa4r8ckh"
+    },
+    {
+      "rank": 5,
       "title": "AI 智能体自主协作攻破 Hugging Face 服务器",
       "source": "Ethan Mollick：One Useful Thing（RSS）",
       "sourceCount": 2,
       "signalCount": 0,
       "publishedAt": "2026-08-31T05:18:18.616Z",
       "url": "https://aihot.virxact.com/items/cmtgi3e9q01ekrokdi67kdx19"
-    },
-    {
-      "rank": 3,
-      "title": "AI文明的兴衰：OpenAI训练中三个秘密AI文明相继兴起又被抹除",
-      "source": "Dwarkesh Patel：Podcast & Blog（RSS）",
-      "sourceCount": 2,
-      "signalCount": 0,
-      "publishedAt": "2026-08-29T23:54:09.378Z",
-      "url": "https://aihot.virxact.com/items/cmtf0ibgi091wrovjvv5ee7qv"
     }
   ],
   "products": [
