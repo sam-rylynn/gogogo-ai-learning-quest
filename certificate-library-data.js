@@ -24,7 +24,7 @@
       status: "verified-current",
       statusNote: "2026 年培训通知和证书名称均可在中国电子学会官网核对。它属于专业技术培训证书，不是国家职业资格。",
       officialSources: [source("中国电子学会 2026 年培训通知", "https://px.cie.org.cn/index.php/portal/article/index/id/1337/cid/3.html")],
-      gogoMapping: "GOGO 第 1、6、11、12 关：需求、评估、产品方法和作品证据。",
+      gogoMapping: "第 1 关「AI 基础」、第 5 关「RAG 与工具调用」、第 7 关「WorkBuddy 工作助手」、第 9 关「CLI 与私有部署」、第 10 关「AI 产品方法」、第 14 关「作品集」。按需选择，不要求全部修读。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -45,7 +45,7 @@
       status: "verified-current",
       statusNote: "2026 年培训通知明确写明由中国电子学会颁发专业技术培训证书。",
       officialSources: [source("中国电子学会 2026 年培训通知", "https://px.cie.org.cn/index.php/portal/article/index/id/1335/cid/3.html")],
-      gogoMapping: "GOGO 第 4、7、8、9、10 关：工具调用、工作流、CLI Agent 与部署。",
+      gogoMapping: "第 1 关「AI 基础」、第 5 关「RAG 与工具调用」、第 8 关「Coze 智能体」、第 9 关「CLI 与私有部署」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -66,7 +66,7 @@
       status: "verified-current",
       statusNote: "当前官方名称是“AI 办公应用”，不是旧资料中的“AIGC 智能办公应用师”。",
       officialSources: [source("中国电子学会 2026 年培训通知", "https://px.cie.org.cn/index.php/portal/article/index/id/1328/cid/3.html")],
-      gogoMapping: "GOGO 第 1、7、12 关：提示设计、办公智能体与运营自动化。",
+      gogoMapping: "第 1 关「AI 基础」、第 7 关「WorkBuddy 工作助手」、第 11 关「运营与办公」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -87,7 +87,7 @@
       status: "verified-current",
       statusNote: "2026 年官方培训通知可查，证书性质为专业技术培训证书。",
       officialSources: [source("中国电子学会 2026 年培训通知", "https://px.cie.org.cn/index.php/portal/article/index/id/1330/cid/3.html")],
-      gogoMapping: "GOGO 第 1、7、13、14 关：提示设计、智能体、视觉与影音应用。",
+      gogoMapping: "第 1 关「AI 基础」、第 8 关「Coze 智能体」、第 11 关「运营与办公」、第 12 关「AI 视觉设计」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -108,7 +108,7 @@
       status: "verified-current",
       statusNote: "2026 年培训通知可在中国电子学会官网核对；属于专业技术培训证书。",
       officialSources: [source("中国电子学会 2026 年培训通知", "https://px.cie.org.cn/portal/article/index/id/1332/cid/3.html")],
-      gogoMapping: "GOGO 第 13、14 关：视觉内容与影音应用入门。",
+      gogoMapping: "第 12 关「AI 视觉设计」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -129,7 +129,7 @@
       status: "verified-current",
       statusNote: "2026 年培训通知可查；属于职业技能培训证书，不是国家职业资格。",
       officialSources: [source("中国电子学会 2026 年培训通知", "https://px.cie.org.cn/portal/article/index/id/1331/cid/3.html")],
-      gogoMapping: "GOGO 第 12–14 关：运营自动化、视觉与影音内容。",
+      gogoMapping: "第 11 关「运营与办公」、第 12 关「AI 视觉设计」、第 13 关「AI 影音」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -150,7 +150,7 @@
       status: "verified-current",
       statusNote: "2026 年培训通知可查；属于职业技能培训证书。",
       officialSources: [source("中国电子学会 2026 年培训通知", "https://px.cie.org.cn/portal/article/index/id/1333/cid/3.html")],
-      gogoMapping: "GOGO 第 13 关：视觉生成入门。",
+      gogoMapping: "第 12 关「AI 视觉设计」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -171,7 +171,7 @@
       status: "verified-current",
       statusNote: "2026 年培训通知可查；属于专业技术培训证书。",
       officialSources: [source("中国电子学会 2026 年培训通知", "https://px.cie.org.cn/portal/article/index/id/1334/cid/3.html")],
-      gogoMapping: "GOGO 第 14 关：影音内容与自动化工作流入门。",
+      gogoMapping: "第 13 关「AI 影音」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -192,7 +192,7 @@
       status: "verified-current",
       statusNote: "2026 年培训通知可查；属于专业技术培训证书，不代表 DeepSeek 官方厂商认证。",
       officialSources: [source("中国电子学会 2026 年培训通知", "https://px.cie.org.cn/index.php/portal/article/index/id/1336/cid/3.html")],
-      gogoMapping: "GOGO 第 1、7、12 关：提示、效率工具和业务应用。",
+      gogoMapping: "第 1 关「AI 基础」、第 11 关「运营与办公」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -217,7 +217,7 @@
         source("工信部教考中心证书性质说明", "https://www.miiteec.org.cn/common_question_details?code=174248616ULN2RR4"),
         source("百度智能云培训与认证说明", "https://cloud.baidu.com/product/SDC_VAS/tui.html?channelCode=44")
       ],
-      gogoMapping: "GOGO 第 2、3、4、8、10 关：API、RAG、工具调用、工作流与部署。",
+      gogoMapping: "第 1 关「AI 基础」、第 4 关「神经网络与大模型原理」、第 5 关「RAG 与工具调用」、第 8 关「Coze 智能体」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -241,7 +241,7 @@
         source("人工智能工程技术人员国家职业技术技能标准", "https://www.mohrss.gov.cn/SYrlzyhshbzb/rencairenshi/zcwj/202110/P020211008590568787090.pdf"),
         source("数字技术工程师培育项目实施办法", "https://www.mohrss.gov.cn/SYrlzyhshbzb/rencairenshi/zcwj/zhuanyejishurenyuan/202110/t20211011_425199.html")
       ],
-      gogoMapping: "GOGO 第 2、3、6、10 关只提供 API、ML、项目与部署入门，不替代专业技术考核。",
+      gogoMapping: "第 3 关「机器学习基础」、第 4 关「神经网络与大模型原理」、第 6 关「产品方向实践」。仅作模型与应用项目入门，不替代专业技术考核。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -265,7 +265,7 @@
         source("2026 年职场 AI 应用师培训通知", "https://www.cace.org.cn/News/Ncontent?key=1524bbd2351bc0b0a23110e61dd666b1"),
         source("IITC 官方证书分类与查询", "https://iitc.miitec.cn/zscx/index.html")
       ],
-      gogoMapping: "GOGO 第 1、7、12 关：提示、效率智能体与岗位自动化。",
+      gogoMapping: "第 1 关「AI 基础」、第 11 关「运营与办公」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -307,7 +307,7 @@
       status: "verified-current",
       statusNote: "这是上海地方项目，不是全国统一职业资格。",
       officialSources: [source("上海市 2026 年人工智能推介官培训认证通知", "https://rsj.sh.gov.cn/tjypx_17737/20260331/t0035_1439666.html")],
-      gogoMapping: "GOGO 第 1、11、12 关：讲清 AI 边界、产品判断和业务应用。",
+      gogoMapping: "第 1 关「AI 基础」、第 11 关「运营与办公」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -328,7 +328,7 @@
       status: "enroll-check",
       statusNote: "培训项目存在，但本库不在证书字段未明确时把它包装成完整现行证书。",
       officialSources: [source("工信部教考中心 2026 年项目页", "https://www.miiteec.org.cn/topics_news_details?code=17848222ACEWB5DS")],
-      gogoMapping: "GOGO 第 2–4、8–10 关可作入门地图，不替代项目课程与考核。",
+      gogoMapping: "第 5 关「RAG 与工具调用」、第 8 关「Coze 智能体」、第 9 关「CLI 与私有部署」。仅作应用与工程入门，不替代项目课程与考核。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -353,7 +353,7 @@
         source("腾讯云考试指南", "https://cloud.tencent.com/document/product/658/134239"),
         source("腾讯云报名与证书指引", "https://cloud.tencent.com/document/product/658/101119")
       ],
-      gogoMapping: "GOGO 第 7、12 关：效率智能体、业务流程和自动化。",
+      gogoMapping: "第 7 关「WorkBuddy 工作助手」、第 11 关「运营与办公」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -377,7 +377,7 @@
         source("腾讯云认证详情", "https://cloud.tencent.com/edu/cert/developer/1053"),
         source("腾讯云考试指南", "https://cloud.tencent.com/document/product/658/134069")
       ],
-      gogoMapping: "GOGO 第 1–4、7–10 关：AI 基础、API、RAG、工具调用与智能体。",
+      gogoMapping: "第 1 关「AI 基础」、第 3 关「机器学习基础」、第 4 关「神经网络与大模型原理」、第 7 关「WorkBuddy 工作助手」、第 9 关「CLI 与私有部署」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -398,7 +398,7 @@
       status: "verified-current",
       statusNote: "这是腾讯云工程师路线，与“腾讯云 AI 从业者”入门认证分开。",
       officialSources: [source("腾讯云人工智能工程师考试指南", "https://cloud.tencent.com/document/product/658/134184")],
-      gogoMapping: "GOGO 第 3、6、10 关只提供 AI/ML、项目和部署入门。",
+      gogoMapping: "第 3 关「机器学习基础」、第 4 关「神经网络与大模型原理」、第 6 关「产品方向实践」、第 9 关「CLI 与私有部署」。仅作模型、项目与部署入门。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -419,7 +419,7 @@
       status: "verified-current",
       statusNote: "官方考试指南可查；具体开考城市和场次在报名时复核。",
       officialSources: [source("腾讯云智能体开发平台 AI 应用工程师考试指南", "https://cloud.tencent.com/document/product/658/134046")],
-      gogoMapping: "GOGO 第 2、4、8–10 关：API、工具、工作流、Agent 与部署。",
+      gogoMapping: "第 2 关「Python 与 API」、第 5 关「RAG 与工具调用」、第 8 关「Coze 智能体」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -440,7 +440,7 @@
       status: "verified-current",
       statusNote: "这是阿里云国内站的大模型 ACA；不能直接把国际站认证当成它的英文版。",
       officialSources: [source("阿里云大模型工程师 ACA 认证", "https://edu.aliyun.com/certification/aca13")],
-      gogoMapping: "GOGO 第 1、2、4、8 关：提示、API、工具调用和智能体工作流。",
+      gogoMapping: "第 1 关「AI 基础」、第 4 关「神经网络与大模型原理」、第 8 关「Coze 智能体」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -464,7 +464,7 @@
         source("阿里云大模型高级工程师 ACP 认证", "https://edu.aliyun.com/certification/acp26"),
         source("阿里云认证考试说明", "https://edu.aliyun.com/clouder/exam/intro/1092")
       ],
-      gogoMapping: "GOGO 第 2–4、8–10 关：API、RAG、工具调用、工作流、CLI 与部署。",
+      gogoMapping: "第 4 关「神经网络与大模型原理」、第 5 关「RAG 与工具调用」、第 8 关「Coze 智能体」、第 9 关「CLI 与私有部署」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -485,7 +485,7 @@
       status: "verified-current",
       statusNote: "这是国际站独立认证，不是国内“大模型工程师 ACA”的英文别名。",
       officialSources: [source("Alibaba Cloud International Certification", "https://www.alibabacloud.com/en/academy/certification/aca_generative_ai")],
-      gogoMapping: "GOGO 第 1–4、8 关可作为中文入门地图，不替代英文考试准备。",
+      gogoMapping: "第 1 关「AI 基础」、第 4 关「神经网络与大模型原理」、第 5 关「RAG 与工具调用」、第 8 关「Coze 智能体」。可作中文概念与应用入门，不替代英文考试准备或云平台实操。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -506,7 +506,7 @@
       status: "enroll-check",
       statusNote: "页面仍在售，但大纲标注较早，适合经典 AI 方向，报名前确认是否符合当前目标。",
       officialSources: [source("阿里云人工智能工程师 ACA 认证", "https://edu.aliyun.com/certification/ACA05")],
-      gogoMapping: "GOGO 第 3、6、10 关只提供 ML、项目和部署入门。",
+      gogoMapping: "第 3 关「机器学习基础」、第 4 关「神经网络与大模型原理」、第 9 关「CLI 与私有部署」。仅作模型与部署入门。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -527,7 +527,7 @@
       status: "enroll-check",
       statusNote: "属于经典 AI 进阶路线，与生成式 AI 专项路线分开呈现。",
       officialSources: [source("阿里云人工智能高级工程师 ACP 认证", "https://edu.aliyun.com/certification/ACP10")],
-      gogoMapping: "GOGO 第 3、6、10 关只提供 ML、项目和部署入门。",
+      gogoMapping: "第 3 关「机器学习基础」、第 4 关「神经网络与大模型原理」、第 9 关「CLI 与私有部署」。仅作模型与工程入门。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -548,7 +548,7 @@
       status: "enroll-check",
       statusNote: "官方页面当前明确显示“系统升级，暂停报名”；可以研究方向，但不能说现在可直接报考。",
       officialSources: [source("百度智能云人才认证体系", "https://cloud.baidu.com/partner/authentication.html")],
-      gogoMapping: "GOGO 第 2–4、8、10 关：API、RAG、工具调用、工作流与部署。",
+      gogoMapping: "第 2 关「Python 与 API」、第 4 关「神经网络与大模型原理」、第 8 关「Coze 智能体」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -569,7 +569,7 @@
       status: "enroll-check",
       statusNote: "官方页面当前明确显示“系统升级，暂停报名”，不能说现在可直接报考。",
       officialSources: [source("百度智能云人才认证体系", "https://cloud.baidu.com/partner/authentication.html")],
-      gogoMapping: "GOGO 第 2–4、8–10 关只提供基础练习，不替代资深认证实操。",
+      gogoMapping: "第 2 关「Python 与 API」、第 4 关「神经网络与大模型原理」、第 5 关「RAG 与工具调用」、第 8 关「Coze 智能体」、第 9 关「CLI 与私有部署」。仅作基础练习，不替代资深认证实操。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -590,7 +590,7 @@
       status: "verified-current",
       statusNote: "当前基础级 AI 厂商认证，面向非纯开发岗位也较友好。",
       officialSources: [source("AWS 认证详情", "https://aws.amazon.com/certification/certified-ai-practitioner/")],
-      gogoMapping: "GOGO 第 1–4 关：AI 概念、API、RAG 和工具边界。",
+      gogoMapping: "第 1 关「AI 基础」、第 3 关「机器学习基础」、第 4 关「神经网络与大模型原理」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -611,7 +611,7 @@
       status: "verified-current",
       statusNote: "2026 年已经开放标准版报名，是旧证书清单里缺失的重要开发者路线。",
       officialSources: [source("AWS 认证详情", "https://aws.amazon.com/certification/certified-generative-ai-developer-professional/")],
-      gogoMapping: "GOGO 第 2–4、8–10 关：API、RAG、工具、工作流、CLI 和部署。",
+      gogoMapping: "第 2 关「Python 与 API」、第 5 关「RAG 与工具调用」、第 8 关「Coze 智能体」、第 9 关「CLI 与私有部署」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -632,7 +632,7 @@
       status: "enroll-check",
       statusNote: "认证仍在，但考试版本正在切换；报名前必须确认语言和 C01/C02 日期。",
       officialSources: [source("AWS 认证详情与版本更新", "https://aws.amazon.com/certification/certified-machine-learning-engineer-associate/")],
-      gogoMapping: "GOGO 第 3、6、10 关：机器学习、项目与部署；GOGO 只覆盖入门认知，不替代工程经验。",
+      gogoMapping: "第 3 关「机器学习基础」、第 4 关「神经网络与大模型原理」、第 9 关「CLI 与私有部署」。仅作数据、模型与部署入门，不替代工程经验。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -653,7 +653,7 @@
       status: "verified-current",
       statusNote: "当前可报名的 NVIDIA 生成式 AI 入门认证。",
       officialSources: [source("NVIDIA Certification", "https://www.nvidia.com/en-us/learn/certification/generative-ai-llm-associate/")],
-      gogoMapping: "GOGO 第 1–4、8 关：提示、API、RAG、工具与智能体入门。",
+      gogoMapping: "第 1 关「AI 基础」、第 4 关「神经网络与大模型原理」、第 5 关「RAG 与工具调用」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -695,7 +695,7 @@
       status: "verified-current",
       statusNote: "2026 官方考试指南可查，适合补足数据与 GenAI 工程方向。",
       officialSources: [source("Databricks 2026 Exam Guide", "https://www.databricks.com/sites/default/files/2026-03/Databricks-Certified-Generative-AI-Engineer-Associate-Exam-Guide-Mar26.pdf")],
-      gogoMapping: "GOGO 第 3、4、8–10 关可作 ML、工具、工作流和部署入门。",
+      gogoMapping: "第 5 关「RAG 与工具调用」、第 8 关「Coze 智能体」、第 9 关「CLI 与私有部署」。仅作检索、智能体与部署入门。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -716,7 +716,7 @@
       status: "verified-current",
       statusNote: "当前面向业务与管理岗位的 Google Cloud 生成式 AI 认证。",
       officialSources: [source("Google Cloud 认证详情", "https://cloud.google.com/learn/certification/generative-ai-leader")],
-      gogoMapping: "GOGO 第 1、11、12 关：AI 边界、产品判断和业务落地。",
+      gogoMapping: "第 1 关「AI 基础」、第 10 关「AI 产品方法」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -737,7 +737,7 @@
       status: "verified-current",
       statusNote: "考试范围已包含 Model Garden、Vertex AI Agent Builder 和生成式 AI 评估。",
       officialSources: [source("Google Cloud 认证详情", "https://cloud.google.com/learn/certification/machine-learning-engineer")],
-      gogoMapping: "GOGO 第 3、6、10 关：ML 基础、项目和部署；GOGO 不覆盖专业工程深度。",
+      gogoMapping: "第 3 关「机器学习基础」、第 4 关「神经网络与大模型原理」、第 9 关「CLI 与私有部署」。仅作数据、模型与部署入门，不覆盖专业工程深度。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -758,7 +758,7 @@
       status: "upcoming",
       statusNote: "截至 2026-08-29 尚未开放；官方写明 2026-09-03 开放 Beta 注册。",
       officialSources: [source("Google Cloud Beta 认证详情", "https://cloud.google.com/learn/certification/agentic-architect")],
-      gogoMapping: "GOGO 第 4、8–10 关：工具、工作流、CLI Agent 与部署，仅作入门地图。",
+      gogoMapping: "第 5 关「RAG 与工具调用」、第 8 关「Coze 智能体」、第 9 关「CLI 与私有部署」。仅作工具、工作流、编码代理与部署入门。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -779,7 +779,7 @@
       status: "verified-current",
       statusNote: "2026 年更新的无代码业务路线，是旧证书清单中明显缺失的一项。",
       officialSources: [source("Microsoft Learn 认证详情", "https://learn.microsoft.com/en-us/credentials/certifications/ai-business-professional/")],
-      gogoMapping: "GOGO 第 1、7、12 关：提示设计、效率智能体和业务自动化。",
+      gogoMapping: "第 1 关「AI 基础」、第 11 关「运营与办公」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -800,7 +800,7 @@
       status: "verified-current",
       statusNote: "适合管理与转型方向，不应与 AI 工程师证书混为一类。",
       officialSources: [source("Microsoft Learn 认证详情", "https://learn.microsoft.com/en-us/credentials/certifications/ai-transformation-leader/")],
-      gogoMapping: "GOGO 第 11、12 关：AI 产品方法、运营自动化和采用边界。",
+      gogoMapping: "第 10 关「AI 产品方法」、第 11 关「运营与办公」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -821,7 +821,7 @@
       status: "verified-current",
       statusNote: "2026 年已从旧 AI-900 路线更新为 AI-901，旧攻略可能过时。",
       officialSources: [source("Microsoft Learn 认证详情", "https://learn.microsoft.com/en-us/credentials/certifications/azure-ai-fundamentals/")],
-      gogoMapping: "GOGO 第 2–4 关：API、RAG、工具调用和 AI 基础概念。",
+      gogoMapping: "第 1 关「AI 基础」、第 3 关「机器学习基础」、第 4 关「神经网络与大模型原理」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -842,7 +842,7 @@
       status: "verified-current",
       statusNote: "这是已于 2026-06-30 退休的 Azure AI Engineer Associate 的当前替代路线之一。",
       officialSources: [source("Microsoft Learn 认证详情", "https://learn.microsoft.com/en-us/credentials/certifications/azure-ai-apps-and-agents-developer-associate/")],
-      gogoMapping: "GOGO 第 2–4、8–10 关：API、RAG、工具、Agent 工作流、CLI 和部署。",
+      gogoMapping: "第 2 关「Python 与 API」、第 4 关「神经网络与大模型原理」、第 5 关「RAG 与工具调用」、第 8 关「Coze 智能体」、第 10 关「AI 产品方法」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -863,7 +863,7 @@
       status: "verified-current",
       statusNote: "属于 AI 云端开发进阶路线，和 AI-103 的应用与 Agent 路线侧重点不同。",
       officialSources: [source("Microsoft Learn 认证详情", "https://learn.microsoft.com/en-us/credentials/certifications/azure-ai-cloud-developer-associate/")],
-      gogoMapping: "GOGO 第 2、8–10 关只提供 API、工作流、CLI 和部署入门。",
+      gogoMapping: "第 2 关「Python 与 API」、第 5 关「RAG 与工具调用」、第 9 关「CLI 与私有部署」。仅作接口、检索与工程入门。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -884,7 +884,7 @@
       status: "verified-current",
       statusNote: "2026 年现行的智能体构建路线，旧证书清单没有覆盖。",
       officialSources: [source("Microsoft Learn 认证详情", "https://learn.microsoft.com/en-us/credentials/certifications/ai-agent-builder-associate/")],
-      gogoMapping: "GOGO 第 4、8、9 关：工具调用、工作流和 Agent 集成。",
+      gogoMapping: "第 2 关「Python 与 API」、第 5 关「RAG 与工具调用」、第 7 关「WorkBuddy 工作助手」、第 8 关「Coze 智能体」、第 9 关「CLI 与私有部署」。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -908,7 +908,7 @@
         source("国家职业技能标准（2021 年版）", "https://www.mohrss.gov.cn/xxgk2020/fdzdgknr/rcrs_4225/jnrc/202112/W020211227626977039770.pdf"),
         source("技能人才评价证书全国联网查询", "https://zscx.osta.org.cn/h5/")
       ],
-      gogoMapping: "GOGO 第 3、4、6 关只覆盖 AI/ML 入门与项目意识，不替代职业技能实操评价。",
+      gogoMapping: "第 3 关「机器学习基础」、第 4 关「神经网络与大模型原理」。仅作数据、模型与评估概念入门，不替代数据标注训练和职业技能实操评价。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -929,7 +929,7 @@
       status: "direction-only",
       statusNote: "它是近年新增的重要职业方向，但不能直接说成“已经有全国统一可报名证书”。",
       officialSources: [source("国务院政策库发布的职业信息", "https://www.gov.cn/zhengce/zhengceku/202407/P020240731502013926154.pdf")],
-      gogoMapping: "GOGO 第 2–4、8–10 关可做入门学习地图，不替代正式职业标准和岗位实训。",
+      gogoMapping: "第 2 关「Python 与 API」、第 4 关「神经网络与大模型原理」、第 8 关「Coze 智能体」、第 9 关「CLI 与私有部署」。仅作模型调用、应用与系统维护入门，不替代正式职业标准和岗位实训。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -950,7 +950,7 @@
       status: "direction-only",
       statusNote: "官网确认三级体系和 AI 方向，但本轮未取得稳定的当前“HCIE-AI”单项详情页；旧稿不能直接把 HCIE-AI 当作当前可报项目。",
       officialSources: [source("Huawei Career Certification", "https://e.huawei.com/en/talent/cert/")],
-      gogoMapping: "GOGO 第 3、6、10 关只做 AI/ML 与部署入门，不能替代华为产品实操。",
+      gogoMapping: "第 3 关「机器学习基础」、第 4 关「神经网络与大模型原理」、第 6 关「产品方向实践」、第 9 关「CLI 与私有部署」。仅作模型、应用项目与部署入门，不替代华为产品实操。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -971,7 +971,7 @@
       status: "verified-current",
       statusNote: "已核验只代表该认证在其自有官网当前可查；它属于第三方认证，不等同于国家职业资格或政府职业技能等级证书。",
       officialSources: [source("CAIE 自有认证官网", "https://www.caieglobal.com/certification.html/")],
-      gogoMapping: "GOGO 第 1–4、8–10 关与其部分知识方向有交集，但双方无官方合作关系。",
+      gogoMapping: "第 1 关「AI 基础」、第 4 关「神经网络与大模型原理」、第 5 关「RAG 与工具调用」、第 8 关「Coze 智能体」、第 9 关「CLI 与私有部署」。仅与部分主题有交集，双方无官方合作关系。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -992,7 +992,7 @@
       status: "retired-replaced",
       statusNote: "旧稿把“谷歌 TensorFlow”列为现行考证方向已经过时，当前应改看 Google Cloud 认证。",
       officialSources: [source("TensorFlow 官方关闭公告", "https://www.tensorflow.org/certificate")],
-      gogoMapping: "无直接映射；可把 GOGO 第 3 关作为 ML 概念入门。",
+      gogoMapping: "第 3 关「机器学习基础」、第 4 关「神经网络与大模型原理」。仅供模型概念入门，不提供 TensorFlow 专门实操；此记录不作为报名路线。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -1013,7 +1013,7 @@
       status: "retired-replaced",
       statusNote: "当前替代路线是 Azure AI Apps and Agents Developer Associate（AI-103）等新认证。",
       officialSources: [source("Microsoft Learn 退休说明", "https://learn.microsoft.com/en-us/credentials/certifications/azure-ai-engineer/")],
-      gogoMapping: "改看 AI-103 对应的 GOGO 第 2–4、8–10 关入门路线。",
+      gogoMapping: "第 2 关「Python 与 API」、第 5 关「RAG 与工具调用」、第 8 关「Coze 智能体」。仅供接口、检索与应用概念入门，不替代 Azure 产品实操；此退役记录不作为报名路线。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -1034,7 +1034,7 @@
       status: "legacy-unverified",
       statusNote: "可用当前中国电子学会“AI 办公应用”作为明确可查的替代研究方向，但两者不能自动视为同一证书。",
       officialSources: [source("可核验的当前替代方向：AI 办公应用", "https://px.cie.org.cn/index.php/portal/article/index/id/1328/cid/3.html")],
-      gogoMapping: "GOGO 第 1、7、12 关。",
+      gogoMapping: "第 1 关「AI 基础」、第 11 关「运营与办公」。可练习文档、PPT 与数据分析；此历史名称待核，不作为报名依据。",
       updatedAt: VERIFIED_AT
     },
     {
@@ -1058,7 +1058,7 @@
         source("当前可查：人工智能产品经理", "https://px.cie.org.cn/index.php/portal/article/index/id/1337/cid/3.html"),
         source("当前可查：生成式人工智能应用工程师", "https://www.miiteec.org.cn/news_details?code=17194171C98ZQ2V4")
       ],
-      gogoMapping: "GOGO 第 1、6、11、12 关。",
+      gogoMapping: "第 1 关「AI 基础」、第 6 关「产品方向实践」、第 10 关「AI 产品方法」。用于需求、项目与大模型应用入门；此历史名称待核，不作为报名依据。",
       updatedAt: VERIFIED_AT
     },
     {

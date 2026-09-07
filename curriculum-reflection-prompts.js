@@ -70,5 +70,5 @@
     });
   });
 
-  curriculum.version = "20260804-reviewfix1";
+  curriculum.version = "20260905-public1";
 })();

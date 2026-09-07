@@ -132,6 +132,10 @@
     if (!Array.isArray(QUESTION_BANK[levelIndex])) QUESTION_BANK[levelIndex] = [];
     QUESTION_BANK[levelIndex] = QUESTION_BANK[levelIndex].concat(additions);
   });
+  Object.keys(deepCurriculum.questionBankOverrides || {}).forEach(function (levelIndex) {
+    var replacement = deepCurriculum.questionBankOverrides[levelIndex];
+    if (Array.isArray(replacement) && replacement.length) QUESTION_BANK[levelIndex] = replacement.slice();
+  });
 
   var QUESTION_LESSONS = deepCurriculum.questionLessons || {};
   var QUESTION_GUIDES = deepCurriculum.questionGuides || {};
@@ -395,7 +399,8 @@
   }
 
   function wrongIds(levelIndex) {
-    return Array.isArray(state.wrong[levelIndex]) ? state.wrong[levelIndex] : [];
+    var saved = Array.isArray(state.wrong[levelIndex]) ? state.wrong[levelIndex] : [];
+    return saved.filter(function (id) { return Boolean(questionById(levelIndex, id)); });
   }
 
   function questionById(levelIndex, id) {
@@ -525,6 +530,12 @@
   function credentialBrief(levelIndex) {
     if (!isAdvancedLevel(levelIndex)) return "";
     var level = course.levels[levelIndex] || {};
+    if (level.publicPractice) {
+      return '<section class="ul-credential-brief"><div class="ul-credential-grid">' +
+        '<div><small>选学小练习</small><b>' + esc(level.publicPractice) + '</b></div>' +
+        '<div><small>本站训练规则</small><b>连续 3 轮不低于 85 分，点亮本关完成状态。</b></div>' +
+        '</div><div class="ul-hardware-note"><span>i</span><p>纸面练习也可以。不要求购买工具或提交商业项目；本站成绩不代表外部考试成绩。</p></div></section>';
+    }
     return '<section class="ul-credential-brief">' +
       '<div class="ul-credential-title"><span>' + esc(level.phase || "高级训练阶段") + '</span><strong>' + esc(level.cluster || "综合能力") + '</strong></div>' +
       '<div class="ul-credential-grid">' +
@@ -564,10 +575,10 @@
       ? '<div class="ul-flow-note" style="margin-top:14px"><span>?</span><div><strong>本关有 ' + noteEntries.length + ' 个未解疑问</strong><button class="ul-button is-cyan" style="margin-top:8px" data-ul-action="view-doubts">查看全部疑问</button></div></div>'
       : "";
     content.innerHTML =
-      pageHead("LIBRARY / INPUT", levelName(levelIndex), "先读懂概念，再用一段自己的话留下理解证据；客观判断仍在训练工坊完成。", '<span class="ul-chip">课卡 <strong>' + read + "/" + lessons.length + '</strong></span><span class="ul-chip">表达 <strong>' + reflectedCount + "/" + lessons.length + '</strong></span>') +
+      pageHead("课程书库", levelName(levelIndex), level.goal || "先看例子，再动手试一试；用自己的话记录理解，进入训练检查掌握情况。", '<span class="ul-chip">课卡 <strong>' + read + "/" + lessons.length + '</strong></span><span class="ul-chip">表达 <strong>' + reflectedCount + "/" + lessons.length + '</strong></span>') +
       levelTabs() +
       credentialBrief(levelIndex) +
-      '<div class="ul-flow-note"><span>i</span><div><strong>新的学习分工：</strong>书库负责输入，训练负责检索与判断，错题负责复盘。课卡中只保留一个可选的"我还没懂什么"，不再强制填写重复能力卡。</div></div>' +
+      '<div class="ul-flow-note"><span>i</span><div>读完一张课卡，用自己的话回答下面的问题。没弄懂的地方可以先记下来，再通过练习和 Agent 解释继续理解。</div></div>' +
       doubtHtml +
       '<section class="ul-books">' + books + '</section>' +
       '<footer class="ul-footer-action">' +
@@ -1063,9 +1074,9 @@
     }).join("");
     var readingContent = lesson.beginnerBody
       ? '<section class="ul-reading-path">' +
-          '<div class="ul-reading-path-head"><span>默认阅读模式</span><strong>先理解，再补充术语</strong><small>先完成新手导读；需要完整知识时再展开教材。</small></div>' +
+          '<div class="ul-reading-path-head"><span>新手导读</span><strong>' + esc(lesson.readingLabel || "先理解，再补充术语") + '</strong><small>' + (lesson.readingLabel ? "先做下面的小练习，再用自己的话回答。" : "先看例子；需要了解更多时再展开教材。") + '</small></div>' +
           '<article class="ul-beginner-body">' + glossaryHtml(lesson.beginnerBody) + '</article>' +
-          '<details class="ul-full-lesson"><summary><span>展开完整教材</span><small>查看术语、工程细节、边界和更多案例</small></summary><article class="ul-lesson-body">' + glossaryHtml(lesson.body || "") + '</article></details>' +
+          '<details class="ul-full-lesson"><summary><span>' + esc(lesson.detailLabel || "展开完整教材") + '</span><small>' + esc(lesson.detailHint || "查看术语、工程细节和更多案例") + '</small></summary><article class="ul-lesson-body">' + glossaryHtml(lesson.body || "") + '</article></details>' +
         '</section>'
       : '<article class="ul-lesson-body">' + glossaryHtml(lesson.body || "") + '</article>';
     content.innerHTML =
@@ -1083,13 +1094,13 @@
           '<div class="ul-reflection-checks">' + reflectionCheckHtml + '</div>' +
           '<label for="ul-reflection">我的理解表述</label>' +
           '<small>建议 30–120 字。至少 20 字会记为“已记录”；字数只代表形成记录，不代表内容一定正确。</small>' +
-          '<textarea id="ul-reflection" data-reflection-key="' + esc(reflectionKey) + '" data-level-index="' + levelIndex + '" data-lesson-index="' + lessonIndex + '" placeholder="不要抄原文。先关掉上面的完整教材，再用自己的话说明。">' + esc(savedReflection) + '</textarea>' +
+          '<textarea id="ul-reflection" data-reflection-key="' + esc(reflectionKey) + '" data-level-index="' + levelIndex + '" data-lesson-index="' + lessonIndex + '" placeholder="用自己的话写出做法和理由，可以使用上面的练习材料。">' + esc(savedReflection) + '</textarea>' +
           '<footer><span data-reflection-count>' + savedReflection.trim().length + ' 字 · ' + (reflectionDone ? "已形成记录" : "至少还需 " + Math.max(0, 20 - savedReflection.trim().length) + " 字") + '</span><div class="ul-button-row"><button class="ul-button" data-ul-action="save-reflection">保存表达</button><button class="ul-button is-cyan" data-ul-action="copy-reflection">复制给 Agent 审核</button></div></footer>' +
         '</section>' +
         '<section class="ul-question-note">' +
           '<label for="ul-note">我还没懂什么？（可选，不是作业）</label>' +
           '<small>只记录真实疑问，之后可以随学习快照交给 Agent。已经理解就留空。</small>' +
-          '<textarea id="ul-note" data-note-key="' + esc(noteKey) + '" placeholder="例如：我还分不清 RAG 和工具调用的边界。">' + esc(noteValue) + '</textarea>' +
+          '<textarea id="ul-note" data-note-key="' + esc(noteKey) + '" placeholder="例如：我能照着例子做，但还不明白为什么要这样做。">' + esc(noteValue) + '</textarea>' +
           '<div class="ul-button-row" style="margin-top:10px"><button class="ul-button" data-ul-action="save-note">保存疑问</button></div>' +
         '</section>' +
         '<footer class="ul-footer-action">' +
@@ -1183,7 +1194,7 @@
       '<div class="ul-training-grid">' +
         '<section class="ul-mission-card">' +
           '<h3>本关训练任务</h3>' +
-          '<p>本轮抽取 ' + Math.min(size, total) + ' 题，包含判断题和选择题。' + (isAdvancedLevel(levelIndex) ? '每轮至少 85 分，连续 3 轮达线才完成本关高级训练要求；一轮未达线会重新计数。这是自我训练纪律，与任何外部考试报名无关。' : '达到 80 分即通过。') + '系统按当前题库答案判分，判分范围只覆盖本题库。</p>' +
+          '<p>本轮抽取 ' + Math.min(size, total) + ' 题，检查课卡中讲过的内容。' + (isAdvancedLevel(levelIndex) ? '每轮至少 85 分，连续 3 轮达线才完成本关高级训练要求；一轮未达线会重新计数。这是自我训练纪律，与任何外部考试报名无关。' : '达到 80 分即通过。') + '系统按当前题库答案判分，判分范围只覆盖本题库。</p>' +
           '<div class="ul-stat-row">' +
             '<div class="ul-stat"><strong>' + read + "/" + lessons.length + '</strong>课卡已读</div>' +
             '<div class="ul-stat"><strong>' + total + '</strong>题库总量</div>' +
@@ -1308,7 +1319,8 @@
       chosen: answerIndex,
       correct: correct
     });
-    var wrong = wrongIds(session.levelIndex).slice();
+    // Keep retired question IDs in the saved record; only the current bank is drilled.
+    var wrong = Array.isArray(state.wrong[session.levelIndex]) ? state.wrong[session.levelIndex].slice() : [];
     var position = wrong.indexOf(item.id);
     if (correct && position >= 0) wrong.splice(position, 1);
     if (!correct && position < 0) wrong.push(item.id);
@@ -1974,6 +1986,7 @@
       openKeyNotes: function () { syncActiveLevelToHome(); renderKeyNotes(); },
       openReview: function () { syncActiveLevelToHome(); renderKeyNotes(); },
       openTraining: renderTrainingHome,
+      getWrongIds: function (levelIndex) { return wrongIds(levelIndex).slice(); },
       openWrongArchive: renderWrongArchive,
       openArtifactArchive: renderArtifactArchive
     };

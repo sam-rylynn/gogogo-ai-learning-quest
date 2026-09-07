@@ -22,6 +22,8 @@ cp advanced-certificate-expansion.js \
    curriculum-depth-upgrade.js \
    curriculum-detail-expansion.js \
    curriculum-reflection-prompts.js \
+   curriculum-public-reading.js curriculum-public-foundations.js \
+   curriculum-public-practice.js curriculum-public-specialist.js \
    glossary-cards.css glossary-cards.js \
    pixel-guild-upgrade.css pixel-guild-upgrade.js progress-backup.js \
    unified-learning-upgrade.css unified-learning-upgrade.js \
