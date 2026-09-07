@@ -297,7 +297,17 @@
     details.appendChild(makeDetailItem("前置条件", item.prerequisites));
     details.appendChild(makeDetailItem("有效期", item.validity));
     details.appendChild(makeDetailItem("为什么这样标注", item.statusNote, "detail-item-full"));
-    details.appendChild(makeDetailItem("对应 GOGO 练习", item.gogoMapping, "detail-item-full"));
+    const mapping = makeDetailItem("对应 GOGO 练习", item.gogoMapping, "detail-item-full");
+    const levels = Array.from(new Set(Array.from(item.gogoMapping.matchAll(/第\s*(\d+)\s*关/g), (match) => Number(match[1]))));
+    const experience = window.GOGO_LEARNING_EXPERIENCE;
+    if (experience && levels.length) {
+      const links = createElement("div", { className: "course-practice-links" });
+      levels.filter((level) => level >= 1 && level <= 14).forEach((level) => {
+        links.appendChild(createElement("a", { text: `进入第 ${level} 关 →`, attributes: { href: experience.courseLink(level) } }));
+      });
+      mapping.querySelector("dd").appendChild(links);
+    }
+    details.appendChild(mapping);
 
     const sourceWrapper = createElement("div", { className: "detail-item detail-item-full" });
     sourceWrapper.appendChild(createElement("dt", { text: "官方来源" }));
@@ -344,6 +354,11 @@
     const results = sortItems(data.filter((item) => matchesFilters(item, filters)), filters.sort);
     renderRows(results);
     updateResultCount(results.length);
+    const more = document.getElementById("more-filters");
+    if (more) {
+      const count = [filters.q, filters.status, filters.issuer, filters.sort !== DEFAULT_SORT ? filters.sort : ""].filter(Boolean).length;
+      more.querySelector("summary").textContent = "关键词和更多筛选" + (count ? ` · 已设置 ${count} 项` : "");
+    }
     if (config.updateUrl !== false) updateAddressBar(filters);
   }
 
@@ -397,7 +412,7 @@
     elements.sort.value = DEFAULT_SORT;
     expandedIds.clear();
     render();
-    elements.query.focus();
+    elements.track.focus();
   }
 
   function updateSummary() {

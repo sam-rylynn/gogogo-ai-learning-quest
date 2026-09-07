@@ -15,6 +15,32 @@
   --ul-body-font: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
 }
 
+/* Reading-first controls; the guild scene and saved progress stay unchanged. */
+.ul-route-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 10px; }
+.ul-route-filters .ul-button { min-height: 40px; padding: 7px 12px; font: 14px/1.4 var(--ul-body-font); }
+.ul-route-filters [aria-pressed="true"] { border-color: var(--ul-gold); background: #3a3020; color: var(--ul-gold); }
+.ul-course-directory { margin: 0 0 18px; border: 1px solid var(--ul-line); background: #0e1b29; }
+.ul-course-directory summary { padding: 12px 14px; cursor: pointer; color: var(--ul-ink); font-size: 14px; }
+.ul-course-directory summary small { margin-left: 8px; color: var(--ul-muted); }
+.ul-course-directory .ul-level-tabs { padding: 10px; margin: 0; }
+.ul-directory-link { display: inline-block; padding: 12px; color: var(--ul-cyan); }
+.ul-next-task { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 20px; margin: 16px 0 24px; border: 2px solid #bc9851; background: #192a32; box-shadow: 4px 4px 0 #02060b; }
+.ul-next-task h3 { margin: 7px 0; font-size: 21px; line-height: 1.5; }
+.ul-next-task p { margin: 0; color: #bbcbd8; font-size: 14px; }
+.ul-next-task small { color: var(--ul-gold); }
+.ul-next-task > button { flex-shrink: 0; }
+.ul-section-label { font-size: 15px; color: var(--ul-muted); margin: 20px 0 12px; }
+.ul-completion-note { display: flex; gap: 16px; padding: 16px; border: 2px solid #54dfa1; background: #102c29; margin: 12px 0; }
+.ul-completion-note > span { align-self: start; border: 2px solid #54dfa1; padding: 4px 12px; font-size: 24px; color: #54dfa1; }
+.ul-completion-note p { margin: 4px 0; }
+.ul-completion-note small { color: #b1ccc5; }
+.ul-question-next { position: sticky; bottom: 0; z-index: 2; padding: 12px 0 max(12px, env(safe-area-inset-bottom)); background: var(--ul-panel); border-top: 1px solid var(--ul-line); }
+.ul-question-next .ul-button { min-height: 44px; }
+@media (prefers-reduced-motion: no-preference) {
+  .ul-completion-note > span { animation: ul-stamp-in .35s steps(3, end) both; }
+  @keyframes ul-stamp-in { from { transform: scale(1.2); opacity: .3; } to { transform: scale(1); opacity: 1; } }
+}
+
 body.ul-locked {
   overflow: hidden;
 }
@@ -3537,4 +3563,53 @@ body.ul-locked {
     line-height: 13px;
     letter-spacing: 0;
   }
+}
+
+/* 2026-09 reading pass: keep the artwork, bring the next action forward. */
+.ul-page-head { margin-bottom: 18px; padding-bottom: 0; }
+.ul-page-head h2 { font-size: clamp(22px, 2.4vw, 30px); }
+.ul-page-head p { max-width: 70ch; }
+.ul-lesson-head { padding: 12px 0; margin: 10px 0; border: 0; background: transparent; box-shadow: none; }
+.ul-lesson-title { font-size: clamp(24px, 3vw, 34px); line-height: 1.45; }
+.ul-core-card { padding: 14px 18px; margin: 16px 0; border-width: 0 0 0 3px; box-shadow: none; font-size: 16px; }
+.ul-reading-path { padding: 0; border: 0; background: transparent; box-shadow: none; }
+.ul-beginner-body { padding: 0; font-size: 16px; line-height: 1.85; }
+.ul-beginner-body > p:first-child { margin-top: 8px; }
+.ul-boundary-note { font: 12px/1.5 var(--ul-body-font); color: #b7c8d4; }
+.ul-boundary-action { color: var(--ul-gold); background: transparent; border-color: #607389; min-height: 36px; }
+#pixel-guild-app .pg-quest-footer .pg-primary[data-home-progress] { white-space: normal; text-overflow: clip; line-height: 1.3; padding-inline: 5px; }
+.ul-start-actions { margin: 14px 0; }
+.pg-storage-details { margin-top: 16px; }
+.pg-storage-details > summary { padding: 10px 0; cursor: pointer; color: #b7c8d4; }
+@media (max-width: 640px) {
+  .ul-content { padding: 18px 12px; }
+  .ul-page-head { gap: 10px; margin-bottom: 14px; }
+  .ul-page-head h2 { font-size: 22px; line-height: 1.4; }
+  .ul-page-head p { font: 15px/1.65 var(--ul-body-font); }
+  .ul-page-head .ul-kicker { display: none; }
+  .ul-route-filters { gap: 6px; }
+  .ul-route-filters .ul-button { min-height: 44px; font-size: 13px; padding: 7px 9px; }
+  .ul-course-directory summary { min-height: 44px; padding: 10px; font-size: 14px; }
+  .ul-next-task { display: block; padding: 15px; margin-top: 12px; }
+  .ul-next-task h3 { font-size: 19px; }
+  .ul-next-task > button { width: 100%; margin-top: 14px; min-height: 48px; }
+  .ul-lesson-title { font-size: 24px; }
+  .ul-reflection-card textarea, .ul-question-note textarea { font-size: 16px; }
+  .ul-book-copy p, .ul-mission-card p, .ul-side-card p, .ul-feedback { font-size: 15px; line-height: 1.7; }
+  .ul-core-card { padding: 12px; }
+  .ul-boundary-note { padding: 6px 12px; gap: 8px; font-size: 12px; }
+  .ul-boundary-note > span { max-width: 24ch; }
+  .ul-boundary-action { min-height: 44px; padding: 5px 8px; }
+  .ul-question-next { padding: 10px 0; }
+  .ul-question-next .ul-button { width: 100%; min-height: 48px; }
+  .ul-overlay[data-view="question"] .ul-nav, .ul-overlay[data-view="question"] .ul-boundary-note { display: none; }
+  .ul-overlay[data-view="question"] .ul-topbar { min-height: 58px; grid-template-columns: 1fr auto; padding: 8px 12px; }
+  .ul-overlay[data-view="question"] .ul-brand strong { font-size: 18px; }
+  .ul-overlay[data-view="question"] .ul-question-card { padding: 16px; }
+  .ul-overlay[data-view="question"] .ul-question-card h2 { font-size: 21px; line-height: 1.5; }
+  .ul-overlay[data-view="question"] .ul-progress-head { font-size: 12px; }
+  .ul-overlay[data-view="question"] .ul-answer { padding: 12px; min-height: 48px; }
+}
+@media (max-width: 350px) {
+  .ul-next-task p { display: none; }
 }

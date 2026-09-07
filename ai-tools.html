@@ -7,12 +7,14 @@
   <meta name="theme-color" content="#08111c">
   <title>AI应用站 · GOGO</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="ai-tools.css?v=20260831-station1">
-  <script src="glossary-cards.js?v=20260831-station1" defer></script>
+  <link rel="stylesheet" href="ai-tools.css?v=20260907-experience1">
+  <link rel="stylesheet" href="learning-examples.css?v=20260907-experience1">
+  <script src="learning-experience.js?v=20260907-experience1" defer></script>
+  <script src="glossary-cards.js?v=20260907-experience1" defer></script>
   <script src="ai-tools-data.js?v=20260831-catalog3" defer></script>
-  <script src="ai-station-data.js?v=20260831-station1" defer></script>
+  <script src="ai-station-data.js?v=20260907-experience1" defer></script>
   <script src="aihot-snapshot.js?v=20260831-station1" defer></script>
-  <script src="ai-station.js?v=20260831-station1" defer></script>
+  <script src="ai-station.js?v=20260907-experience1" defer></script>
   <script src="ai-tools.js?v=20260831-station1" defer></script>
 </head>
 <body>
@@ -71,7 +73,7 @@
             <p class="eyebrow">MODEL RANKING</p>
             <h2 id="home-ranking-title">模型排行榜</h2>
           </div>
-          <p>按 AIHOT 共识分展示当前前五名；它反映多项公开评测的综合证据，不代表每个具体任务都适用。</p>
+          <p>按 AIHOT 共识分展示快照中的前五名；它反映多项公开评测的综合证据，不代表每个具体任务都适用。</p>
         </div>
         <div id="model-ranking-home"></div>
       </section>
@@ -164,6 +166,7 @@
           </div>
           <p>根据多个来源对同一事件的集中报道整理。</p>
         </div>
+        <p class="module-freshness" id="aihot-event-status" role="status"></p>
         <div class="news-grid event-grid" id="event-news-grid"></div>
       </section>
 
@@ -175,6 +178,7 @@
           </div>
           <p>最近一周值得继续打开原文核对的 AI 产品动态。</p>
         </div>
+        <p class="module-freshness" id="aihot-product-status" role="status"></p>
         <div class="news-grid product-grid" id="product-news-grid"></div>
       </section>
 

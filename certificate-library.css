@@ -971,3 +971,59 @@ footer p {
     animation-iteration-count: 1 !important;
   }
 }
+
+/* A compact lookup page, consistent with the learning station. */
+:root { --radius: 3px; }
+.site-header { min-height: 68px; }
+.brand-mark { border-radius: 0; box-shadow: 3px 3px 0 #322718; }
+.hero { display: block; padding: 28px 0 12px; gap: 0; }
+.hero h1 { font-size: clamp(26px, 3.5vw, 40px); line-height: 1.4; max-width: none; margin: 6px 0 10px; }
+.hero-lead { max-width: none; font-size: 16px; line-height: 1.7; margin-bottom: 8px; }
+.hero .eyebrow { font-size: 12px; margin: 0; }
+.certificate-scope { font-size: 13px; color: var(--muted); }
+.certificate-scope summary { cursor: pointer; padding: 10px 0; min-height: 44px; color: var(--gold); }
+.certificate-scope p { max-width: 80ch; }
+.summary-grid { display: flex; flex-wrap: wrap; margin: 4px 0 22px; border-radius: 0; border: 0; gap: 8px 20px; padding: 0; background: transparent; }
+.summary-card { display: flex; align-items: baseline; gap: 6px; min-height: 0; padding: 0; border: 0; background: transparent; }
+.summary-value, .summary-date { font-size: 14px; font-weight: 650; line-height: 1.5; }
+.summary-label { font-size: 12px; margin: 0; }
+.library-panel { margin-top: 0; padding-top: 0; }
+.section-heading { margin-bottom: 14px; gap: 10px; }
+.section-heading h2 { font-size: 22px; }
+.section-heading .section-kicker { display: none; }
+.section-heading > p { font-size: 14px; }
+.filter-form { display: block; padding: 18px; border-radius: 2px; }
+.filter-primary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.filter-advanced { margin-top: 8px; }
+.filter-advanced > summary { cursor: pointer; padding: 10px 0; min-height: 44px; color: var(--gold); font-size: 14px; }
+.filter-extra-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding-top: 12px; }
+.filter-field select, .filter-field input { min-height: 46px; border-radius: 2px; }
+.filter-toolbar { margin-top: 12px; padding: 0; }
+.copy-feedback:empty { display: none; }
+.table-frame { border-radius: 2px; }
+.detail-panel { border-radius: 2px; }
+.course-practice-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.course-practice-links a { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 12px; border: 1px solid #729790; color: #9cddd4; background: #112a30; text-decoration: none; }
+.course-practice-links a:focus-visible, summary:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+@media (max-width: 640px) {
+  .hero { padding: 18px 0 6px; }
+  .hero h1 { font-size: 27px; }
+  .hero-lead { font-size: 15px; }
+  .summary-grid { gap: 5px 14px; margin-bottom: 16px; }
+  .summary-card-wide { flex-basis: 100%; }
+  .summary-card { min-height: 0; }
+  .section-heading { display: block; }
+  .section-heading h2 { font-size: 20px; }
+  .section-heading > p { margin: 4px 0; }
+  .filter-form { padding: 12px; }
+  .filter-primary { gap: 8px; }
+  .filter-field label { font-size: 13px; margin-bottom: 5px; }
+  .filter-primary select { font-size: 15px; padding-inline: 8px; }
+  .filter-extra-grid { grid-template-columns: 1fr; }
+  .filter-toolbar { display: block; }
+  .toolbar-actions { flex-direction: row; flex-wrap: wrap; gap: 12px; }
+  .certificate-table tbody tr:not(.detail-row) { border-radius: 2px; }
+  .certificate-table td { padding-top: 10px; padding-bottom: 10px; }
+  .certificate-table .cell-subline { line-height: 1.6; }
+  .route-next { margin-top: 28px; padding: 20px; border-radius: 2px; }
+}

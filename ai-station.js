@@ -145,7 +145,12 @@
     method.rel = "noopener noreferrer";
     links.append(full, method);
     source.append(sourceText, links);
-    container.replaceChildren(list, source);
+    const captured = new Date(snapshot.generatedAt);
+    const age = Date.now() - captured.getTime();
+    const freshness = makeElement("p", "module-freshness" + (age > 3 * 86400000 ? " is-stale" : ""),
+      "榜单标注：" + (snapshot.leaderboard.updatedLabel || "日期待核验") + " · 本站快照，非实时排名" +
+      (age > 3 * 86400000 ? " · 快照已超过 3 天，可打开源榜单看最新数据" : ""));
+    container.replaceChildren(freshness, list, source);
   }
 
   function toolName(id) {
@@ -205,6 +210,14 @@
       makeElement("p", "deliverable-callout", "完成后你会得到：" + workflow.deliverable)
     );
     content.appendChild(head);
+    const experience = window.GOGO_LEARNING_EXPERIENCE;
+    const sampleId = experience && Object.keys(experience.samples).find(function (key) { return experience.samples[key].workflow === id; });
+    if (sampleId) {
+      const sample = makeElement("div", "workflow-sample");
+      // Only our authored static example markup enters this element, never API data.
+      sample.innerHTML = experience.renderSample(sampleId);
+      content.appendChild(sample);
+    }
     const detailGrid = makeElement("div", "content-detail-grid");
     appendList(detailGrid, "开始前准备", workflow.inputs, false);
     appendList(detailGrid, "执行步骤", workflow.steps, true);
@@ -267,6 +280,11 @@
     return [term.term, term.translation, term.summary].concat(term.aliases || []).join(" ").toLocaleLowerCase("zh-CN");
   }
 
+  function termDisplayName(term) {
+    if (term.displayName) return term.displayName;
+    return /[\u4e00-\u9fff]/.test(term.term) ? term.term : term.translation.split(/[；/]/)[0].trim();
+  }
+
   function renderGlossaryFilters() {
     const filters = document.getElementById("glossary-filters");
     if (!filters) return;
@@ -298,8 +316,8 @@
       card.setAttribute("aria-haspopup", "dialog");
       card.append(
         makeElement("span", "term-group", term.group),
-        makeElement("strong", "", term.term),
-        makeElement("small", "", term.translation),
+        makeElement("strong", "", termDisplayName(term)),
+        makeElement("small", "", term.term + " · " + term.translation),
         makeElement("span", "term-summary", term.summary),
         makeElement("span", "term-arrow", "查看解释 →")
       );
@@ -321,22 +339,25 @@
     const head = makeElement("header", "content-dialog-head");
     head.append(
       makeElement("p", "dialog-meta", term.group),
-      makeElement("h2", "", term.term),
-      makeElement("p", "term-translation", term.translation),
+      makeElement("h2", "", termDisplayName(term)),
+      makeElement("p", "term-translation", term.term + " · " + term.translation),
       makeElement("p", "dialog-summary", term.summary)
     );
     content.appendChild(head);
+    if (term.example) {
+      const example = makeElement("section", "term-example");
+      example.append(makeElement("h3", "", "看一个例子"), makeElement("p", "", term.example));
+      content.appendChild(example);
+    }
+    const more = makeElement("details", "term-more");
+    more.appendChild(makeElement("summary", "", "继续了解原理与步骤"));
     if (term.logic) {
       const logic = makeElement("section", "detail-block standalone");
       logic.append(makeElement("h3", "", "它是怎么工作的"), makeElement("p", "", term.logic));
-      content.appendChild(logic);
+      more.appendChild(logic);
     }
-    if (Array.isArray(term.flow) && term.flow.length) appendList(content, "标准流程", term.flow, true);
-    if (term.example) {
-      const example = makeElement("section", "term-example");
-      example.append(makeElement("h3", "", "举个例子"), makeElement("p", "", term.example));
-      content.appendChild(example);
-    }
+    if (Array.isArray(term.flow) && term.flow.length) appendList(more, "参考步骤", term.flow, true);
+    content.appendChild(more);
     dialog.showModal();
   }
 
@@ -440,6 +461,14 @@
   }
 
   let refreshingNews = false;
+  const lastNewsRead = {};
+  function newsStatus(kind, state) {
+    const target = document.getElementById("aihot-" + kind + "-status");
+    if (!target) return;
+    const label = lastNewsRead[kind] || ("本站快照 " + formatTime(snapshot.generatedAt));
+    target.classList.toggle("is-stale", state === "failed");
+    target.textContent = state === "loading" ? label + " · 正在检查更新" : state === "failed" ? label + " · 更新暂缓，保留已有内容；条目日期见下方" : label + " · 条目日期见下方";
+  }
   async function refreshNews() {
     if (refreshingNews) return;
     refreshingNews = true;
@@ -448,26 +477,23 @@
     if (status) status.textContent = "正在更新近期动态…";
     if (retry) retry.hidden = true;
     let updated = 0;
-    try {
-      const hotPayload = await fetchJson("https://aihot.virxact.com/api/v1/hot-topics");
-      const hot = normalizeHot(hotPayload);
-      if (hot.length) {
-        renderEventCards(hot);
+    await Promise.all([
+      { kind: "event", url: "https://aihot.virxact.com/api/v1/hot-topics", normalize: normalizeHot, render: renderEventCards },
+      { kind: "product", url: "https://aihot.virxact.com/api/v1/items?mode=selected&category=ai-products&window=7d&limit=8", normalize: normalizeProducts, render: renderProductCards }
+    ].map(async function (feed) {
+      newsStatus(feed.kind, "loading");
+      try {
+        const items = feed.normalize(await fetchJson(feed.url));
+        if (!items.length) throw new Error("empty feed");
+        feed.render(items);
+        lastNewsRead[feed.kind] = "本次读取 " + new Date().toLocaleString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });
+        newsStatus(feed.kind, "ready");
         updated += 1;
+      } catch (_) {
+        // Keep the bundled snapshot or the last successful response for this feed.
+        newsStatus(feed.kind, "failed");
       }
-    } catch (_) {
-      // Keep the bundled snapshot. External availability must not block the page.
-    }
-    try {
-      const productPayload = await fetchJson("https://aihot.virxact.com/api/v1/items?mode=selected&category=ai-products&window=7d&limit=8");
-      const products = normalizeProducts(productPayload);
-      if (products.length) {
-        renderProductCards(products);
-        updated += 1;
-      }
-    } catch (_) {
-      // Keep the bundled snapshot. External availability must not block the page.
-    }
+    }));
     if (status) {
       status.textContent = updated === 2
         ? "近期动态已更新 · 摘要由 AIHOT 整理，重要信息请打开原文核对"
@@ -535,6 +561,8 @@
   renderGlossary();
   renderEventCards(snapshot.hotTopics);
   renderProductCards(snapshot.products);
+  newsStatus("event", "ready");
+  newsStatus("product", "ready");
 
   const globalSearch = document.getElementById("global-search");
   const globalClear = document.getElementById("clear-global-search");

@@ -17,6 +17,7 @@ fi
 cp advanced-certificate-expansion.js \
    ai-tools.css ai-tools-data.js ai-tools.js ai-tools.html \
    ai-station-data.js ai-station.js aihot-snapshot.js \
+   learning-experience.js learning-examples.css \
    certificate-library.css certificate-library-data.js certificate-library.js certificates.html \
    curriculum-beginner-reading.js \
    curriculum-depth-upgrade.js \

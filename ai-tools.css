@@ -1447,6 +1447,52 @@ footer a { color: var(--gold-hi); }
   .glossary-grid { grid-template-columns: 1fr; }
 }
 
+/* Shared reading scale: retain pixel headings without shrinking body copy. */
+.module-freshness { padding: 10px 12px; margin: 0 0 14px; border-left: 3px solid #568c91; color: #bbcbd1; background: #11212e; font: 13px/1.6 "PingFang SC", "Microsoft YaHei", sans-serif; }
+.module-freshness.is-stale { border-color: #d9b061; color: #edce92; }
+.term-more { margin-top: 16px; border-top: 1px solid var(--line); }
+.term-more > summary { padding: 14px 0; cursor: pointer; color: #9edcd8; min-height: 44px; }
+.term-more > summary:focus-visible { outline: 2px solid var(--gold); }
+.term-example p, .detail-block p, .detail-block li { font-size: 15px; line-height: 1.8; }
+@media (max-width: 640px) {
+  .top-nav { flex-wrap: wrap; gap: 4px; }
+  .top-nav a, .top-nav button { font-size: 13px; line-height: 1.4; min-height: 44px; padding: 10px 8px; }
+  .title-block > p:last-child, .home-title-block > p:last-child, .page-intro > p:last-child, .page-intro > div > p:last-child { font-size: 15px; line-height: 1.65; }
+  .section-heading > p, .portal-copy > small, .source-line, .model-identity small, .model-score small, .workflow-card-meta, .term-card > small { font-size: 12px; line-height: 1.6; }
+  .portal-card { min-height: 172px; padding: 14px 12px; }
+  .portal-copy > strong { font-size: 17px; }
+  .portal-copy > span { font-size: 14px; line-height: 1.65; }
+  .portal-copy > small { margin-top: 14px; }
+  .portal-order { font-size: 12px; }
+  .portal-grid { gap: 10px; }
+  .tool-grid { grid-template-columns: 1fr; }
+  .tool-card { padding: 18px; }
+  .tool-card h3 { font-size: 20px; }
+  .tool-card > p, .tool-description, .workflow-card-summary, .term-summary, .news-card p { font-size: 15px; line-height: 1.7; }
+  .tool-type, .tool-tags span, .workflow-deliverable, .filter-label, .result-count, .live-status-row { font-size: 12px; }
+  .category-filters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .filter-chip { min-height: 44px; font-size: 13px; padding: 9px 6px; }
+  .region-badge { font-size: 12px; }
+  .reset-button { font-size: 12px; min-height: 44px; }
+  .detail-button, .official-link, .primary-button, .compare-toggle { min-height: 44px; font-size: 13px; padding: 9px 12px; }
+  .glossary-grid { grid-template-columns: 1fr; }
+  .term-card { min-height: 0; padding: 18px; }
+  .term-card > strong { font-size: 20px; margin-top: 8px; }
+  .term-summary { margin-top: 10px; }
+  .term-group, .term-arrow { font-size: 12px; }
+  .workflow-card > strong, .news-card strong { font-size: 18px; line-height: 1.5; }
+  .model-identity strong { font-size: 15px; }
+  .source-line { gap: 10px; }
+  .source-links a { display: inline-flex; align-items: center; min-height: 44px; }
+  .content-dialog-head .dialog-summary, .dialog-summary, .detail-block p, .detail-block li { font-size: 15px; }
+  .global-search-shell input, .search-box input, .search-wrap input { font-size: 16px; }
+}
+@media (max-width: 350px) {
+  .portal-grid { grid-template-columns: 1fr; }
+  .portal-card { min-height: 0; }
+  .portal-copy > span { font-size: 14px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after {

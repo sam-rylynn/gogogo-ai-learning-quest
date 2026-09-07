@@ -391,7 +391,7 @@
           <div class="pg-gate-grid" id="pg-gates"></div>
           <div class="pg-quest-footer">
             <span class="pg-artifact-line" id="pg-artifact-line"></span>
-            <button class="pg-primary" data-home-progress data-action="library">继续书库 0/8</button>
+            <button class="pg-primary" data-home-progress data-action="library">开始第一课</button>
           </div>
         </section>
         <svg class="pg-foreground-actors" viewBox="0 0 1536 1024" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
@@ -473,6 +473,9 @@
   });
 
   function shouldShowOnboarding() {
+    // 课程直达已打开阅读层时，不再叠加一个首次欢迎面板。
+    const activeLearning = document.querySelector(".ul-overlay:not([hidden])");
+    if (activeLearning) return false;
     try {
       return localStorage.getItem(ONBOARDING_KEY) !== "seen";
     } catch (error) {
@@ -1425,11 +1428,12 @@
         </section>`;
     }
     return `
-      <p class="pg-panel-intro">完整备份覆盖课程、训练、错题、复盘、Agent 回执、公会证据和五步流程。不同网址与设备不会自动同步；迁移前先下载 JSON 文件。</p>
+      <p class="pg-panel-intro">学习记录自动保存在当前浏览器。换设备、换网址或清理数据前，请下载完整备份；新设备不会自动同步。</p>
       <section class="pg-panel-card">
         <div class="pg-card-heading"><h3>当前浏览器记录</h3><span class="pg-status">v2 完整备份</span></div>
-        <ul class="pg-store-list">${statusRows}</ul>
         <div class="pg-form-actions"><button class="pg-primary" type="button" data-action="download-backup">下载完整备份</button><button class="pg-secondary" type="button" data-action="copy-full-snapshot" data-prompt="next">复制完整学习快照</button></div>
+        <p>备份用于恢复进度；学习快照用于交给 Agent 帮你学习，两者用途不同。</p>
+        <details class="pg-storage-details"><summary>查看记录范围与存储详情</summary><ul class="pg-store-list">${statusRows}</ul></details>
       </section>
       <section class="pg-panel-card">
         <div class="pg-card-heading"><h3>交给 Agent 做什么</h3><span class="pg-status">复制即用</span></div>

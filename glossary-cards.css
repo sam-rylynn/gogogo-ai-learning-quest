@@ -213,6 +213,10 @@
   background: rgba(255, 159, 91, 0.08);
 }
 
+.gc-more { margin-top: 18px; border-top: 1px solid #435a82; }
+.gc-more > summary { min-height: 44px; padding: 12px 0; color: #b6d8e9; cursor: pointer; font-size: 14px; }
+.gc-more > summary:focus-visible { outline: 2px solid #44e4eb; outline-offset: 3px; }
+
 @media (max-width: 640px) {
   .gc-overlay {
     align-items: end;

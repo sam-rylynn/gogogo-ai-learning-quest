@@ -7,9 +7,10 @@
   <meta name="theme-color" content="#050916">
   <title>AI 证书与培训认证导航 · GOGO</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="certificate-library.css?v=20260829-1">
+  <link rel="stylesheet" href="certificate-library.css?v=20260907-experience1">
+  <script src="learning-experience.js?v=20260907-experience1" defer></script>
   <script src="certificate-library-data.js?v=20260905-public1" defer></script>
-  <script src="certificate-library.js?v=20260829-1" defer></script>
+  <script src="certificate-library.js?v=20260907-experience1" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#certificate-results">跳到证书列表</a>
@@ -19,24 +20,17 @@
       <span class="brand-mark" aria-hidden="true">G</span>
       <span><strong>GOGO</strong><small>AI 闯关地图</small></span>
     </a>
-    <a class="course-link" href="index.html">进入小游戏 <span aria-hidden="true">→</span></a>
+    <a class="course-link" href="index.html">返回学习地图 <span aria-hidden="true">→</span></a>
   </header>
 
   <main>
     <section class="hero" aria-labelledby="page-title">
       <div class="hero-copy">
-        <p class="eyebrow">CERTIFICATE COMPASS · 2026</p>
-        <h1 id="page-title">AI 证书与培训认证导航</h1>
-        <p class="hero-lead">先分清谁发、是什么性质、适合谁、学什么、怎么考，再决定要不要投入时间和钱。</p>
-        <p class="scope-note"><strong>收录范围：</strong>面向中文用户转向 AI 产品、办公、智能体、开发与机器学习的代表性路径。这里不是全球穷尽清单，也不按所谓“含金量”排名。</p>
+        <p class="eyebrow">GOGO · 考证清单</p>
+        <h1 id="page-title">找到适合你的 AI 证书</h1>
+        <p class="hero-lead">先选方向，再看证书性质、学习内容和官方要求。</p>
+        <details class="certificate-scope"><summary>收录范围与核验说明</summary><p>收录面向中文用户的代表性证书与培训认证，不是全球穷尽清单，也不按“含金量”排名。</p><p>“当前可查”只表示找到了对应官方页面，不等于推荐。报名资格、考试版本、价格和开放状态，请在付款前向官方复核。</p></details>
       </div>
-      <aside class="status-key" aria-label="核验说明">
-        <span class="status-key-icon" aria-hidden="true">i</span>
-        <div>
-          <strong>“当前可查”不等于推荐</strong>
-          <p>它只表示已找到对应官方页面。报名资格、考试版本、价格和开放状态仍以付款前的官方页面为准。</p>
-        </div>
-      </aside>
     </section>
 
     <section class="summary-grid" aria-label="证书库概况">
@@ -64,10 +58,41 @@
           <p class="section-kicker">FIND YOUR ROUTE</p>
           <h2 id="filter-title">按你的方向筛选</h2>
         </div>
-        <p>建议先选“学习方向”和“代码程度”，再看证书性质与核验状态；点击证书名称可打开官方原页面。</p>
+        <p>没有编程基础，可以先选“无需代码”。</p>
       </div>
 
       <form class="filter-form" id="certificate-filters" role="search">
+        <div class="filter-primary">
+        <div class="filter-field">
+          <label for="filter-track">学习方向</label>
+          <select id="filter-track" name="track">
+            <option value="">全部方向</option>
+            <option value="办公与业务">办公与业务</option>
+            <option value="产品与管理">产品与管理</option>
+            <option value="智能体与低代码">智能体与低代码</option>
+            <option value="开发与工程">开发与工程</option>
+            <option value="机器学习">机器学习</option>
+            <option value="职业技能">职业技能</option>
+            <option value="视觉与内容">视觉与内容</option>
+            <option value="安全与治理">安全与治理</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label for="filter-code">代码程度</label>
+          <select id="filter-code" name="code">
+            <option value="">全部程度</option>
+            <option value="无需代码">无需代码</option>
+            <option value="少量代码">少量代码</option>
+            <option value="需要编程">需要编程</option>
+            <option value="按等级">按等级</option>
+            <option value="按岗位">按岗位</option>
+            <option value="按项目">按项目</option>
+          </select>
+        </div>
+        </div>
+        <details class="filter-advanced" id="more-filters">
+          <summary>关键词和更多筛选</summary>
+          <div class="filter-extra-grid">
         <div class="filter-field filter-search">
           <label for="filter-query">关键词</label>
           <input id="filter-query" name="q" type="search" autocomplete="off" placeholder="例如：智能体、产品经理、AWS">
@@ -98,32 +123,6 @@
           </select>
         </div>
         <div class="filter-field">
-          <label for="filter-track">学习方向</label>
-          <select id="filter-track" name="track">
-            <option value="">全部方向</option>
-            <option value="办公与业务">办公与业务</option>
-            <option value="产品与管理">产品与管理</option>
-            <option value="智能体与低代码">智能体与低代码</option>
-            <option value="开发与工程">开发与工程</option>
-            <option value="机器学习">机器学习</option>
-            <option value="职业技能">职业技能</option>
-            <option value="视觉与内容">视觉与内容</option>
-            <option value="安全与治理">安全与治理</option>
-          </select>
-        </div>
-        <div class="filter-field">
-          <label for="filter-code">代码程度</label>
-          <select id="filter-code" name="code">
-            <option value="">全部程度</option>
-            <option value="无需代码">无需代码</option>
-            <option value="少量代码">少量代码</option>
-            <option value="需要编程">需要编程</option>
-            <option value="按等级">按等级</option>
-            <option value="按岗位">按岗位</option>
-            <option value="按项目">按项目</option>
-          </select>
-        </div>
-        <div class="filter-field">
           <label for="filter-sort">排序方式</label>
           <select id="filter-sort" name="sort">
             <option value="status">先看当前可查</option>
@@ -132,6 +131,8 @@
             <option value="updated">按核验日期</option>
           </select>
         </div>
+          </div>
+        </details>
       </form>
 
       <div class="filter-toolbar">
@@ -165,9 +166,9 @@
       <div>
         <p class="section-kicker">FROM ROUTE TO PRACTICE</p>
         <h2 id="route-next-title">选好方向，不等于已经学会</h2>
-        <p>证书库帮你缩小范围。GOGO 把提示设计、API、RAG、工具调用、智能体、评测和项目证据拆成一关关练习。</p>
+        <p>用课卡和小练习补齐基础。本站练习不是官方题库，也不代表覆盖全部考试要求。</p>
       </div>
-      <a class="primary-link" href="index.html">去 GOGO 玩第一关 <span aria-hidden="true">→</span></a>
+      <a class="primary-link" href="index.html?learn=1">开始入门学习 <span aria-hidden="true">→</span></a>
     </section>
   </main>
 

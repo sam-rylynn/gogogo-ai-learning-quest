@@ -10,28 +10,28 @@
       id: "tools",
       order: "01",
       title: "应用工具库",
-      summary: "按任务筛选、比较并打开适合你的 AI 工具。",
+      summary: "按任务找工具，比较后直接使用。",
       meta: "24 个工具 · 10 类任务"
     },
     {
       id: "hot",
       order: "02",
       title: "AI 热榜",
-      summary: "先看模型排行，再看事件热度和产品更新。",
+      summary: "模型排行、AI 事件和产品更新。",
       meta: "模型排行 · 近期动态"
     },
     {
       id: "flows",
       order: "03",
       title: "实战流程",
-      summary: "选一个真实任务，按步骤做到可验收。",
+      summary: "选一个任务，照着步骤做。",
       meta: "8 条完整流程"
     },
     {
       id: "glossary",
       order: "04",
       title: "常用词",
-      summary: "用中文白话听懂模型、Agent、MCP、API 和 Git。",
+      summary: "用中文解释常见 AI 词汇。",
       meta: "中文解释 · 例子 · 易混概念"
     }
   ];

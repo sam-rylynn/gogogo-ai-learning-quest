@@ -15,7 +15,7 @@ test("both public course entries ship the same safe-area mobile build", () => {
 
   assert.equal(index, legacy);
   assert.match(index, /width=device-width, initial-scale=1\.0, viewport-fit=cover/);
-  assert.match(index, /unified-learning-upgrade\.css\?v=20260905-public2/);
+  assert.match(index, /unified-learning-upgrade\.css\?v=20260907-experience1/);
 });
 
 test("portrait home uses an independent centered board and touch-sized actions", () => {
